@@ -7,34 +7,205 @@
   <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
-  <main>
+  <header class="entete">
     <h1>Gestion de stock</h1>
-    <p class="intro">
-      Page de vérification technique. Les écrans de l'application arrivent dans
-      les prochaines étapes.
-    </p>
+  </header>
 
-    <p id="avertissement" class="avertissement" role="alert" hidden></p>
-
-    <dl class="etats" aria-live="polite">
-      <div class="etat">
-        <dt>Connexion à Firebase</dt>
-        <dd id="etat-firebase" data-niveau="attente">Vérification…</dd>
-      </div>
-      <div class="etat">
-        <dt>Mémoire hors ligne</dt>
-        <dd id="etat-persistance" data-niveau="attente">Vérification…</dd>
-      </div>
-      <div class="etat">
-        <dt>Version</dt>
-        <dd id="etat-version" data-niveau="attente">Vérification…</dd>
-      </div>
-    </dl>
+  <main>
+    <p id="avertissement-stockage" class="avertissement" role="alert" hidden></p>
 
     <noscript>
       <p class="avertissement">JavaScript est désactivé : l'application ne peut pas fonctionner.</p>
     </noscript>
+
+    <!-- Chargement -->
+    <section id="vue-chargement" data-vue>
+      <p class="attente">Chargement…</p>
+    </section>
+
+    <!-- Connexion -->
+    <section id="vue-connexion" data-vue hidden>
+      <h2>Connexion</h2>
+
+      <button type="button" id="bouton-google" class="bouton bouton-secondaire">
+        Continuer avec Google
+      </button>
+
+      <p class="separateur">ou</p>
+
+      <form id="formulaire-connexion" novalidate>
+        <label for="connexion-email">Adresse e-mail</label>
+        <input id="connexion-email" type="email" inputmode="email" autocomplete="username" autocapitalize="none" spellcheck="false">
+
+        <label for="connexion-mdp">Mot de passe</label>
+        <input id="connexion-mdp" type="password" autocomplete="current-password" data-mot-de-passe>
+
+        <label class="case">
+          <input type="checkbox" data-afficher-mdp="connexion-mdp">
+          Afficher le mot de passe
+        </label>
+
+        <p id="erreur-connexion" class="message-erreur" role="alert" hidden></p>
+
+        <button type="submit" id="bouton-connexion" class="bouton bouton-principal">Se connecter</button>
+      </form>
+
+      <nav class="liens" aria-label="Autres actions">
+        <button type="button" class="lien" data-aller="vue-inscription">Créer un compte</button>
+        <button type="button" class="lien" data-aller="vue-oubli">Mot de passe oublié ?</button>
+        <button type="button" class="lien" data-aller="vue-confidentialite">Confidentialité</button>
+      </nav>
+    </section>
+
+    <!-- Inscription -->
+    <section id="vue-inscription" data-vue hidden>
+      <h2>Créer un compte</h2>
+      <p class="aide">
+        Vous avez un compte Google ? Revenez à la connexion et choisissez
+        « Continuer avec Google » : aucun mot de passe à créer.
+      </p>
+
+      <form id="formulaire-inscription" novalidate>
+        <label for="inscription-email">Adresse e-mail</label>
+        <input id="inscription-email" type="email" inputmode="email" autocomplete="username" autocapitalize="none" spellcheck="false">
+
+        <label for="inscription-mdp">Mot de passe</label>
+        <input id="inscription-mdp" type="password" autocomplete="new-password" aria-describedby="aide-inscription-mdp" data-mot-de-passe>
+        <p id="aide-inscription-mdp" class="aide-champ">Au moins 8 caractères.</p>
+
+        <label class="case">
+          <input type="checkbox" data-afficher-mdp="inscription-mdp">
+          Afficher le mot de passe
+        </label>
+
+        <p id="erreur-inscription" class="message-erreur" role="alert" hidden></p>
+
+        <button type="submit" id="bouton-inscription" class="bouton bouton-principal">Créer mon compte</button>
+      </form>
+
+      <nav class="liens" aria-label="Autres actions">
+        <button type="button" class="lien" data-aller="vue-connexion">Retour à la connexion</button>
+        <button type="button" class="lien" data-aller="vue-confidentialite">Confidentialité</button>
+      </nav>
+    </section>
+
+    <!-- Mot de passe oublié -->
+    <section id="vue-oubli" data-vue hidden>
+      <h2>Mot de passe oublié</h2>
+      <p class="aide">
+        Saisissez l'adresse e-mail de votre compte. Vous recevrez un e-mail
+        avec un lien pour choisir un nouveau mot de passe.
+      </p>
+
+      <form id="formulaire-oubli" novalidate>
+        <label for="oubli-email">Adresse e-mail</label>
+        <input id="oubli-email" type="email" inputmode="email" autocomplete="username" autocapitalize="none" spellcheck="false">
+
+        <p id="erreur-oubli" class="message-erreur" role="alert" hidden></p>
+        <p id="info-oubli" class="message-info" role="status" hidden></p>
+
+        <button type="submit" id="bouton-oubli" class="bouton bouton-principal">Envoyer l'e-mail</button>
+      </form>
+
+      <nav class="liens" aria-label="Autres actions">
+        <button type="button" class="lien" data-aller="vue-connexion">Retour à la connexion</button>
+      </nav>
+    </section>
+
+    <!-- Confidentialité -->
+    <section id="vue-confidentialite" data-vue hidden>
+      <h2>Confidentialité</h2>
+
+      <h3>Données enregistrées</h3>
+      <ul>
+        <li>Votre adresse e-mail, pour vous connecter.</li>
+        <li>Si vous utilisez Google : le nom et la photo de votre compte Google, transmis par Google au service de connexion.</li>
+        <li>Les données de stock que vous saisissez : entrepôt, produits, quantités, prix et mouvements.</li>
+      </ul>
+
+      <h3>Utilisation</h3>
+      <p>
+        Ces données servent uniquement à faire fonctionner l'application pour
+        vous. Elles ne sont ni vendues, ni partagées, ni utilisées pour de la
+        publicité. Chaque compte ne voit que ses propres données.
+      </p>
+
+      <h3>Où sont-elles conservées ?</h3>
+      <p>
+        Sur les serveurs de Google Firebase, aux États-Unis, et dans la mémoire
+        de votre appareil pour permettre l'utilisation sans Internet.
+      </p>
+
+      <h3>Suppression</h3>
+      <p>
+        Vous pouvez supprimer votre compte et toutes vos données depuis les
+        paramètres de l'application.
+      </p>
+
+      <nav class="liens" aria-label="Autres actions">
+        <button type="button" class="lien" data-aller="vue-connexion">Retour à la connexion</button>
+      </nav>
+    </section>
+
+    <!-- Premier lancement -->
+    <section id="vue-premier-lancement" data-vue hidden>
+      <h2>Créer votre entrepôt</h2>
+      <p class="aide">Ces deux informations suffisent pour commencer.</p>
+
+      <form id="formulaire-lancement" novalidate>
+        <label for="lancement-nom">Nom de l'entrepôt</label>
+        <input id="lancement-nom" type="text" autocomplete="off">
+
+        <label for="lancement-devise">Devise</label>
+        <select id="lancement-devise" aria-describedby="aide-lancement-devise"></select>
+        <p id="aide-lancement-devise" class="aide-champ">
+          La devise ne pourra plus être changée dès que l'entrepôt contiendra un produit.
+        </p>
+
+        <p id="erreur-lancement" class="message-erreur" role="alert" hidden></p>
+
+        <button type="submit" id="bouton-lancement" class="bouton bouton-principal">Créer l'entrepôt</button>
+      </form>
+
+      <nav class="liens" aria-label="Autres actions">
+        <button type="button" class="lien" data-deconnexion>Se déconnecter</button>
+      </nav>
+    </section>
+
+    <!-- Accueil (provisoire : le tableau de bord arrive en phase 5) -->
+    <section id="vue-accueil" data-vue hidden>
+      <h2>Votre entrepôt</h2>
+      <dl class="fiche">
+        <div>
+          <dt>Nom</dt>
+          <dd id="accueil-entrepot"></dd>
+        </div>
+        <div>
+          <dt>Devise</dt>
+          <dd id="accueil-devise"></dd>
+        </div>
+        <div>
+          <dt>Compte</dt>
+          <dd id="accueil-compte"></dd>
+        </div>
+      </dl>
+      <p class="aide">Les produits et les mouvements de stock arrivent dans les prochaines étapes.</p>
+
+      <button type="button" class="bouton bouton-secondaire" data-deconnexion>Se déconnecter</button>
+    </section>
+
+    <!-- Problème : attente d'Internet ou erreur du serveur -->
+    <section id="vue-probleme" data-vue hidden>
+      <h2 id="probleme-titre"></h2>
+      <p id="probleme-texte"></p>
+      <button type="button" id="bouton-recharger" class="bouton bouton-principal">Recharger la page</button>
+      <button type="button" id="bouton-deconnexion-probleme" class="bouton bouton-secondaire" data-deconnexion>Se déconnecter</button>
+    </section>
   </main>
+
+  <footer class="pied">
+    <p id="version"></p>
+  </footer>
 
   <script type="module" src="./js/app.js"></script>
 </body>

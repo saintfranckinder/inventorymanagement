@@ -105,7 +105,8 @@ export async function demarrerFirebase() {
     })
   });
 
-  // À appeler après une première opération Firestore.
+  // À appeler seulement APRÈS une première opération Firestore : avant, la
+  // base locale n'existe pas encore et le résultat serait faux.
   // Résultat approximatif, à présenter comme tel :
   //   true  : la mémoire hors ligne semble active ;
   //   false : elle est indisponible (les données ne survivront pas à la
@@ -118,5 +119,7 @@ export async function demarrerFirebase() {
     return presente !== false;
   }
 
-  return { app, auth, db, verifierMemoireHorsLigne };
+  // `stockageLocalDisponible` est connu dès le démarrage, avant toute
+  // opération Firestore.
+  return { app, auth, db, stockageLocalDisponible, verifierMemoireHorsLigne };
 }

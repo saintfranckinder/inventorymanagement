@@ -27,3 +27,10 @@ Chaque décision : date, choix, raison. Ne pas modifier une décision sans l'acc
 
 16. **Versions fixes des bibliothèques : SDK Firebase 13.4.0 (`firebase-app.js`, `firebase-auth.js`, `firebase-firestore.js`) et SheetJS 0.20.3 (`xlsx.full.min.js`).** Sources officielles, empreintes et correction appliquée notées dans `vendor/LISEZMOI.md`. Raison : `CLAUDE.md` exige une version fixe, jamais `latest` ; ce sont les versions officielles les plus récentes au moment du téléchargement.
 17. **Serveur local sur `http://localhost:8080/`, toujours le même port.** Raison : le navigateur range les données locales (comptes, mémoire hors ligne) par adresse ; changer de port ferait apparaître une application « vide » pendant les tests.
+
+## 2026-11-16 — phase 3
+
+18. **Devises proposées : HTG (par défaut), USD, EUR, DOP, CAD.** La liste existe dans `js/entrepot.js` et dans `firestore.rules` ; les deux doivent rester identiques. Raison : liste courte adaptée à Haïti ; les règles refusent toute autre valeur.
+19. **Pas de vérification de l'adresse par e-mail à l'inscription.** Raison : non demandée par `CLAUDE.md`, et une étape de plus pour l'utilisateur. Conséquences acceptées : une faute de frappe dans l'adresse empêche de recevoir l'e-mail de « Mot de passe oublié » ; un compte créé par mot de passe avec une adresse Gmail perd ce mot de passe à la première connexion Google (les données restent).
+20. **L'écran « Créer votre entrepôt » ne s'affiche que si le serveur confirme qu'aucun entrepôt n'existe.** Quand la réponse vient seulement de la mémoire de l'appareil, l'application attend Internet. Raison : sur un nouvel appareil sans Internet, un compte existant ressemblerait à un compte neuf et son entrepôt pourrait être écrasé.
+21. **Mot de passe : 8 caractères minimum, contrôlé dans l'application avant l'envoi**, en plus de la règle réglée dans la console Firebase.

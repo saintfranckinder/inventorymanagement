@@ -11,7 +11,7 @@ Dossier de travail : `C:\GitHub\Inventory Management\inventorymanagement` (dép�
 | 0 | Préparer le dossier (Git, `.gitignore`, `README.md`) | **Terminée le 2026-11-16** |
 | 1 | Audit et plan | **Terminée le 2026-11-16** (analyse validée, aucun code écrit) |
 | 2 | Structure, Firebase, persistance hors ligne | **Terminée le 2026-11-16** (deux vérifications du propriétaire restent à faire) |
-| 3 | Connexion, premier lancement, confidentialité | À faire |
+| 3 | Connexion, premier lancement, confidentialité | **Faite le 2026-11-16** ; trois tests du propriétaire restent à faire (Google, e-mail de réinitialisation, même adresse) |
 | 4a | Produits et conversion des nombres | À faire |
 | 4b | Mouvements, règles complètes, historique | À faire |
 | — | Vérification des secrets, dépôt public, GitHub Pages activé | À faire (fin de la phase 4b) |
@@ -81,6 +81,43 @@ Constats :
   - Même adresse par les deux méthodes, dans les deux ordres ; noter le comportement réel.
   - Popup bloquée : le message d'aide s'affiche.
   - Un second compte ne voit pas les données du premier.
+
+**Compte rendu de la phase 3 (2026-11-16)**
+
+Tests exécutés par l'assistant, dans le navigateur intégré, sur `http://localhost:8080/`, avec le compte de test `test-phase3@example.com` (mot de passe dans `.env.test`, fichier ignoré par Git) :
+
+| Test | Résultat |
+|---|---|
+| Création du compte par e-mail et mot de passe | Réussi |
+| Mot de passe de moins de 8 caractères refusé avant l'envoi | Réussi |
+| Seconde inscription avec la même adresse : message « a déjà un compte » | Réussi |
+| Mauvais mot de passe : message générique | Réussi |
+| Déconnexion, puis reconnexion | Réussi |
+| Mot de passe oublié avec une adresse sans compte : même message que pour une adresse existante | Réussi |
+| Texte de confidentialité accessible depuis la connexion | Réussi |
+| Règles non publiées : message « Impossible de charger vos données » | Réussi |
+| Premier lancement : nom vide refusé, puis entrepôt créé (4 champs, date du serveur) | Réussi |
+| Rechargement : l'accueil s'affiche avec l'entrepôt existant, sans repasser par le premier lancement | Réussi |
+| `tests-regles.html` : 14 essais sur 14 (2 autorisés, 12 refusés) | Réussi |
+| Tous les écrans à 360 pixels, sans défilement horizontal, cibles d'au moins 48 pixels | Réussi |
+
+Tests non exécutés :
+
+- Connexion avec Google (popup) et message de popup bloquée : à faire par le propriétaire.
+- Réception réelle de l'e-mail de réinitialisation, en français : à faire par le propriétaire.
+- Même adresse par les deux méthodes, dans les deux ordres : à faire par le propriétaire, avec son compte Google.
+- Second compte réel qui ne voit pas les données du premier : seule la lecture d'un autre identifiant de compte a été testée (refusée).
+- Premier chargement sans Internet sur un nouvel appareil (écran « Connexion Internet nécessaire ») : non simulé.
+- Smartphone : impossible avant la mise en ligne.
+
+Constats :
+
+- La publication des règles a d'abord semblé sans effet : le serveur a continué de tout refuser pendant plusieurs minutes, puis la version 3 est devenue active. Cause non identifiée (délai du serveur ou publication refaite). Le README demande désormais de vérifier la ligne « Version des regles » dans la console.
+- La lecture de test provisoire de la phase 2 est retirée.
+- L'écran de premier lancement ne s'affiche que si le serveur confirme qu'aucun entrepôt n'existe (décision 20).
+- Le texte de confidentialité mentionne la suppression du compte, qui n'existera qu'en phase 7.
+- La liste des devises existe à deux endroits qui doivent rester identiques : `js/entrepot.js` et `firestore.rules`.
+- Le compte de test reste dans Firebase Authentication, avec son entrepôt « Entrepôt de test ». Il resservira en phase 4.
 
 ### Phase 4a : produits et nombres
 - **Résultat :** ajouter, modifier, archiver un produit ; fonction unique de conversion (saisie ↔ entiers) ; bornes sur les quantités et les prix ; règles de validation des produits (types, champs, longueurs).
@@ -154,7 +191,7 @@ Constats :
 Ces points viennent de l'analyse et n'ont pas été testés.
 
 1. *(Vérifié le 2026-11-16.)* Avec la méthode moderne de persistance, un échec n'est pas signalé à l'application. Solution en place : test du stockage local au démarrage (voir le compte rendu de la phase 2).
-2. **Phase 3 :** comportement exact de l'inscription et de la connexion quand l'e-mail existe déjà, avec la protection contre l'énumération activée.
+2. *(Vérifié en partie le 2026-11-16.)* Avec la protection contre l'énumération : l'inscription avec une adresse existante est refusée avec un message précis ; une mauvaise connexion donne un message générique ; « Mot de passe oublié » ne signale jamais d'adresse inconnue. Reste à tester par le propriétaire : le passage d'un compte par mot de passe à Google avec la même adresse.
 3. **Phases 7 et 11 :** nombre maximal d'écritures par lot quand les règles font des vérifications (`get`, `getAfter`). Déterminer la taille de lot sûre.
 
 ## 4. Propositions de l'analyse pas encore validées
@@ -167,7 +204,7 @@ Ces points viennent de l'analyse et n'ont pas été testés.
 - Annoncer une taille raisonnable d'entrepôt (environ 500 produits) à cause du quota de lectures.
 - Facultatif : numéro de version affiché ; regroupement des appuis rapides sur `+1` ; vérification dans les règles que le compte n'est pas en cours de suppression.
 - Peut-on désarchiver un produit ? Un produit archivé compte-t-il dans la valeur du stock ?
-- Liste des devises proposées au premier lancement.
+- *(Tranché : décision 18.)* Liste des devises proposées au premier lancement.
 
 ## 5. Problèmes connus
 
@@ -212,8 +249,9 @@ Règles de conception retenues pour le code :
 
 ## 8. Notes de passation
 
-- **Phase actuelle :** phases 0, 1 et 2 terminées ; phase 3 à faire.
+- **Phase actuelle :** phases 0, 1 et 2 terminées ; phase 3 faite et dans un commit local (tests du propriétaire en attente) ; phase 4a à faire.
+- **Phase 3, journal intermédiaire du 2026-11-16 (blocage résolu depuis : voir le compte rendu de la phase 3, section 2) :** code écrit (`index.html`, `css/style.css`, `js/app.js`, `js/auth.js`, `js/entrepot.js`, `js/messages-erreur.js`, `js/tests-regles.js`, `tests-regles.html`, `firestore.rules` version 3). Testé en local avec le compte de test (identifiants dans `.env.test`, fichier ignoré par Git) : inscription, mot de passe trop court, adresse déjà utilisée, mauvais mot de passe, déconnexion, reconnexion, mot de passe oublié (adresse sans compte), confidentialité, affichage à 360 pixels. **Blocage constaté :** après l'annonce de la publication, le serveur refuse toujours la lecture et la création de `users/{uid}` pour le compte de test (`permission-denied`), alors que le jeton de connexion, le projet et la base `(default)` sont corrects. Les règles actives sur le serveur ne sont donc pas la version 3 : vérifier dans la console (Firestore > Règles) que la ligne 4 indique « Version des regles : 3 (phase 3) » et qu'aucune erreur n'a empêché la publication. **En attente :** le propriétaire doit publier `firestore.rules` dans la console ; ensuite tester le premier lancement et lancer `tests-regles.html`. Restent aussi les tests du propriétaire : connexion Google, e-mail de réinitialisation, même adresse par les deux méthodes.
 - **Travail terminé :** analyse, plan (ce fichier), décisions 8 à 15 dans `DECISIONS.md`.
 - **Fichiers modifiés :** `PLAN.md` (créé), `DECISIONS.md` (décisions ajoutées), `CLAUDE.md` et `DEMARRAGE.md` (alignés sur les décisions 8 à 14). Phase 0 : `.gitignore` et `README.md` créés ; premier commit local fait.
 - **Phase 2 :** fichiers créés : `index.html`, `css/style.css`, `js/app.js`, `js/firebase-config.js`, `js/firebase-init.js`, `firestore.rules`, `demarrer.bat`, `outils/serveur-local.ps1`, `vendor/` (SDK Firebase 13.4.0 corrigé, SheetJS 0.20.3, `LISEZMOI.md`). Commit local fait.
-- **Prochaine action précise :** le propriétaire double-clique sur `demarrer.bat`, vérifie les trois lignes d'état, publie `firestore.rules` dans la console (voir README), puis vérifie et publie les commits dans GitHub Desktop. Ensuite, nouvelle session pour la phase 3 ; avant de coder, expliquer le cas « même adresse e-mail avec les deux méthodes ».
+- **Prochaine action précise :** le propriétaire fait ses trois tests de la phase 3 (Google, e-mail de réinitialisation, même adresse par les deux méthodes), puis vérifie et publie les commits dans GitHub Desktop. Ensuite, phase 4a (produits et conversion des nombres). À trancher au début de la 4a : écouter seulement les produits non archivés, possibilité de désarchiver, produits archivés dans la valeur du stock (section 4).

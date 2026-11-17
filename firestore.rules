@@ -1,8 +1,11 @@
 rules_version = '2';
 
 // Regles de securite de la base Firestore.
-// Phase 2 : tout est refuse. Les autorisations par utilisateur seront
-// ajoutees a partir de la phase 3.
+// Version des regles : 3 (phase 3).
+//
+// Phase 3 : chaque utilisateur accede uniquement a son document users/{uid}.
+// Les produits et les mouvements restent fermes jusqu'a la phase 4.
+// Tout ce qui n'est pas explicitement autorise ici est refuse.
 //
 // Ce fichier n'est pas applique automatiquement : il faut copier son contenu
 // dans la console Firebase (Firestore > Regles), puis cliquer sur "Publier".
@@ -10,8 +13,51 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if false;
+
+    // Vrai si la demande vient de l'utilisateur connecte proprietaire de {uid}.
+    function estProprietaire(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    // Cette liste doit rester identique a celle de js/entrepot.js.
+    function deviseValide(devise) {
+      return devise in ['HTG', 'USD', 'EUR', 'DOP', 'CAD'];
+    }
+
+    // Controle des champs du document users/{uid} : uniquement les quatre
+    // champs prevus, avec le bon type et la bonne longueur.
+    function entrepotValide(d) {
+      return d.keys().hasOnly(['nomEntrepot', 'devise', 'createdAt', 'suppressionDemandee'])
+        && d.keys().hasAll(['nomEntrepot', 'devise', 'createdAt', 'suppressionDemandee'])
+        && d.nomEntrepot is string
+        && d.nomEntrepot.size() >= 1
+        && d.nomEntrepot.size() <= 100
+        && d.devise is string
+        && deviseValide(d.devise)
+        && d.createdAt is timestamp
+        && d.suppressionDemandee is bool;
+    }
+
+    match /users/{uid} {
+      // Lecture de son propre document uniquement.
+      allow get: if estProprietaire(uid);
+
+      // Creation au premier lancement : la date est celle du serveur et la
+      // suppression n'est pas demandee.
+      allow create: if estProprietaire(uid)
+        && entrepotValide(request.resource.data)
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.suppressionDemandee == false;
+
+      // Modification : le nom et la devise peuvent changer. La date de
+      // creation et la demande de suppression ne changent pas ici
+      // (la suppression du compte sera ouverte en phase 7).
+      allow update: if estProprietaire(uid)
+        && entrepotValide(request.resource.data)
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.suppressionDemandee == resource.data.suppressionDemandee;
+
+      // Suppression : refusee pour l'instant (phase 7).
     }
   }
 }

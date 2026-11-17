@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Test des règles de sécurité</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <header class="entete">
+    <h1>Test des règles de sécurité</h1>
+  </header>
+
+  <main>
+    <p class="avertissement">
+      Page réservée aux tests. Utilisez un compte de test, jamais votre vrai
+      compte : ces essais tentent volontairement des opérations interdites.
+    </p>
+
+    <p>
+      Cette page vérifie que les règles publiées dans la console Firebase
+      autorisent ce qui doit l'être et refusent le reste. Elle a besoin
+      d'Internet.
+    </p>
+
+    <dl class="fiche">
+      <div>
+        <dt>Compte utilisé</dt>
+        <dd id="compte">Vérification…</dd>
+      </div>
+    </dl>
+
+    <p id="message" class="message-erreur" role="alert" hidden></p>
+
+    <button type="button" id="bouton-lancer" class="bouton bouton-principal" disabled>Lancer les tests</button>
+
+    <p id="bilan" class="message-info" role="status" hidden></p>
+
+    <table class="resultats">
+      <thead>
+        <tr>
+          <th scope="col">Essai</th>
+          <th scope="col">Attendu</th>
+          <th scope="col">Résultat</th>
+        </tr>
+      </thead>
+      <tbody id="resultats"></tbody>
+    </table>
+
+    <p><a href="./">Retour à l'application</a></p>
+  </main>
+
+  <script type="module" src="./js/tests-regles.js"></script>
+</body>
+</html>
