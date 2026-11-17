@@ -181,8 +181,20 @@
       </p>
 
       <p id="erreur-accueil" class="message-erreur" role="alert" hidden></p>
+      <p id="info-accueil" class="message-info" role="status" hidden></p>
+
+      <!-- Opérations que le serveur a refusées (voir js/operations-en-attente.js) -->
+      <section id="operations-refusees" class="bloc-refus" role="alert" hidden>
+        <h3>Opérations refusées par le serveur</h3>
+        <p>
+          Ces opérations n'ont pas été enregistrées : le stock et l'historique
+          n'en tiennent pas compte. Refaites-les si elles sont toujours valables.
+        </p>
+        <ul id="liste-operations-refusees" class="liste-produits"></ul>
+      </section>
 
       <button type="button" id="bouton-ajouter-produit" class="bouton bouton-principal">Ajouter un produit</button>
+      <button type="button" id="bouton-historique" class="bouton bouton-secondaire">Historique des mouvements</button>
 
       <h3>Produits</h3>
       <p id="produits-vide" class="aide" hidden>Aucun produit pour l'instant.</p>
@@ -202,6 +214,16 @@
         <label for="produit-unite">Unité</label>
         <input id="produit-unite" type="text" autocomplete="off" autocapitalize="none" aria-describedby="aide-produit-unite">
         <p id="aide-produit-unite" class="aide-champ">Exemples : sac, kg, pièce, carton.</p>
+
+        <div id="produit-stock-bloc">
+          <label for="produit-stock">Stock de départ</label>
+          <input id="produit-stock" type="text" inputmode="decimal" autocomplete="off" aria-describedby="aide-produit-stock note-produit-stock">
+          <p id="aide-produit-stock" class="aide-champ" aria-live="polite"></p>
+          <p id="note-produit-stock" class="aide-champ">
+            Laissez 0 si le produit n'est pas encore en stock. Un stock de départ
+            est noté dans l'historique comme une entrée « Stock initial ».
+          </p>
+        </div>
 
         <label for="produit-seuil">Seuil d'alerte</label>
         <input id="produit-seuil" type="text" inputmode="decimal" autocomplete="off" aria-describedby="aide-produit-seuil">
@@ -225,6 +247,76 @@
         <button type="button" id="bouton-annuler-produit" class="bouton bouton-secondaire">Annuler</button>
         <button type="button" id="bouton-archiver-produit" class="bouton bouton-danger" hidden>Archiver ce produit</button>
       </form>
+    </section>
+
+    <!-- Mouvement de stock : entrée, sortie ou ajustement -->
+    <section id="vue-mouvement" data-vue hidden>
+      <h2>Mouvement de stock</h2>
+
+      <dl class="fiche">
+        <div>
+          <dt>Produit</dt>
+          <dd id="mouvement-produit"></dd>
+        </div>
+        <div>
+          <dt>Stock actuel</dt>
+          <dd id="mouvement-stock"></dd>
+        </div>
+      </dl>
+
+      <form id="formulaire-mouvement" novalidate>
+        <fieldset class="choix-type">
+          <legend>Type de mouvement</legend>
+          <label class="choix">
+            <input type="radio" name="mouvement-type" id="mouvement-type-entree" value="entree" checked>
+            <span>Entrée <span class="choix-detail">(le stock augmente)</span></span>
+          </label>
+          <label class="choix">
+            <input type="radio" name="mouvement-type" id="mouvement-type-sortie" value="sortie">
+            <span>Sortie <span class="choix-detail">(le stock diminue)</span></span>
+          </label>
+          <label class="choix">
+            <input type="radio" name="mouvement-type" id="mouvement-type-ajustement" value="ajustement">
+            <span>Ajustement <span class="choix-detail">(corriger une erreur)</span></span>
+          </label>
+        </fieldset>
+
+        <label for="mouvement-quantite" id="mouvement-libelle-quantite">Quantité</label>
+        <input id="mouvement-quantite" type="text" inputmode="text" autocomplete="off" aria-describedby="mouvement-exemple mouvement-apercu">
+        <p id="mouvement-exemple" class="aide-champ"></p>
+        <p id="mouvement-apercu" class="aide-champ" aria-live="polite"></p>
+        <p id="mouvement-alerte-negatif" class="avertissement" role="alert" hidden></p>
+
+        <label for="mouvement-motif">Motif (facultatif)</label>
+        <input id="mouvement-motif" type="text" autocomplete="off">
+
+        <p id="erreur-mouvement" class="message-erreur" role="alert" hidden></p>
+
+        <button type="submit" id="bouton-enregistrer-mouvement" class="bouton bouton-principal">Enregistrer le mouvement</button>
+        <button type="button" id="bouton-annuler-mouvement" class="bouton bouton-secondaire">Annuler</button>
+      </form>
+
+      <p class="aide">
+        Un mouvement enregistré ne peut plus être modifié ni supprimé. Une
+        erreur se corrige par un mouvement d'ajustement.
+      </p>
+    </section>
+
+    <!-- Historique des mouvements -->
+    <section id="vue-historique" data-vue hidden>
+      <h2>Historique des mouvements</h2>
+      <button type="button" id="bouton-retour-historique" class="bouton bouton-secondaire">Retour aux produits</button>
+
+      <p id="erreur-historique" class="message-erreur" role="alert" hidden></p>
+      <p id="historique-vide" class="aide" hidden>Aucun mouvement pour l'instant.</p>
+
+      <ul id="liste-historique" class="liste-produits"></ul>
+
+      <p id="historique-partiel" class="avertissement" hidden>
+        Sans Internet, la suite de l'historique vient de la mémoire de
+        l'appareil : elle peut être incomplète.
+      </p>
+      <button type="button" id="bouton-voir-plus" class="bouton bouton-secondaire" hidden>Voir plus</button>
     </section>
 
     <!-- Problème : attente d'Internet ou erreur du serveur -->

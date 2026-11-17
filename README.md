@@ -10,9 +10,27 @@ Le projet est en cours de construction. L'avancement est suivi dans `PLAN.md`.
 - Demander un nouveau mot de passe (« Mot de passe oublié »).
 - Créer son entrepôt au premier lancement : nom et devise.
 - Afficher le texte de confidentialité depuis l'écran de connexion.
-- Ajouter, modifier et archiver un produit : nom, unité, seuil d'alerte, prix d'achat.
+- Ajouter, modifier et archiver un produit : nom, unité, seuil d'alerte, prix d'achat, stock de départ.
+- Enregistrer des mouvements de stock : entrée, sortie, ajustement, avec un motif facultatif.
+- Consulter l'historique : les 50 derniers mouvements, puis « Voir plus ».
+- Signaler les opérations que le serveur a refusées, même après fermeture de l'application.
 
-Un produit est créé avec un stock de 0. Les entrées et sorties de stock arrivent à la prochaine étape.
+## Mouvements de stock
+
+- La quantité d'un produit ne change que par un mouvement. Chaque mouvement laisse une ligne dans l'historique.
+- **Entrée** et **Sortie** : saisir la quantité sans signe. **Ajustement** : saisir la correction avec son signe (`-2,5` ou `+3`).
+- Un mouvement enregistré ne peut être ni modifié ni supprimé. Une erreur se corrige par un mouvement d'ajustement.
+- Un stock peut devenir négatif. L'application avertit avant l'enregistrement et affiche ensuite « Stock négatif : à vérifier ». Avec plusieurs appareils hors ligne, elle ne peut pas l'empêcher.
+- Un mouvement apparaît tout de suite, avec la mention « En attente de synchronisation » tant que le serveur ne l'a pas confirmé.
+- L'historique est rangé selon l'heure de réception par le serveur. L'heure indiquée « Fait le » est celle de l'appareil au moment de l'opération ; si l'écart dépasse 5 minutes, les deux sont affichées.
+
+### Comment un mouvement est protégé
+
+Chaque opération part dans un seul envoi qui contient le changement de quantité et la ligne d'historique. Le serveur vérifie que le mouvement est nouveau, que le produit le désigne, et que la quantité a changé exactement de la valeur du mouvement. Sinon, il refuse tout. Si le même envoi arrive deux fois après une coupure, le second est refusé : rien n'est compté deux fois.
+
+### Opérations refusées
+
+Chaque mouvement et chaque création de produit est noté sur l'appareil jusqu'à la confirmation du serveur. Si le serveur refuse, un bloc rouge « Opérations refusées par le serveur » décrit l'opération, y compris à la réouverture de l'application. Le bouton « J'ai noté » le fait disparaître. Les simples modifications de fiche (nom, prix, seuil, archivage) ne sont pas suivies de cette façon.
 
 ## Saisie des nombres
 
@@ -56,7 +74,7 @@ Tant que les règles publiées sont en retard sur le fichier, l'application affi
 
 À refaire après chaque publication des règles.
 
-Ces essais créent dans le compte de test un produit « Produit d'essai (règles) ». Il est archivé à la fin de chaque passage et n'apparaît donc pas dans la liste.
+Ces essais créent dans le compte de test deux produits « Produit d'essai (règles) ». Ils sont archivés à la fin de chaque passage et n'apparaissent donc pas dans la liste. Chaque passage ajoute aussi trois mouvements à l'historique du compte de test (impossibles à supprimer, par conception) ; leur somme est nulle. Un passage dure environ une minute.
 
 ## Tester les conversions de nombres
 
@@ -99,4 +117,6 @@ Tous les chemins sont relatifs : l'application peut être placée chez n'importe
 - **Archivage définitif :** un produit archivé ne peut pas être remis dans la liste. Il reste dans la base avec son historique.
 - **Noms en double :** le formulaire refuse deux produits actifs du même nom, mais deux appareils hors ligne peuvent chacun créer le même nom avant de se synchroniser.
 - **Produit modifié sur deux appareils :** pour le nom, l'unité, le seuil et le prix, la dernière modification arrivée au serveur l'emporte.
-- **Opération refusée après fermeture :** si un ajout fait hors ligne est refusé par le serveur alors que l'application est fermée, aucun message ne s'affiche pour l'instant (corrigé à la prochaine étape).
+- **Suivi des opérations refusées :** la liste des opérations en attente est gardée sur l'appareil. Si le stockage du navigateur est effacé ou bloqué, un refus du serveur peut passer inaperçu.
+- **Ajustement d'inventaire :** la correction est saisie à la main. Si un autre appareil a modifié le stock entre-temps, le chiffre affiché au moment de la saisie n'était peut-être plus à jour.
+- **Quota gratuit :** chaque mouvement coûte deux écritures et quelques lectures de contrôle. La limite gratuite est de 20 000 écritures et 50 000 lectures par jour pour tous les comptes réunis ; si elle est atteinte, l'application se bloque jusqu'au lendemain, sans perte de données.

@@ -13,7 +13,7 @@ Dossier de travail : `C:\GitHub\Inventory Management\inventorymanagement` (dép�
 | 2 | Structure, Firebase, persistance hors ligne | **Terminée le 2026-11-16** (deux vérifications du propriétaire restent à faire) |
 | 3 | Connexion, premier lancement, confidentialité | **Faite le 2026-11-16** ; trois tests du propriétaire restent à faire (Google, e-mail de réinitialisation, même adresse) |
 | 4a | Produits et conversion des nombres | **Terminée le 2026-11-16** |
-| 4b | Mouvements, règles complètes, historique | À faire |
+| 4b | Mouvements, règles complètes, historique | **Terminée le 2026-11-16** (tests hors ligne et à deux appareils non faits) |
 | — | Vérification des secrets, dépôt public, GitHub Pages activé | À faire (fin de la phase 4b) |
 | 5 | Tableau de bord | À faire |
 | 6 | Formulaires, historique lisible, paramètres | À faire |
@@ -176,6 +176,50 @@ Constats :
   - mouvement modifié ou supprimé : refusé ;
   - accès aux données d'un autre compte : refusé.
 
+**Compte rendu de la phase 4b (2026-11-16)**
+
+Tests exécutés par l'assistant, dans le navigateur intégré, sur `http://localhost:8080/`, avec le compte de test et les règles version 5 publiées :
+
+| Test | Résultat |
+|---|---|
+| `tests-regles.html` : 70 essais sur 70 | Réussi |
+| Lot complet (entrée, sortie, ajustement) accepté, y compris sur un produit archivé | Réussi |
+| Quantité augmentée exactement de la valeur du mouvement (lecture sur le serveur) | Réussi |
+| Même numéro de mouvement renvoyé : refusé, quantité non comptée deux fois | Réussi |
+| Mouvement sans changement de stock, changement sans mouvement, chiffres discordants, ancien mouvement réutilisé, autre numéro désigné : refusés | Réussi |
+| Mouvement modifié ou supprimé : refusé | Réussi |
+| Valeur 0, valeur à virgule, type inconnu ou incohérent, motif trop long, autre auteur, heure serveur choisie par l'appareil, champ inconnu : refusés | Réussi |
+| Produit créé avec stock de départ et mouvement d'entrée : accepté ; sans mouvement, avec chiffres discordants ou négatif : refusé | Réussi |
+| Application : entrée +10, sortie -2,5, ajustement -0,5 sur un produit à 0 : quantité 7, égale à la somme des mouvements sur le serveur | Réussi |
+| Affichage immédiat « En attente de synchronisation », puis confirmation | Réussi |
+| Produit « Ciment » créé avec un stock de départ de 12,5 : mouvement « Stock initial » présent | Réussi |
+| Sortie de 15 sur 12,5 : avertissement avant l'envoi, puis « Stock négatif : à vérifier » | Réussi |
+| Refus simulé : bloc « Opérations refusées » affiché, bouton « J'ai noté » | Réussi |
+| Opération déjà enregistrée renvoyée : message « était déjà enregistrée », quantité inchangée | Réussi |
+| Réouverture avec une opération notée « en attente » mais absente du serveur : signalée comme refusée ; une autre, présente sur le serveur : retirée sans message | Réussi |
+| Historique : ordre, motif, heure ; 56 mouvements ajoutés, « Voir plus » passe de 50 à 65 lignes, sans doublon | Réussi |
+| 56 mouvements alternés +1 / -1 : la quantité revient exactement à 7 | Réussi |
+| Formulaire de mouvement à 360 pixels, cibles d'au moins 48 pixels | Réussi |
+
+Tests non exécutés :
+
+- Mouvement fait réellement hors ligne (mode avion), puis retour en ligne.
+- Coupure de connexion entre l'envoi et la réponse (le renvoi automatique par Firebase n'a été que simulé).
+- Deux appareils modifiant le même produit.
+- « Voir plus » sans Internet (avertissement d'historique incomplet).
+- Affichage des deux heures quand l'écart dépasse 5 minutes (aucun mouvement dans ce cas).
+- Smartphone : impossible avant la mise en ligne.
+
+Constats :
+
+- **Point incertain n° 1 levé :** les règles voient bien la quantité après l'addition faite par le serveur (`increment`), dans `request.resource` comme dans `getAfter()`.
+- **Point à vérifier n° 3 :** les lots de l'application (2 écritures, 9 vérifications au plus) passent sous la limite de 20 vérifications par lot. La taille de lot sûre pour la suppression du compte reste à déterminer en phase 7.
+- Les refus et le cas « déjà enregistrée » ont été provoqués en appelant les fonctions de l'application avec des données fabriquées, pas par une vraie coupure de réseau.
+- L'historique du compte de test contient maintenant 65 mouvements, dont 56 « Essai du bouton Voir plus ». Ils ne peuvent pas être supprimés.
+- Compte de test : « Riz 25 kg (Tchako) » à 7 sac, « Ciment » à -2,5 sac, trois produits archivés.
+- Le suivi des opérations utilise `localStorage`, par compte (clé `operations-en-attente:{uid}`).
+- Un passage complet de `tests-regles.html` dure environ une minute.
+
 ### Étape intermédiaire : dépôt public et GitHub Pages
 - **Résultat :** recherche de secrets dans les fichiers et tout l'historique Git ; règles publiées ; dépôt passé en public ; GitHub Pages activé ; `saintfranckinder.github.io` dans les domaines autorisés de Firebase Authentication.
 - **Test :** le lien s'ouvre sur le smartphone et la connexion fonctionne.
@@ -231,7 +275,7 @@ Ces points viennent de l'analyse et n'ont pas été testés.
 
 À trancher avec le propriétaire au début de la phase concernée.
 
-- Trier l'historique par `dateServeur` et afficher `dateAppareil` comme « fait le » (phase 4b).
+- *(Tranché : décision 32.)* Trier l'historique par `dateServeur` et afficher `dateAppareil` comme « fait le » (phase 4b).
 - *(Tranché : décision 22.)* N'écouter en temps réel que les produits non archivés (phase 4a).
 - Filtre par produit dans l'historique : prévu par `DEMARRAGE.md` (phase 6) mais absent de `CLAUDE.md` ; il exige un index à créer dans la console.
 - Annoncer une taille raisonnable d'entrepôt (environ 500 produits) à cause du quota de lectures.
@@ -283,10 +327,11 @@ Règles de conception retenues pour le code :
 
 ## 8. Notes de passation
 
-- **Phase actuelle :** phases 0, 1 et 2 terminées ; phase 3 faite et dans un commit local (tests du propriétaire en attente) ; phase 4a terminée et dans un commit local ; phase 4b à faire.
+- **Phase actuelle :** phases 0, 1 et 2 terminées ; phase 3 faite et dans un commit local (tests du propriétaire en attente) ; phase 4a terminée et dans un commit local ; phase 4b terminée et dans un commit local ; étape « dépôt public » à faire avant la phase 5.
+- **Phase 4b, journal intermédiaire du 2026-11-16 (terminée depuis : voir le compte rendu de la phase 4b, section 2) :** code écrit (`js/mouvements.js`, `js/operations-en-attente.js`, `js/ecran-mouvements.js`, `js/produits.js`, `js/ecran-produits.js`, `js/app.js`, `index.html`, `css/style.css`, `js/tests-regles.js`, `firestore.rules` version 5). Formulaire de mouvement vérifié en local (types, aperçu, alerte de stock négatif, contrôles). **En attente :** publication de `firestore.rules` version 5 par le propriétaire ; ensuite lancer `tests-regles.html` (preuve du lien produit-mouvement, point incertain n° 1 : les règles voient-elles la quantité après l'addition du serveur ?), tester entrée, sortie, ajustement, stock de départ, historique et opération refusée.
 - **Phase 4a, journal intermédiaire du 2026-11-16 (terminée depuis : voir le compte rendu de la phase 4a, section 2) :** code écrit (`js/nombres.js`, `js/tests-nombres.js`, `tests-nombres.html`, `js/interface.js`, `js/produits.js`, `js/ecran-produits.js`, `js/app.js`, `index.html`, `css/style.css`, `js/tests-regles.js`, `firestore.rules` version 4). `tests-nombres.html` : 98 essais sur 98. Formulaire de produit vérifié en local (contrôles, aides de saisie, 360 pixels). **En attente :** publication de `firestore.rules` version 4 par le propriétaire ; ensuite ajouter, modifier, archiver un produit avec le compte de test et relancer `tests-regles.html`.
 - **Phase 3, journal intermédiaire du 2026-11-16 (blocage résolu depuis : voir le compte rendu de la phase 3, section 2) :** code écrit (`index.html`, `css/style.css`, `js/app.js`, `js/auth.js`, `js/entrepot.js`, `js/messages-erreur.js`, `js/tests-regles.js`, `tests-regles.html`, `firestore.rules` version 3). Testé en local avec le compte de test (identifiants dans `.env.test`, fichier ignoré par Git) : inscription, mot de passe trop court, adresse déjà utilisée, mauvais mot de passe, déconnexion, reconnexion, mot de passe oublié (adresse sans compte), confidentialité, affichage à 360 pixels. **Blocage constaté :** après l'annonce de la publication, le serveur refuse toujours la lecture et la création de `users/{uid}` pour le compte de test (`permission-denied`), alors que le jeton de connexion, le projet et la base `(default)` sont corrects. Les règles actives sur le serveur ne sont donc pas la version 3 : vérifier dans la console (Firestore > Règles) que la ligne 4 indique « Version des regles : 3 (phase 3) » et qu'aucune erreur n'a empêché la publication. **En attente :** le propriétaire doit publier `firestore.rules` dans la console ; ensuite tester le premier lancement et lancer `tests-regles.html`. Restent aussi les tests du propriétaire : connexion Google, e-mail de réinitialisation, même adresse par les deux méthodes.
 - **Travail terminé :** analyse, plan (ce fichier), décisions 8 à 15 dans `DECISIONS.md`.
 - **Fichiers modifiés :** `PLAN.md` (créé), `DECISIONS.md` (décisions ajoutées), `CLAUDE.md` et `DEMARRAGE.md` (alignés sur les décisions 8 à 14). Phase 0 : `.gitignore` et `README.md` créés ; premier commit local fait.
 - **Phase 2 :** fichiers créés : `index.html`, `css/style.css`, `js/app.js`, `js/firebase-config.js`, `js/firebase-init.js`, `firestore.rules`, `demarrer.bat`, `outils/serveur-local.ps1`, `vendor/` (SDK Firebase 13.4.0 corrigé, SheetJS 0.20.3, `LISEZMOI.md`). Commit local fait.
-- **Prochaine action précise :** le propriétaire fait ses trois tests de la phase 3 (Google, e-mail de réinitialisation, même adresse par les deux méthodes), puis vérifie et publie les commits dans GitHub Desktop. Ensuite, phase 4b (mouvements, règles du lien produit-mouvement, liste locale des opérations non confirmées, historique). Avant de coder la 4b : expliquer simplement au propriétaire comment les règles vérifient qu'un mouvement correspond à la modification de stock. À trancher au début de la 4b : tri de l'historique par `dateServeur` (section 4). À la fin de la 4b : recherche de secrets, puis dépôt public et GitHub Pages (décision 10).
+- **Prochaine action précise :** le propriétaire fait ses trois tests de la phase 3 (Google, e-mail de réinitialisation, même adresse par les deux méthodes), puis vérifie et publie les commits dans GitHub Desktop. Ensuite, étape « dépôt public » (décision 10), avec l'accord du propriétaire : recherche de secrets dans les fichiers et tout l'historique Git, puis le propriétaire publie les commits, passe le dépôt en public, active GitHub Pages et ajoute `saintfranckinder.github.io` aux domaines autorisés de Firebase Authentication. Premier test sur smartphone à ce moment. Ensuite, phase 5 (tableau de bord : recherche, valeur du stock, boutons `+1` / `-1`, alertes `Stock bas` et `Rupture`).

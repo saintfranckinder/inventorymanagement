@@ -2,8 +2,16 @@
 // L'affichage est volontairement sobre : le tableau de bord complet (alertes,
 // valeur du stock, boutons +1 / -1) arrive en phase 5.
 
+import {
+  formaterVariation,
+  mettreAJourProduitDuFormulaire,
+  ouvrirFormulaireMouvement,
+  signalerResultatOperation
+} from './ecran-mouvements.js';
 import { afficherMessage, afficherVue, effacerMessages, element, vueActuelle } from './interface.js';
 import { messageErreur } from './messages-erreur.js';
+import { nouvelIdMouvement } from './mouvements.js';
+import { suivreOperation } from './operations-en-attente.js';
 import {
   DECIMALES_PRIX,
   DECIMALES_QUANTITE,
@@ -21,6 +29,7 @@ import {
   ajouterProduit,
   archiverProduit,
   modifierProduit,
+  nouvelIdProduit,
   surveillerProduits
 } from './produits.js';
 
@@ -60,12 +69,28 @@ function afficherListe() {
       ligneDetail('Prix d’achat', formaterMontant(produit.prixAchatCentimes, contexte.devise))
     );
 
+    if (produit.quantiteMilliemes < 0) {
+      // Signalé par un texte, pas seulement par une couleur.
+      const negatif = document.createElement('p');
+      negatif.className = 'produit-negatif';
+      negatif.textContent = 'Stock négatif : à vérifier';
+      article.append(negatif);
+    }
+
     if (produit.enAttente) {
       const attente = document.createElement('p');
       attente.className = 'produit-attente';
       attente.textContent = 'En attente de synchronisation';
       article.append(attente);
     }
+
+    const boutonMouvement = document.createElement('button');
+    boutonMouvement.type = 'button';
+    boutonMouvement.className = 'bouton bouton-principal';
+    boutonMouvement.textContent = 'Mouvement de stock';
+    boutonMouvement.setAttribute('aria-label', `Mouvement de stock pour ${produit.nom}`);
+    boutonMouvement.addEventListener('click', () => ouvrirFormulaireMouvement(produit));
+    article.append(boutonMouvement);
 
     const bouton = document.createElement('button');
     bouton.type = 'button';
@@ -82,6 +107,7 @@ function afficherListe() {
 function surProduits(etat) {
   produits = etat.produits.slice().sort((a, b) => COMPARATEUR.compare(a.nom, b.nom));
   afficherListe();
+  mettreAJourProduitDuFormulaire(produits);
   // Si le produit ouvert dans le formulaire vient d'être archivé ailleurs,
   // revenir à la liste.
   if (vueActuelle() === 'vue-produit' && idProduitEnCours !== null &&
@@ -139,6 +165,10 @@ function mettreAJourAide(idChamp, idAide, analyser, afficher, sujet, decimales) 
 
 function mettreAJourAides() {
   mettreAJourAide(
+    'produit-stock', 'aide-produit-stock',
+    analyserQuantite, formaterQuantite, 'Stock de départ', DECIMALES_QUANTITE
+  );
+  mettreAJourAide(
     'produit-seuil', 'aide-produit-seuil',
     analyserQuantite, formaterQuantite, 'Seuil d’alerte', DECIMALES_QUANTITE
   );
@@ -160,11 +190,13 @@ function ouvrirFormulaire(idProduit) {
   element('produit-seuil').value = modification ? quantitePourSaisie(produit.seuilAlerteMilliemes) : '0';
   element('produit-prix').value = modification ? prixPourSaisie(produit.prixAchatCentimes) : '0';
 
+  element('produit-stock').value = '0';
+  element('produit-stock-bloc').hidden = modification;
   element('produit-quantite-bloc').hidden = !modification;
   element('bouton-archiver-produit').hidden = !modification;
   element('produit-note-quantite').textContent = modification
-    ? 'La quantité ne se modifie pas ici : elle changera par des mouvements de stock (prochaine étape).'
-    : 'Le produit est créé avec un stock de 0. Les entrées de stock arrivent à la prochaine étape.';
+    ? 'La quantité ne se modifie pas ici. Utilisez « Mouvement de stock » dans la liste des produits.'
+    : '';
 
   afficherVue('vue-produit');
   effacerMessages();
@@ -216,25 +248,68 @@ function lireFormulaire() {
     return null;
   }
 
+  // Le stock de départ n'existe qu'à la création d'un produit.
+  let stockInitialMilliemes = 0;
+  if (idProduitEnCours === null) {
+    const stock = analyserQuantite(element('produit-stock').value);
+    if (!stock.ok) {
+      afficherMessage('erreur-produit', messageNombreRefuse(stock, 'Stock de départ', DECIMALES_QUANTITE));
+      return null;
+    }
+    stockInitialMilliemes = stock.valeur;
+  }
+
   return {
-    nom,
-    unite,
-    seuilAlerteMilliemes: seuil.valeur,
-    prixAchatCentimes: prix.valeur
+    stockInitialMilliemes,
+    fiche: {
+      nom,
+      unite,
+      seuilAlerteMilliemes: seuil.valeur,
+      prixAchatCentimes: prix.valeur
+    }
   };
+}
+
+// Ajoute un produit. Avec un stock de départ, le produit et son mouvement
+// d'entrée initial partent dans le même lot.
+function ajouterLeProduit(fiche, stockInitialMilliemes) {
+  // Les identifiants et l'heure sont fixés une seule fois, avant l'envoi.
+  const creation = {
+    idProduit: nouvelIdProduit(contexte.db, contexte.uid),
+    fiche,
+    stockInitialMilliemes,
+    idMouvement: stockInitialMilliemes > 0 ? nouvelIdMouvement(contexte.db, contexte.uid) : null,
+    dateAppareil: new Date()
+  };
+  const libelle = `Ajout du produit « ${fiche.nom} »` + (stockInitialMilliemes > 0
+    ? ` avec un stock de départ de ${formaterVariation(stockInitialMilliemes)} ${fiche.unite}`
+    : '');
+
+  suivreOperation(
+    contexte.db,
+    contexte.uid,
+    {
+      id: creation.idProduit,
+      chemin: ['users', contexte.uid, 'products', creation.idProduit],
+      libelle,
+      dateAppareil: creation.dateAppareil
+    },
+    ajouterProduit(contexte.db, contexte.uid, creation),
+    (resultat) => signalerResultatOperation(resultat, libelle)
+  );
 }
 
 function enregistrer() {
   effacerMessages();
-  const fiche = lireFormulaire();
-  if (!fiche) {
+  const saisie = lireFormulaire();
+  if (!saisie) {
     return;
   }
+  const fiche = saisie.fiche;
   // Pas d'attente : la liste se met à jour dès l'enregistrement local, même
   // sans Internet. Un refus du serveur est signalé sur l'écran des produits.
   if (idProduitEnCours === null) {
-    ajouterProduit(contexte.db, contexte.uid, fiche)
-      .catch((erreur) => signalerRefus(`L’ajout de « ${fiche.nom} »`, erreur));
+    ajouterLeProduit(fiche, saisie.stockInitialMilliemes);
   } else {
     modifierProduit(contexte.db, contexte.uid, idProduitEnCours, fiche)
       .catch((erreur) => signalerRefus(`La modification de « ${fiche.nom} »`, erreur));
@@ -275,6 +350,7 @@ export function brancherEcranProduits() {
     evenement.preventDefault();
     enregistrer();
   });
+  element('produit-stock').addEventListener('input', mettreAJourAides);
   element('produit-seuil').addEventListener('input', mettreAJourAides);
   element('produit-prix').addEventListener('input', mettreAJourAides);
   // Dès qu'un champ est corrigé, l'ancien message d'erreur disparaît.

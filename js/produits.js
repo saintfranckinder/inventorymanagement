@@ -3,9 +3,9 @@
 // seuilAlerteMilliemes, prixAchatCentimes, archive, dernierMouvementId,
 // createdAt, updatedAt.
 //
-// Règle essentielle : ce fichier ne modifie JAMAIS quantiteMilliemes ni
-// dernierMouvementId. Toute variation de quantité passe par un mouvement de
-// stock (phase 4b).
+// Règle essentielle : après sa création, la quantité d'un produit ne change
+// JAMAIS depuis ce fichier. Toute variation passe par un mouvement de stock
+// (js/mouvements.js).
 
 import {
   collection,
@@ -15,14 +15,22 @@ import {
   serverTimestamp,
   setDoc,
   updateDoc,
-  where
+  where,
+  writeBatch
 } from '../vendor/firebase-firestore.js';
+import { contenuMouvement, referenceMouvement } from './mouvements.js';
 
 export const LONGUEUR_MAX_NOM_PRODUIT = 100;
 export const LONGUEUR_MAX_UNITE = 30;
+export const MOTIF_STOCK_INITIAL = 'Stock initial';
 
 function collectionProduits(db, uid) {
   return collection(db, 'users', uid, 'products');
+}
+
+// Crée un identifiant de produit, sans rien envoyer.
+export function nouvelIdProduit(db, uid) {
+  return doc(collectionProduits(db, uid)).id;
 }
 
 // Écoute les produits NON archivés du compte (moins de lectures facturées).
@@ -48,24 +56,48 @@ export function surveillerProduits(db, uid, rappel, surErreur) {
   );
 }
 
-// Ajoute un produit avec un stock de 0 et sans mouvement. Le stock initial
-// s'enregistre par un mouvement d'entrée (phase 4b).
+// Ajoute un produit.
+// `creation` : { idProduit, fiche, stockInitialMilliemes, idMouvement, dateAppareil }
+//   - stock de départ à 0 : le produit seul, sans mouvement ;
+//   - stock de départ positif : un lot unique crée le produit ET son
+//     mouvement d'entrée initial (CLAUDE.md, section 6, règle 8).
 // Les promesses de ce fichier ne se terminent que lorsque le serveur a
 // répondu : ne pas les attendre pour mettre l'écran à jour, mais traiter leur
 // échec (refus du serveur).
-export function ajouterProduit(db, uid, fiche) {
-  const reference = doc(collectionProduits(db, uid));
-  return setDoc(reference, {
-    nom: fiche.nom,
-    unite: fiche.unite,
-    quantiteMilliemes: 0,
-    seuilAlerteMilliemes: fiche.seuilAlerteMilliemes,
-    prixAchatCentimes: fiche.prixAchatCentimes,
+export function ajouterProduit(db, uid, creation) {
+  const reference = doc(collectionProduits(db, uid), creation.idProduit);
+  const avecStock = creation.stockInitialMilliemes > 0;
+  const contenu = {
+    nom: creation.fiche.nom,
+    unite: creation.fiche.unite,
+    quantiteMilliemes: avecStock ? creation.stockInitialMilliemes : 0,
+    seuilAlerteMilliemes: creation.fiche.seuilAlerteMilliemes,
+    prixAchatCentimes: creation.fiche.prixAchatCentimes,
     archive: false,
-    dernierMouvementId: null,
+    dernierMouvementId: avecStock ? creation.idMouvement : null,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp()
-  });
+  };
+
+  if (!avecStock) {
+    return setDoc(reference, contenu);
+  }
+
+  const lot = writeBatch(db);
+  lot.set(reference, contenu);
+  lot.set(
+    referenceMouvement(db, uid, creation.idMouvement),
+    contenuMouvement(uid, {
+      idProduit: creation.idProduit,
+      nomProduit: creation.fiche.nom,
+      unite: creation.fiche.unite,
+      deltaMilliemes: creation.stockInitialMilliemes,
+      type: 'entree',
+      motif: MOTIF_STOCK_INITIAL,
+      dateAppareil: creation.dateAppareil
+    })
+  );
+  return lot.commit();
 }
 
 // Modifie uniquement la fiche : nom, unité, seuil, prix. Seuls ces champs

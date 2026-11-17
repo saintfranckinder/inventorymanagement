@@ -4,30 +4,37 @@
 //
 // Phase 3 : isolation des comptes et contrôle des champs de users/{uid}.
 // Phase 4a : produits (fiche modifiable, quantité intouchable).
-// Les essais sur les mouvements seront ajoutés en phase 4b.
+// Phase 4b : mouvements et lien produit-mouvement.
 //
-// Le compte de test garde un produit « Produit d'essai (règles) », archivé à
-// la fin de chaque passage : il n'apparaît donc pas dans la liste.
+// Le compte de test garde deux produits d'essai, archivés à la fin de chaque
+// passage : ils n'apparaissent donc pas dans la liste. Chaque passage ajoute
+// trois mouvements à l'historique du compte de test (un mouvement ne peut pas
+// être supprimé) ; leur somme est nulle.
 
 import { onAuthStateChanged } from '../vendor/firebase-auth.js';
 import {
+  Timestamp,
   collection,
   deleteDoc,
   doc,
   getDocFromServer,
   getDocsFromServer,
   increment,
+  limit,
+  orderBy,
   query,
   serverTimestamp,
   setDoc,
   updateDoc,
-  where
+  where,
+  writeBatch
 } from '../vendor/firebase-firestore.js';
 import { demarrerFirebase } from './firebase-init.js';
 
 const DELAI_MAX_MS = 15000;
 const AUTRE_COMPTE = 'compte-de-quelqu-un-d-autre';
 const ID_PRODUIT_ESSAI = 'essai-regles';
+const ID_PRODUIT_AVEC_STOCK = 'essai-regles-stock';
 
 function element(id) {
   return document.getElementById(id);
@@ -40,13 +47,18 @@ function afficherMessage(texte) {
 }
 
 // Exécute une opération et renvoie 'autorise', 'refuse' ou une erreur.
+// Une opération de contrôle renvoie vrai ou faux : le résultat est alors
+// 'vrai' ou 'faux'.
 async function essayer(operation) {
   let minuterie;
   const delai = new Promise((_, rejeter) => {
     minuterie = setTimeout(() => rejeter({ code: 'pas-de-reponse' }), DELAI_MAX_MS);
   });
   try {
-    await Promise.race([operation(), delai]);
+    const valeur = await Promise.race([operation(), delai]);
+    if (typeof valeur === 'boolean') {
+      return valeur ? 'vrai' : 'faux';
+    }
     return 'autorise';
   } catch (erreur) {
     if (erreur && erreur.code === 'permission-denied') {
@@ -59,7 +71,7 @@ async function essayer(operation) {
 }
 
 function ajouterLigne(nom, attendu, obtenu) {
-  const libelles = { autorise: 'Autorisé', refuse: 'Refusé' };
+  const libelles = { autorise: 'Autorisé', refuse: 'Refusé', vrai: 'Exact', faux: 'Inexact' };
   const reussi = attendu === obtenu;
   const ligne = document.createElement('tr');
 
@@ -351,17 +363,290 @@ function essaisProduits(db, uid, produitEssaiExiste) {
       )
     },
     {
-      nom: 'Lire un mouvement (fermé jusqu’à la phase 4b)',
-      attendu: 'refuse',
-      operation: () => getDocFromServer(doc(db, 'users', uid, 'movements', 'essai'))
-    },
-    {
-      // En dernier : le produit d'essai disparaît ainsi de la liste.
+      // Le produit d'essai disparaît ainsi de la liste. Les essais de
+      // mouvements qui suivent portent donc sur un produit archivé : les
+      // règles doivent les accepter (opération faite hors ligne avant
+      // l'archivage sur un autre appareil).
       nom: 'Archiver un produit',
       attendu: 'autorise',
       operation: () => updateDoc(produitEssai, { archive: true, updatedAt: serverTimestamp() })
     }
   );
+
+  return essais;
+}
+
+function essaisMouvements(db, uid, produitAvecStockExiste) {
+  const mesProduits = collection(db, 'users', uid, 'products');
+  const mesMouvements = collection(db, 'users', uid, 'movements');
+  const produitEssai = doc(mesProduits, ID_PRODUIT_ESSAI);
+  const produitAvecStock = doc(mesProduits, ID_PRODUIT_AVEC_STOCK);
+  const nouvelId = () => doc(mesMouvements).id;
+
+  // Identifiants fixés une seule fois, comme dans l'application.
+  const idEntree = nouvelId();
+  const idSortie = nouvelId();
+  const idAjustement = nouvelId();
+  let quantiteDepart = null;
+
+  const mouvement = (idProduit, delta, type, modifications = {}) => ({
+    productId: idProduit,
+    nomProduit: 'Produit d’essai (règles)',
+    unite: 'kg',
+    deltaMilliemes: delta,
+    type,
+    motif: 'Essai des règles',
+    auteurUid: uid,
+    dateAppareil: Timestamp.now(),
+    dateServeur: serverTimestamp(),
+    ...modifications
+  });
+
+  // Lot d'une opération de stock, comme dans l'application. Les options
+  // servent à fabriquer les cas interdits.
+  function lot(options) {
+    const {
+      idMouvement,
+      delta,
+      type,
+      deltaProduit = delta,
+      idDansProduit = idMouvement,
+      modifications = {},
+      sansProduit = false,
+      sansMouvement = false
+    } = options;
+    const ecritures = writeBatch(db);
+    if (!sansProduit) {
+      ecritures.update(produitEssai, {
+        quantiteMilliemes: increment(deltaProduit),
+        dernierMouvementId: idDansProduit,
+        updatedAt: serverTimestamp()
+      });
+    }
+    if (!sansMouvement) {
+      ecritures.set(
+        doc(mesMouvements, idMouvement),
+        mouvement(ID_PRODUIT_ESSAI, delta, type, modifications)
+      );
+    }
+    return ecritures.commit();
+  }
+
+  // Lot de création d'un produit avec stock de départ.
+  function lotCreation(reference, stock, deltaMouvement, avecMouvement = true) {
+    const idMouvement = nouvelId();
+    const ecritures = writeBatch(db);
+    ecritures.set(reference, produitValide({
+      quantiteMilliemes: stock,
+      dernierMouvementId: idMouvement
+    }));
+    if (avecMouvement) {
+      ecritures.set(
+        doc(mesMouvements, idMouvement),
+        mouvement(reference.id, deltaMouvement, 'entree', { motif: 'Stock initial' })
+      );
+    }
+    return ecritures.commit();
+  }
+
+  const lireQuantite = async () =>
+    (await getDocFromServer(produitEssai)).data().quantiteMilliemes;
+
+  const essais = [
+    {
+      nom: 'Entrée de 2,5 par un lot complet (sur un produit archivé)',
+      attendu: 'autorise',
+      operation: async () => {
+        quantiteDepart = await lireQuantite();
+        await lot({ idMouvement: idEntree, delta: 2500, type: 'entree' });
+      }
+    },
+    {
+      nom: 'Après l’entrée, la quantité a augmenté exactement de 2,5',
+      attendu: 'vrai',
+      operation: async () => (await lireQuantite()) === quantiteDepart + 2500
+    },
+    {
+      nom: 'Renvoyer la même opération (même numéro de mouvement)',
+      attendu: 'refuse',
+      operation: () => lot({ idMouvement: idEntree, delta: 2500, type: 'entree' })
+    },
+    {
+      nom: 'Après le renvoi, la quantité n’a pas été comptée deux fois',
+      attendu: 'vrai',
+      operation: async () => (await lireQuantite()) === quantiteDepart + 2500
+    },
+    {
+      nom: 'Sortie de 1 par un lot complet',
+      attendu: 'autorise',
+      operation: () => lot({ idMouvement: idSortie, delta: -1000, type: 'sortie' })
+    },
+    {
+      nom: 'Ajustement de -1,5 par un lot complet',
+      attendu: 'autorise',
+      operation: () => lot({ idMouvement: idAjustement, delta: -1500, type: 'ajustement' })
+    },
+    {
+      nom: 'Après +2,5 puis -1 puis -1,5, la quantité est revenue au départ',
+      attendu: 'vrai',
+      operation: async () => (await lireQuantite()) === quantiteDepart
+    },
+    {
+      nom: 'Créer un mouvement sans modifier le produit',
+      attendu: 'refuse',
+      operation: () => lot({ idMouvement: nouvelId(), delta: 2500, type: 'entree', sansProduit: true })
+    },
+    {
+      nom: 'Modifier le stock en désignant un mouvement qui n’est pas créé',
+      attendu: 'refuse',
+      operation: () => lot({ idMouvement: nouvelId(), delta: 2500, type: 'entree', sansMouvement: true })
+    },
+    {
+      nom: 'Modifier le stock en réutilisant un ancien mouvement de même valeur',
+      attendu: 'refuse',
+      operation: () => lot({ idMouvement: idEntree, delta: 2500, type: 'entree', sansMouvement: true })
+    },
+    {
+      nom: 'Chiffres discordants (mouvement de 2,5, stock augmenté de 5)',
+      attendu: 'refuse',
+      operation: () => lot({ idMouvement: nouvelId(), delta: 2500, type: 'entree', deltaProduit: 5000 })
+    },
+    {
+      nom: 'Le produit désigne un autre numéro que le mouvement créé',
+      attendu: 'refuse',
+      operation: () => lot({ idMouvement: nouvelId(), delta: 2500, type: 'entree', idDansProduit: nouvelId() })
+    },
+    {
+      nom: 'Mouvement visant un produit qui n’existe pas',
+      attendu: 'refuse',
+      operation: () => lot({
+        idMouvement: nouvelId(), delta: 2500, type: 'entree', sansProduit: true,
+        modifications: { productId: 'produit-inexistant' }
+      })
+    },
+    {
+      nom: 'Mouvement de valeur 0',
+      attendu: 'refuse',
+      operation: () => lot({ idMouvement: nouvelId(), delta: 0, type: 'ajustement' })
+    },
+    {
+      nom: 'Mouvement de valeur à virgule (non entière)',
+      attendu: 'refuse',
+      operation: () => lot({ idMouvement: nouvelId(), delta: 2.5, type: 'entree' })
+    },
+    {
+      nom: 'Type de mouvement inconnu',
+      attendu: 'refuse',
+      operation: () => lot({ idMouvement: nouvelId(), delta: 2500, type: 'cadeau' })
+    },
+    {
+      nom: 'Entrée de valeur négative',
+      attendu: 'refuse',
+      operation: () => lot({ idMouvement: nouvelId(), delta: -2500, type: 'entree' })
+    },
+    {
+      nom: 'Sortie de valeur positive',
+      attendu: 'refuse',
+      operation: () => lot({ idMouvement: nouvelId(), delta: 2500, type: 'sortie' })
+    },
+    {
+      nom: 'Motif de 201 caractères',
+      attendu: 'refuse',
+      operation: () => lot({
+        idMouvement: nouvelId(), delta: 2500, type: 'entree',
+        modifications: { motif: 'x'.repeat(201) }
+      })
+    },
+    {
+      nom: 'Mouvement signé par un autre auteur',
+      attendu: 'refuse',
+      operation: () => lot({
+        idMouvement: nouvelId(), delta: 2500, type: 'entree',
+        modifications: { auteurUid: AUTRE_COMPTE }
+      })
+    },
+    {
+      nom: 'Heure du serveur choisie par l’appareil',
+      attendu: 'refuse',
+      operation: () => lot({
+        idMouvement: nouvelId(), delta: 2500, type: 'entree',
+        modifications: { dateServeur: new Date(2000, 0, 1) }
+      })
+    },
+    {
+      nom: 'Mouvement avec un champ non prévu',
+      attendu: 'refuse',
+      operation: () => lot({
+        idMouvement: nouvelId(), delta: 2500, type: 'entree',
+        modifications: { champNonPrevu: true }
+      })
+    },
+    {
+      nom: 'Modifier un mouvement enregistré',
+      attendu: 'refuse',
+      operation: () => updateDoc(doc(mesMouvements, idEntree), { motif: 'Modifié après coup' })
+    },
+    {
+      nom: 'Supprimer un mouvement enregistré',
+      attendu: 'refuse',
+      operation: () => deleteDoc(doc(mesMouvements, idEntree))
+    },
+    {
+      nom: 'Lire ses derniers mouvements',
+      attendu: 'autorise',
+      operation: () => getDocsFromServer(query(mesMouvements, orderBy('dateServeur', 'desc'), limit(5)))
+    },
+    {
+      nom: 'Lire un mouvement d’un autre compte',
+      attendu: 'refuse',
+      operation: () => getDocFromServer(doc(db, 'users', AUTRE_COMPTE, 'movements', 'essai'))
+    },
+    {
+      nom: 'Créer un mouvement dans un autre compte',
+      attendu: 'refuse',
+      operation: () => setDoc(
+        doc(db, 'users', AUTRE_COMPTE, 'movements', nouvelId()),
+        mouvement(ID_PRODUIT_ESSAI, 2500, 'entree')
+      )
+    },
+    {
+      nom: 'Créer un produit avec un stock de départ, sans mouvement',
+      attendu: 'refuse',
+      operation: () => lotCreation(doc(mesProduits), 5000, 5000, false)
+    },
+    {
+      nom: 'Créer un produit avec un stock de 5 et un mouvement de 3',
+      attendu: 'refuse',
+      operation: () => lotCreation(doc(mesProduits), 5000, 3000)
+    },
+    {
+      nom: 'Créer un produit avec un stock de départ négatif',
+      attendu: 'refuse',
+      operation: () => lotCreation(doc(mesProduits), -1000, -1000)
+    }
+  ];
+
+  // Ce produit n'est créé qu'une fois : il ne peut pas être supprimé.
+  if (!produitAvecStockExiste) {
+    essais.push(
+      {
+        nom: 'Créer un produit avec un stock de départ de 4 et son mouvement d’entrée',
+        attendu: 'autorise',
+        operation: () => lotCreation(produitAvecStock, 4000, 4000)
+      },
+      {
+        nom: 'Le produit créé a bien un stock de 4',
+        attendu: 'vrai',
+        operation: async () =>
+          (await getDocFromServer(produitAvecStock)).data().quantiteMilliemes === 4000
+      },
+      {
+        nom: 'Archiver ce second produit d’essai',
+        attendu: 'autorise',
+        operation: () => updateDoc(produitAvecStock, { archive: true, updatedAt: serverTimestamp() })
+      }
+    );
+  }
 
   return essais;
 }
@@ -376,6 +661,7 @@ async function lancerLesTests(db, utilisateur) {
   // Les essais portent sur l'entrepôt du compte : il doit déjà exister.
   let entrepot;
   let produitEssaiExiste;
+  let produitAvecStockExiste;
   try {
     const instantane = await getDocFromServer(doc(db, 'users', utilisateur.uid));
     if (!instantane.exists()) {
@@ -397,6 +683,10 @@ async function lancerLesTests(db, utilisateur) {
       doc(db, 'users', utilisateur.uid, 'products', ID_PRODUIT_ESSAI)
     );
     produitEssaiExiste = produit.exists();
+    const second = await getDocFromServer(
+      doc(db, 'users', utilisateur.uid, 'products', ID_PRODUIT_AVEC_STOCK)
+    );
+    produitAvecStockExiste = second.exists();
   } catch (erreur) {
     afficherMessage(
       'Impossible de lire les produits de ce compte (' + (erreur.code || 'erreur') + '). ' +
@@ -408,7 +698,8 @@ async function lancerLesTests(db, utilisateur) {
 
   const essais = [
     ...essaisEntrepot(db, utilisateur.uid, entrepot),
-    ...essaisProduits(db, utilisateur.uid, produitEssaiExiste)
+    ...essaisProduits(db, utilisateur.uid, produitEssaiExiste),
+    ...essaisMouvements(db, utilisateur.uid, produitAvecStockExiste)
   ];
   let reussis = 0;
   for (const essai of essais) {
@@ -420,7 +711,9 @@ async function lancerLesTests(db, utilisateur) {
 
   const bilan = element('bilan');
   bilan.textContent = `${reussis} essais réussis sur ${essais.length}.` +
-    (produitEssaiExiste ? ' (La création du produit d’essai n’est pas rejouée : il existe déjà.)' : '');
+    (produitEssaiExiste || produitAvecStockExiste
+      ? ' (La création des produits d’essai n’est pas rejouée : ils existent déjà.)'
+      : '');
   bilan.className = reussis === essais.length ? 'message-info' : 'message-erreur';
   bilan.hidden = false;
   bouton.disabled = false;

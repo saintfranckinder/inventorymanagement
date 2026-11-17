@@ -298,6 +298,101 @@ select {
   display: none;
 }
 
+.produit-negatif {
+  margin: 0.25rem 0 0;
+  color: var(--erreur);
+  font-weight: 600;
+}
+
+/* ---------- Mouvements ---------- */
+
+.choix-type {
+  margin: 0 0 1rem;
+  padding: 0;
+  border: 0;
+}
+
+.choix-type legend {
+  margin: 0 0 0.25rem;
+  padding: 0;
+  font-weight: 600;
+}
+
+.choix {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 48px;
+  margin: 0 0 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--carte);
+  border: 1px solid var(--bordure);
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.choix input {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+  flex: none;
+}
+
+.choix-detail {
+  color: var(--texte-discret);
+  font-weight: 400;
+}
+
+.mouvement {
+  margin: 0 0 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--carte);
+  border: 1px solid var(--bordure-legere);
+  border-radius: 0.5rem;
+}
+
+.mouvement h4 {
+  margin: 0 0 0.25rem;
+  font-size: 1.0625rem;
+  overflow-wrap: anywhere;
+}
+
+.mouvement p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.mouvement-variation {
+  font-weight: 600;
+}
+
+.bloc-refus {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem 0.25rem;
+  background: var(--fond-erreur);
+  border: 2px solid var(--erreur);
+  border-radius: 0.5rem;
+}
+
+.bloc-refus h3 {
+  margin: 0 0 0.5rem;
+  color: var(--erreur);
+}
+
+.operation-refusee {
+  margin: 0 0 0.75rem;
+  padding: 0.75rem 1rem 0.25rem;
+  background: var(--carte);
+  border: 1px solid var(--bordure-legere);
+  border-radius: 0.5rem;
+}
+
+.operation-refusee p {
+  margin: 0 0 0.25rem;
+  overflow-wrap: anywhere;
+}
+
 .bouton-danger {
   background: var(--carte);
   color: var(--erreur);

@@ -1,12 +1,22 @@
 rules_version = '2';
 
 // Regles de securite de la base Firestore.
-// Version des regles : 4 (phase 4a).
+// Version des regles : 5 (phase 4b).
 //
-// Phase 4a : chaque utilisateur accede a son document users/{uid} et a ses
-// produits. La quantite d'un produit ne peut pas encore changer : cela
-// arrivera en phase 4b, uniquement par un mouvement de stock.
-// Les mouvements restent fermes jusqu'a la phase 4b.
+// Phase 4b : chaque utilisateur accede a son document users/{uid}, a ses
+// produits et a ses mouvements de stock.
+//
+// Principe du lien produit-mouvement :
+//   - la quantite d'un produit ne change QUE dans un lot qui cree aussi un
+//     mouvement nouveau, de la meme valeur ;
+//   - un mouvement ne se cree QUE dans un lot qui modifie le produit de la
+//     meme valeur et qui le designe comme "dernier mouvement" ;
+//   - un mouvement enregistre n'est jamais modifie ni supprime.
+//
+// Ces regles ne refusent jamais une operation a cause d'un etat qui a pu
+// changer sur un autre appareil (produit renomme ou archive) : une operation
+// faite hors ligne doit pouvoir etre acceptee plus tard.
+//
 // Tout ce qui n'est pas explicitement autorise ici est refuse.
 //
 // Ce fichier n'est pas applique automatiquement : il faut copier son contenu
@@ -24,6 +34,14 @@ service cloud.firestore {
     // Cette liste doit rester identique a celle de js/entrepot.js.
     function deviseValide(devise) {
       return devise in ['HTG', 'USD', 'EUR', 'DOP', 'CAD'];
+    }
+
+    // Un identifiant de document : lettres, chiffres, tiret, tiret bas.
+    function identifiantValide(id) {
+      return id is string
+        && id.size() >= 1
+        && id.size() <= 100
+        && id.matches('^[A-Za-z0-9_-]+$');
     }
 
     // Controle des champs du document users/{uid} : uniquement les quatre
@@ -67,12 +85,64 @@ service cloud.firestore {
         && d.prixAchatCentimes >= 0
         && d.prixAchatCentimes <= 1000000000000
         && d.archive is bool
-        && (d.dernierMouvementId == null
-            || (d.dernierMouvementId is string
-                && d.dernierMouvementId.size() >= 1
-                && d.dernierMouvementId.size() <= 100))
+        && (d.dernierMouvementId == null || identifiantValide(d.dernierMouvementId))
         && d.createdAt is timestamp
         && d.updatedAt is timestamp;
+    }
+
+    // Controle des champs d'un mouvement : uniquement les neuf champs prevus.
+    // deltaMilliemes : positif = entree, negatif = sortie, jamais 0.
+    function mouvementValide(m) {
+      return m.keys().hasOnly(['productId', 'nomProduit', 'unite', 'deltaMilliemes', 'type',
+                               'motif', 'auteurUid', 'dateAppareil', 'dateServeur'])
+        && m.keys().hasAll(['productId', 'nomProduit', 'unite', 'deltaMilliemes', 'type',
+                            'motif', 'auteurUid', 'dateAppareil', 'dateServeur'])
+        && identifiantValide(m.productId)
+        && m.nomProduit is string
+        && m.nomProduit.size() >= 1
+        && m.nomProduit.size() <= 100
+        && m.unite is string
+        && m.unite.size() >= 1
+        && m.unite.size() <= 30
+        && m.deltaMilliemes is int
+        && m.deltaMilliemes != 0
+        && m.deltaMilliemes >= -1000000000000000
+        && m.deltaMilliemes <= 1000000000000000
+        && m.type in ['entree', 'sortie', 'ajustement']
+        && (m.type != 'entree' || m.deltaMilliemes > 0)
+        && (m.type != 'sortie' || m.deltaMilliemes < 0)
+        && m.motif is string
+        && m.motif.size() <= 200
+        && m.auteurUid is string
+        && m.dateAppareil is timestamp
+        && m.dateServeur is timestamp;
+    }
+
+    // Vu depuis le PRODUIT : le mouvement designe n'existait pas avant le
+    // lot, il existe apres, il porte la meme valeur et vise ce produit.
+    function mouvementNouveauEtConforme(uid, productId, mouvementId, delta) {
+      return !exists(/databases/$(database)/documents/users/$(uid)/movements/$(mouvementId))
+        && existsAfter(/databases/$(database)/documents/users/$(uid)/movements/$(mouvementId))
+        && getAfter(/databases/$(database)/documents/users/$(uid)/movements/$(mouvementId)).data.deltaMilliemes == delta
+        && getAfter(/databases/$(database)/documents/users/$(uid)/movements/$(mouvementId)).data.productId == productId;
+    }
+
+    // Vu depuis le MOUVEMENT : apres le lot, le produit designe ce mouvement
+    // et sa quantite a change exactement de la valeur du mouvement.
+    // Si le produit n'existait pas avant le lot (creation avec stock de
+    // depart), sa quantite est egale a la valeur du mouvement.
+    function produitRefleteLeMouvement(uid, mouvementId, m) {
+      return existsAfter(/databases/$(database)/documents/users/$(uid)/products/$(m.productId))
+        && getAfter(/databases/$(database)/documents/users/$(uid)/products/$(m.productId)).data.dernierMouvementId == mouvementId
+        && (
+          (exists(/databases/$(database)/documents/users/$(uid)/products/$(m.productId))
+            && getAfter(/databases/$(database)/documents/users/$(uid)/products/$(m.productId)).data.quantiteMilliemes
+               == get(/databases/$(database)/documents/users/$(uid)/products/$(m.productId)).data.quantiteMilliemes + m.deltaMilliemes)
+          ||
+          (!exists(/databases/$(database)/documents/users/$(uid)/products/$(m.productId))
+            && getAfter(/databases/$(database)/documents/users/$(uid)/products/$(m.productId)).data.quantiteMilliemes
+               == m.deltaMilliemes)
+        );
     }
 
     match /users/{uid} {
@@ -100,25 +170,64 @@ service cloud.firestore {
         // Lecture de ses propres produits (un par un, ou en liste).
         allow read: if estProprietaire(uid);
 
-        // Creation : stock a 0, aucun mouvement, non archive, dates du serveur.
-        // (Le stock initial par mouvement arrive en phase 4b.)
+        // Creation : non archive, dates du serveur, et
+        //   - soit un stock de 0 et aucun mouvement ;
+        //   - soit un stock de depart positif, justifie par un mouvement
+        //     d'entree cree dans le meme lot.
         allow create: if estProprietaire(uid)
           && produitValide(request.resource.data)
-          && request.resource.data.quantiteMilliemes == 0
-          && request.resource.data.dernierMouvementId == null
           && request.resource.data.archive == false
           && request.resource.data.createdAt == request.time
-          && request.resource.data.updatedAt == request.time;
+          && request.resource.data.updatedAt == request.time
+          && (
+            (request.resource.data.quantiteMilliemes == 0
+              && request.resource.data.dernierMouvementId == null)
+            ||
+            (request.resource.data.quantiteMilliemes > 0
+              && request.resource.data.dernierMouvementId != null
+              && mouvementNouveauEtConforme(uid, productId,
+                   request.resource.data.dernierMouvementId,
+                   request.resource.data.quantiteMilliemes))
+          );
 
-        // Modification de la fiche (nom, unite, seuil, prix, archivage).
-        // La quantite et le dernier mouvement ne changent pas ici.
+        // Modification :
+        //   - soit la fiche seule (nom, unite, seuil, prix, archivage) : la
+        //     quantite et le dernier mouvement ne changent pas ;
+        //   - soit une operation de stock : la quantite change, et le produit
+        //     designe un mouvement nouveau de la meme valeur.
         allow update: if estProprietaire(uid)
           && produitValide(request.resource.data)
           && request.resource.data.createdAt == resource.data.createdAt
           && request.resource.data.updatedAt == request.time
-          && request.resource.data.quantiteMilliemes == resource.data.quantiteMilliemes
-          && request.resource.data.dernierMouvementId == resource.data.dernierMouvementId;
+          && (
+            (request.resource.data.quantiteMilliemes == resource.data.quantiteMilliemes
+              && request.resource.data.dernierMouvementId == resource.data.dernierMouvementId)
+            ||
+            (request.resource.data.quantiteMilliemes != resource.data.quantiteMilliemes
+              && request.resource.data.dernierMouvementId != null
+              && request.resource.data.dernierMouvementId != resource.data.dernierMouvementId
+              && mouvementNouveauEtConforme(uid, productId,
+                   request.resource.data.dernierMouvementId,
+                   request.resource.data.quantiteMilliemes - resource.data.quantiteMilliemes))
+          );
 
+        // Suppression : toujours refusee (sauf suppression du compte, phase 7).
+      }
+
+      match /movements/{movementId} {
+        // Lecture de ses propres mouvements (un par un, ou en liste).
+        allow read: if estProprietaire(uid);
+
+        // Creation : champs valides, auteur = utilisateur connecte, date du
+        // serveur, et le produit reflete exactement ce mouvement.
+        allow create: if estProprietaire(uid)
+          && identifiantValide(movementId)
+          && mouvementValide(request.resource.data)
+          && request.resource.data.auteurUid == request.auth.uid
+          && request.resource.data.dateServeur == request.time
+          && produitRefleteLeMouvement(uid, movementId, request.resource.data);
+
+        // Modification : toujours refusee (un mouvement est definitif).
         // Suppression : toujours refusee (sauf suppression du compte, phase 7).
       }
     }

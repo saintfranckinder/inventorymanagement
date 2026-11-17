@@ -47,3 +47,14 @@ Chaque décision : date, choix, raison. Ne pas modifier une décision sans l'acc
 29. **Limites : 1 milliard d'unités et un prix de 10 milliards dans le formulaire ; bornes de quantité plus larges dans les règles.** Raison : écarter les nombres absurdes sans refuser une opération légitime faite hors ligne.
 30. **La valeur d'une ligne est calculée en grands entiers (BigInt), avec le même arrondi que `Math.round(quantiteMilliemes × prixAchatCentimes / 1000)`.** Raison : résultat identique à la formule de `CLAUDE.md`, mais exact avec de très grands nombres.
 31. **En phase 4a, un produit est créé avec un stock de 0, sans mouvement ; chaque modification d'un produit écrit `updatedAt` avec l'heure du serveur, et les règles l'exigent.** Raison : toute variation de quantité doit passer par un mouvement (phase 4b).
+
+## 2026-11-16 — phase 4b
+
+32. **L'historique est trié par `dateServeur` (heure de réception par le serveur). `dateAppareil` est affichée comme « Fait le » ; si l'écart dépasse 5 minutes, les deux heures sont affichées.** Raison : l'heure d'un appareil peut être fausse ; le tri par heure du serveur donne un ordre stable aux 50 derniers mouvements.
+33. **Saisie d'un mouvement : choisir Entrée, Sortie ou Ajustement. Entrée et Sortie se saisissent sans signe ; l'Ajustement se saisit comme une correction avec son signe.** Raison : plus clair qu'un signe à taper ; l'application ne remplace jamais une quantité par un chiffre calculé à l'écran (`CLAUDE.md`, section 6, règle 3).
+34. **Un stock négatif est autorisé : avertissement avant l'envoi, puis mention « Stock négatif : à vérifier ».** Raison : demandé par `CLAUDE.md` ; un refus perdrait des opérations faites hors ligne.
+35. **Les règles vérifient la cohérence du type : une entrée est positive, une sortie est négative, un ajustement a le signe qu'on veut ; jamais 0.**
+36. **Les règles acceptent un mouvement sur un produit archivé, et ne comparent pas le nom ni l'unité du mouvement à ceux du produit.** Raison : décision 9 (un produit peut être archivé ou renommé sur un autre appareil pendant qu'un mouvement attend hors ligne).
+37. **Le suivi des opérations non confirmées couvre les mouvements et les créations de produit. Il est gardé dans `localStorage`, par compte.** Les modifications de fiche et l'archivage ne sont pas suivis. Raison : ce sont les opérations dont la perte fausserait le stock.
+38. **Le stock de départ d'un produit est un mouvement d'entrée de motif « Stock initial », créé dans le même lot que le produit. Un stock de départ de 0 ne crée aucun mouvement.**
+39. **Les identifiants de produit et de mouvement acceptés par les règles ne contiennent que des lettres, des chiffres, le tiret et le tiret bas.** Raison : ils servent à construire des chemins dans les règles.

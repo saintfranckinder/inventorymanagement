@@ -11,6 +11,11 @@ import {
   surveillerConnexion
 } from './auth.js';
 import {
+  arreterEcranMouvements,
+  brancherEcranMouvements,
+  demarrerEcranMouvements
+} from './ecran-mouvements.js';
+import {
   arreterEcranProduits,
   brancherEcranProduits,
   demarrerEcranProduits
@@ -26,14 +31,14 @@ import { demarrerFirebase, VERSION_SDK_FIREBASE } from './firebase-init.js';
 import { afficherMessage, afficherVue, effacerMessages, element, vueActuelle } from './interface.js';
 import { messageErreur } from './messages-erreur.js';
 
-const VERSION_APP = '0.4.0';
+const VERSION_APP = '0.5.0';
 
 // Écrans accessibles sans être connecté.
 const VUES_SANS_COMPTE = ['vue-connexion', 'vue-inscription', 'vue-oubli', 'vue-confidentialite'];
 
 // Écrans de travail d'un compte connecté. Tant que l'utilisateur est sur l'un
 // d'eux, une simple mise à jour de l'entrepôt ne doit pas le déplacer.
-const VUES_DE_TRAVAIL = ['vue-accueil', 'vue-produit'];
+const VUES_DE_TRAVAIL = ['vue-accueil', 'vue-produit', 'vue-mouvement', 'vue-historique'];
 
 const AVERTISSEMENT_STOCKAGE =
   'Ce navigateur n’enregistre pas les données sur l’appareil. ' +
@@ -105,6 +110,7 @@ function surEtatEntrepot(etat) {
     element('accueil-devise').textContent = nomDevise(etat.donnees.devise);
     element('accueil-compte').textContent = utilisateur.email || 'Compte sans adresse e-mail';
     demarrerEcranProduits(firebase.db, utilisateur.uid, etat.donnees);
+    demarrerEcranMouvements(firebase.db, utilisateur.uid);
     if (!VUES_DE_TRAVAIL.includes(vueActuelle())) {
       afficherVue('vue-accueil');
     }
@@ -112,6 +118,7 @@ function surEtatEntrepot(etat) {
   }
 
   arreterEcranProduits();
+  arreterEcranMouvements();
 
   if (!etat.depuisCache) {
     // Le serveur confirme qu'aucun entrepôt n'existe : c'est un nouveau compte.
@@ -143,6 +150,7 @@ function surChangementUtilisateur(nouvelUtilisateur) {
     arreterEcouteEntrepot = null;
   }
   arreterEcranProduits();
+  arreterEcranMouvements();
   utilisateur = nouvelUtilisateur;
   viderMotsDePasse();
 
@@ -341,6 +349,7 @@ async function demarrer() {
   brancherMotDePasseOublie();
   brancherPremierLancement();
   brancherEcranProduits();
+  brancherEcranMouvements();
 
   surveillerConnexion(firebase.auth, surChangementUtilisateur);
 }
