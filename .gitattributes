@@ -1,0 +1,6 @@
+# Bibliotheques externes : Git ne doit jamais modifier leur contenu
+# (sinon elles ne correspondraient plus aux fichiers officiels).
+vendor/*.js -text
+
+# Les fichiers .bat ont besoin des fins de ligne Windows.
+*.bat text eol=crlf

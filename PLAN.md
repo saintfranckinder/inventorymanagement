@@ -10,7 +10,7 @@ Dossier de travail : `C:\GitHub\Inventory Management\inventorymanagement` (dép�
 |---|---|---|
 | 0 | Préparer le dossier (Git, `.gitignore`, `README.md`) | **Terminée le 2026-11-16** |
 | 1 | Audit et plan | **Terminée le 2026-11-16** (analyse validée, aucun code écrit) |
-| 2 | Structure, Firebase, persistance hors ligne | À faire |
+| 2 | Structure, Firebase, persistance hors ligne | **Terminée le 2026-11-16** (deux vérifications du propriétaire restent à faire) |
 | 3 | Connexion, premier lancement, confidentialité | À faire |
 | 4a | Produits et conversion des nombres | À faire |
 | 4b | Mouvements, règles complètes, historique | À faire |
@@ -41,7 +41,37 @@ Dossier de travail : `C:\GitHub\Inventory Management\inventorymanagement` (dép�
 - **Tests :**
   - La page s'ouvre en local et se connecte au projet Firebase.
   - Dans l'onglet Réseau du navigateur, aucun appel vers `gstatic.com`.
-  - En navigation privée (ou stockage bloqué), l'avertissement de persistance s'affiche.
+  - Quand le navigateur bloque le stockage local, l'avertissement de persistance s'affiche.
+
+**Compte rendu de la phase 2 (2026-11-16)**
+
+Tests exécutés par l'assistant, dans le navigateur intégré, sur `http://localhost:8080/` :
+
+| Test | Résultat |
+|---|---|
+| Le serveur local démarre et sert la page | Réussi |
+| Les trois fichiers du SDK sont chargés depuis `vendor/` ; aucun appel vers `gstatic.com` | Réussi |
+| Firebase répond « accès refusé » (projet joint, règles actives) | Réussi |
+| Mémoire hors ligne active ; la base locale `firestore/[DEFAULT]/inventory-management-app-52866/main` existe | Réussi |
+| Stockage local bloqué (simulé par une page de test temporaire, supprimée ensuite) : avertissement affiché, « Indisponible » | Réussi |
+| Affichage à 360 pixels de large, sans défilement horizontal | Réussi |
+| Le serveur local refuse `.git`, `.gitignore` et les chemins hors du projet | Réussi |
+| Aucune erreur dans la console du navigateur | Réussi |
+
+Tests non exécutés :
+
+- Double-clic sur `demarrer.bat` par le propriétaire (seul le script qu'il lance a été testé).
+- Coupure d'Internet : la ligne doit afficher « Serveur injoignable ».
+- Publication de `firestore.rules` dans la console (action du propriétaire).
+- Aucun test sur smartphone (impossible avant la mise en ligne, fin de phase 4b).
+
+Constats :
+
+- Le SDK Firebase 13.4.0 confirme l'analyse : si le stockage local est bloqué, Firestore continue en mémoire sans prévenir l'application (seulement un message dans la console). L'application teste donc elle-même le stockage local au démarrage, puis vérifie que la base locale de Firestore existe quand le navigateur permet de le savoir.
+- Cette détection est approximative. En navigation privée, les navigateurs récents acceptent le stockage puis l'effacent à la fermeture : l'application affiche alors « Active » à tort. Limite notée dans le README.
+- La page de vérification fait une tentative de lecture sur le serveur à chaque ouverture. C'est provisoire : à retirer en phase 3, quand la connexion des utilisateurs existera.
+- `firebase-auth.js` est chargé et démarré pour valider la copie locale, mais aucune fonction de connexion n'existe encore.
+- SheetJS (`xlsx.full.min.js`, 0.20.3) est copié dans `vendor/` mais n'est pas encore utilisé ni chargé par la page.
 
 ### Phase 3 : connexion, premier lancement, confidentialité
 - **Résultat :** connexion Google (popup) et e-mail / mot de passe, inscription, mot de passe oublié, premier lancement (nom de l'entrepôt, devise), texte de confidentialité, règles d'isolation par compte. Messages génériques quand l'e-mail existe déjà avec l'autre méthode.
@@ -123,7 +153,7 @@ Dossier de travail : `C:\GitHub\Inventory Management\inventorymanagement` (dép�
 
 Ces points viennent de l'analyse et n'ont pas été testés.
 
-1. **Phase 2 :** avec la méthode moderne de persistance, un échec est-il signalé à l'application ? Sinon, tester le stockage local avant de démarrer Firestore.
+1. *(Vérifié le 2026-11-16.)* Avec la méthode moderne de persistance, un échec n'est pas signalé à l'application. Solution en place : test du stockage local au démarrage (voir le compte rendu de la phase 2).
 2. **Phase 3 :** comportement exact de l'inscription et de la connexion quand l'e-mail existe déjà, avec la protection contre l'énumération activée.
 3. **Phases 7 et 11 :** nombre maximal d'écritures par lot quand les règles font des vérifications (`get`, `getAfter`). Déterminer la taille de lot sûre.
 
@@ -182,7 +212,8 @@ Règles de conception retenues pour le code :
 
 ## 8. Notes de passation
 
-- **Phase actuelle :** phases 0 et 1 terminées ; phase 2 à faire.
+- **Phase actuelle :** phases 0, 1 et 2 terminées ; phase 3 à faire.
 - **Travail terminé :** analyse, plan (ce fichier), décisions 8 à 15 dans `DECISIONS.md`.
 - **Fichiers modifiés :** `PLAN.md` (créé), `DECISIONS.md` (décisions ajoutées), `CLAUDE.md` et `DEMARRAGE.md` (alignés sur les décisions 8 à 14). Phase 0 : `.gitignore` et `README.md` créés ; premier commit local fait.
-- **Prochaine action précise :** le propriétaire vérifie le commit dans GitHub Desktop et le publie. Ensuite, nouvelle session pour la phase 2 ; le propriétaire devra fournir le bloc `firebaseConfig`.
+- **Phase 2 :** fichiers créés : `index.html`, `css/style.css`, `js/app.js`, `js/firebase-config.js`, `js/firebase-init.js`, `firestore.rules`, `demarrer.bat`, `outils/serveur-local.ps1`, `vendor/` (SDK Firebase 13.4.0 corrigé, SheetJS 0.20.3, `LISEZMOI.md`). Commit local fait.
+- **Prochaine action précise :** le propriétaire double-clique sur `demarrer.bat`, vérifie les trois lignes d'état, publie `firestore.rules` dans la console (voir README), puis vérifie et publie les commits dans GitHub Desktop. Ensuite, nouvelle session pour la phase 3 ; avant de coder, expliquer le cas « même adresse e-mail avec les deux méthodes ».

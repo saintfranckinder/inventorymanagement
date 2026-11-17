@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gestion de stock</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <main>
+    <h1>Gestion de stock</h1>
+    <p class="intro">
+      Page de vérification technique. Les écrans de l'application arrivent dans
+      les prochaines étapes.
+    </p>
+
+    <p id="avertissement" class="avertissement" role="alert" hidden></p>
+
+    <dl class="etats" aria-live="polite">
+      <div class="etat">
+        <dt>Connexion à Firebase</dt>
+        <dd id="etat-firebase" data-niveau="attente">Vérification…</dd>
+      </div>
+      <div class="etat">
+        <dt>Mémoire hors ligne</dt>
+        <dd id="etat-persistance" data-niveau="attente">Vérification…</dd>
+      </div>
+      <div class="etat">
+        <dt>Version</dt>
+        <dd id="etat-version" data-niveau="attente">Vérification…</dd>
+      </div>
+    </dl>
+
+    <noscript>
+      <p class="avertissement">JavaScript est désactivé : l'application ne peut pas fonctionner.</p>
+    </noscript>
+  </main>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+/* Styles de base, pensés d'abord pour le smartphone. */
+
+:root {
+  --fond: #f4f5f7;
+  --carte: #ffffff;
+  --texte: #1b1f24;
+  --texte-discret: #4b5563;
+  --bordure: #d0d5dd;
+  --ok: #0b6b3a;
+  --alerte: #8a4b00;
+  --erreur: #a4161a;
+  --fond-alerte: #fff4e0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--fond);
+  color: var(--texte);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+main {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 1.25rem 1rem 2rem;
+}
+
+h1 {
+  margin: 0 0 0.5rem;
+  font-size: 1.5rem;
+  line-height: 1.25;
+}
+
+.intro {
+  margin: 0 0 1.25rem;
+  color: var(--texte-discret);
+}
+
+.avertissement {
+  margin: 0 0 1.25rem;
+  padding: 0.75rem 1rem;
+  background: var(--fond-alerte);
+  border: 2px solid var(--alerte);
+  border-radius: 0.5rem;
+  font-weight: 600;
+}
+
+.etats {
+  margin: 0;
+  background: var(--carte);
+  border: 1px solid var(--bordure);
+  border-radius: 0.5rem;
+}
+
+.etat {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--bordure);
+}
+
+.etat:last-child {
+  border-bottom: 0;
+}
+
+.etat dt {
+  color: var(--texte-discret);
+  font-size: 0.875rem;
+}
+
+.etat dd {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* La couleur complète le texte, elle ne le remplace jamais. */
+.etat dd[data-niveau="ok"] {
+  color: var(--ok);
+}
+
+.etat dd[data-niveau="alerte"] {
+  color: var(--alerte);
+}
+
+.etat dd[data-niveau="erreur"] {
+  color: var(--erreur);
+}
+
+.etat dd[data-niveau="attente"] {
+  color: var(--texte-discret);
+  font-weight: 400;
+}

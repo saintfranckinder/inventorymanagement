@@ -22,3 +22,8 @@ Chaque décision : date, choix, raison. Ne pas modifier une décision sans l'acc
 13. **Suppression du compte : reconnexion demandée en premier, suppression en ligne uniquement, reprise automatique à la connexion suivante si `suppressionDemandee` est vrai.** Une suppression demandée ne s'annule pas. Raison : éviter un compte à moitié supprimé ; la limite gratuite est de 20 000 suppressions par jour.
 14. **La phase 4 est coupée en 4a (produits, conversion des nombres) et 4b (mouvements, règles, historique). Le test « rouvrir l'application en mode avion » passe de la phase 8 à la phase 10.** Raison : phase 4 trop chargée pour une session ; ce test exige le service worker, créé en phase 10.
 15. **Dossier de travail : `C:\GitHub\Inventory Management`.** Il doit être relié au dépôt GitHub `saintfranckinder/inventorymanagement` avant la phase 0. Raison : le dossier n'était pas un dépôt Git au moment de l'audit. *(Précision du 2026-11-16 : le propriétaire a cloné le dépôt dans le sous-dossier `C:\GitHub\Inventory Management\inventorymanagement`, qui est désormais le dossier de travail.)*
+
+## 2026-11-16 — phase 2
+
+16. **Versions fixes des bibliothèques : SDK Firebase 13.4.0 (`firebase-app.js`, `firebase-auth.js`, `firebase-firestore.js`) et SheetJS 0.20.3 (`xlsx.full.min.js`).** Sources officielles, empreintes et correction appliquée notées dans `vendor/LISEZMOI.md`. Raison : `CLAUDE.md` exige une version fixe, jamais `latest` ; ce sont les versions officielles les plus récentes au moment du téléchargement.
+17. **Serveur local sur `http://localhost:8080/`, toujours le même port.** Raison : le navigateur range les données locales (comptes, mémoire hors ligne) par adresse ; changer de port ferait apparaître une application « vide » pendant les tests.

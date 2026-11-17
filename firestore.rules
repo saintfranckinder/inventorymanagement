@@ -1,0 +1,17 @@
+rules_version = '2';
+
+// Regles de securite de la base Firestore.
+// Phase 2 : tout est refuse. Les autorisations par utilisateur seront
+// ajoutees a partir de la phase 3.
+//
+// Ce fichier n'est pas applique automatiquement : il faut copier son contenu
+// dans la console Firebase (Firestore > Regles), puis cliquer sur "Publier".
+// Voir README.md.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
