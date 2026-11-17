@@ -34,3 +34,16 @@ Chaque décision : date, choix, raison. Ne pas modifier une décision sans l'acc
 19. **Pas de vérification de l'adresse par e-mail à l'inscription.** Raison : non demandée par `CLAUDE.md`, et une étape de plus pour l'utilisateur. Conséquences acceptées : une faute de frappe dans l'adresse empêche de recevoir l'e-mail de « Mot de passe oublié » ; un compte créé par mot de passe avec une adresse Gmail perd ce mot de passe à la première connexion Google (les données restent).
 20. **L'écran « Créer votre entrepôt » ne s'affiche que si le serveur confirme qu'aucun entrepôt n'existe.** Quand la réponse vient seulement de la mémoire de l'appareil, l'application attend Internet. Raison : sur un nouvel appareil sans Internet, un compte existant ressemblerait à un compte neuf et son entrepôt pourrait être écrasé.
 21. **Mot de passe : 8 caractères minimum, contrôlé dans l'application avant l'envoi**, en plus de la règle réglée dans la console Firebase.
+
+## 2026-11-16 — phase 4a
+
+22. **L'application n'écoute en temps réel que les produits non archivés.** Raison : moins de lectures facturées après chaque coupure de plus de 30 minutes.
+23. **Un produit archivé ne peut pas être remis dans la liste (première version).** L'archivage demande une confirmation. Raison : `CLAUDE.md` ne demande que l'archivage. Les règles n'interdisent pas le désarchivage, pour pouvoir l'ajouter plus tard sans les republier.
+24. **Les produits archivés ne comptent pas dans la valeur du stock affichée.** Raison : ils ne sont plus affichés.
+25. **Un produit dont le stock n'est pas à 0 peut être archivé, avec un avertissement.** Raison : un refus pourrait rejeter une opération faite hors ligne (décision 9).
+26. **Deux produits actifs ne peuvent pas porter le même nom (majuscules et accents ignorés). Ce contrôle est fait dans le formulaire, pas dans les règles.** Raison : éviter les confusions dans l'historique ; les règles ne peuvent pas vérifier l'unicité sans lectures coûteuses. Limite acceptée : deux appareils hors ligne peuvent créer le même nom.
+27. **L'unité d'un produit est obligatoire (30 caractères au plus).** Raison : elle est recopiée dans chaque mouvement.
+28. **Saisie des nombres : virgule ou point pour les décimales, espaces pour les milliers ; 3 décimales au plus pour une quantité, 2 pour un prix ; toute décimale en trop est refusée, jamais arrondie.** Conséquence acceptée : `1.000` est lu comme 1 ; la valeur comprise s'affiche sous le champ.
+29. **Limites : 1 milliard d'unités et un prix de 10 milliards dans le formulaire ; bornes de quantité plus larges dans les règles.** Raison : écarter les nombres absurdes sans refuser une opération légitime faite hors ligne.
+30. **La valeur d'une ligne est calculée en grands entiers (BigInt), avec le même arrondi que `Math.round(quantiteMilliemes × prixAchatCentimes / 1000)`.** Raison : résultat identique à la formule de `CLAUDE.md`, mais exact avec de très grands nombres.
+31. **En phase 4a, un produit est créé avec un stock de 0, sans mouvement ; chaque modification d'un produit écrit `updatedAt` avec l'heure du serveur, et les règles l'exigent.** Raison : toute variation de quantité doit passer par un mouvement (phase 4b).

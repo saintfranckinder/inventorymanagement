@@ -1,0 +1,178 @@
+// Page de test de js/nombres.js : chaque ligne compare le résultat obtenu au
+// résultat attendu. Aucune connexion nécessaire, aucune donnée modifiée.
+
+import {
+  analyserPrix,
+  analyserQuantite,
+  calculerValeurCentimes,
+  formaterMontant,
+  formaterQuantite,
+  prixPourSaisie,
+  quantitePourSaisie
+} from './nombres.js';
+
+const refus = (raison) => ({ ok: false, raison });
+const accepte = (valeur) => ({ ok: true, valeur });
+
+// Les espaces insécables de l'affichage français sont remplacés par des
+// espaces simples avant la comparaison.
+function normaliser(valeur) {
+  if (typeof valeur === 'bigint') {
+    return valeur.toString() + ' (grand entier)';
+  }
+  if (typeof valeur === 'string') {
+    return '« ' + valeur.replace(/[   ]/g, ' ') + ' »';
+  }
+  if (Object.is(valeur, -0)) {
+    return '-0 (zéro négatif)';
+  }
+  return JSON.stringify(valeur);
+}
+
+const ESSAIS = [
+  // ----- Quantités saisies -> millièmes -----
+  ['Quantité « 2,5 »', () => analyserQuantite('2,5'), accepte(2500)],
+  ['Quantité « 2.5 » (point)', () => analyserQuantite('2.5'), accepte(2500)],
+  ['Quantité « 1 »', () => analyserQuantite('1'), accepte(1000)],
+  ['Quantité « 0 »', () => analyserQuantite('0'), accepte(0)],
+  ['Quantité « 0,001 »', () => analyserQuantite('0,001'), accepte(1)],
+  ['Quantité « 0,07 »', () => analyserQuantite('0,07'), accepte(70)],
+  ['Quantité « 1,005 » (piège d’arrondi)', () => analyserQuantite('1,005'), accepte(1005)],
+  ['Quantité « ,5 »', () => analyserQuantite(',5'), accepte(500)],
+  ['Quantité « 5, »', () => analyserQuantite('5,'), accepte(5000)],
+  ['Quantité « 1 000 » (espace)', () => analyserQuantite('1 000'), accepte(1000000)],
+  ['Quantité « 1 000,5 » (espace fine insécable)', () => analyserQuantite('1 000,5'), accepte(1000500)],
+  ['Quantité «  12  » (espaces autour)', () => analyserQuantite('  12  '), accepte(12000)],
+  ['Quantité « 2,5000 » (zéros de fin)', () => analyserQuantite('2,5000'), accepte(2500)],
+  ['Quantité « 1.000 » (lue comme 1, pas mille)', () => analyserQuantite('1.000'), accepte(1000)],
+  ['Quantité « 1000000000 » (maximum)', () => analyserQuantite('1000000000'), accepte(1000000000000)],
+  ['Quantité « +10 » (mouvement)', () => analyserQuantite('+10', true), accepte(10000)],
+  ['Quantité « -2,5 » (mouvement)', () => analyserQuantite('-2,5', true), accepte(-2500)],
+  ['Quantité « −3 » (signe moins typographique)', () => analyserQuantite('−3', true), accepte(-3000)],
+  ['Quantité « -0 » donne 0', () => analyserQuantite('-0', true), accepte(0)],
+  ['Quantité « -0 » sans négatif autorisé', () => analyserQuantite('-0'), accepte(0)],
+  ['Quantité « -2,5 » refusée pour un seuil', () => analyserQuantite('-2,5'), refus('negatif')],
+  ['Quantité « 2,5555 » refusée', () => analyserQuantite('2,5555'), refus('trop-de-decimales')],
+  ['Quantité « 0,0001 » refusée', () => analyserQuantite('0,0001'), refus('trop-de-decimales')],
+  ['Quantité « 1000000000,001 » refusée', () => analyserQuantite('1000000000,001'), refus('trop-grand')],
+  ['Quantité de 20 chiffres refusée', () => analyserQuantite('12345678901234567890'), refus('trop-grand')],
+  ['Quantité vide refusée', () => analyserQuantite(''), refus('vide')],
+  ['Quantité « espaces » refusée', () => analyserQuantite('   '), refus('vide')],
+  ['Quantité « abc » refusée', () => analyserQuantite('abc'), refus('invalide')],
+  ['Quantité « 1,2,3 » refusée', () => analyserQuantite('1,2,3'), refus('invalide')],
+  ['Quantité « 1e3 » refusée', () => analyserQuantite('1e3'), refus('invalide')],
+  ['Quantité « - » refusée', () => analyserQuantite('-', true), refus('invalide')],
+  ['Quantité « , » refusée', () => analyserQuantite(','), refus('invalide')],
+  ['Quantité « 12 kg » refusée', () => analyserQuantite('12 kg'), refus('invalide')],
+  ['Quantité qui n’est pas du texte refusée', () => analyserQuantite(12), refus('invalide')],
+
+  // ----- Prix saisis -> centimes -----
+  ['Prix « 125,50 »', () => analyserPrix('125,50'), accepte(12550)],
+  ['Prix « 125,5 »', () => analyserPrix('125,5'), accepte(12550)],
+  ['Prix « 125 »', () => analyserPrix('125'), accepte(12500)],
+  ['Prix « 0 »', () => analyserPrix('0'), accepte(0)],
+  ['Prix « 0,07 »', () => analyserPrix('0,07'), accepte(7)],
+  ['Prix « 4,35 » (piège d’arrondi)', () => analyserPrix('4,35'), accepte(435)],
+  ['Prix « 19,99 »', () => analyserPrix('19,99'), accepte(1999)],
+  ['Prix « 150 000 »', () => analyserPrix('150 000'), accepte(15000000)],
+  ['Prix « 10000000000 » (maximum)', () => analyserPrix('10000000000'), accepte(1000000000000)],
+  ['Prix « 1,005 » refusé', () => analyserPrix('1,005'), refus('trop-de-decimales')],
+  ['Prix « -1 » refusé', () => analyserPrix('-1'), refus('negatif')],
+  ['Prix « 10000000000,01 » refusé', () => analyserPrix('10000000000,01'), refus('trop-grand')],
+
+  // ----- Millièmes -> affichage -----
+  ['Afficher 2500', () => formaterQuantite(2500), '2,5'],
+  ['Afficher 1000', () => formaterQuantite(1000), '1'],
+  ['Afficher 0', () => formaterQuantite(0), '0'],
+  ['Afficher 1', () => formaterQuantite(1), '0,001'],
+  ['Afficher 70', () => formaterQuantite(70), '0,07'],
+  ['Afficher -2500', () => formaterQuantite(-2500), '-2,5'],
+  ['Afficher 1000500', () => formaterQuantite(1000500), '1 000,5'],
+  ['Afficher 1234567890', () => formaterQuantite(1234567890), '1 234 567,89'],
+
+  // ----- Centimes -> affichage -----
+  ['Montant 12550 HTG', () => formaterMontant(12550, 'HTG'), '125,50 HTG'],
+  ['Montant 7 USD', () => formaterMontant(7, 'USD'), '0,07 USD'],
+  ['Montant 0 HTG', () => formaterMontant(0, 'HTG'), '0,00 HTG'],
+  ['Montant -12550 HTG', () => formaterMontant(-12550, 'HTG'), '-125,50 HTG'],
+  ['Montant 15000000 HTG', () => formaterMontant(15000000, 'HTG'), '150 000,00 HTG'],
+  ['Montant très grand (grand entier)', () => formaterMontant(123456789012345678901n, 'HTG'), '1 234 567 890 123 456 789,01 HTG'],
+
+  // ----- Préremplissage des champs -----
+  ['Champ quantité 2500', () => quantitePourSaisie(2500), '2,5'],
+  ['Champ quantité 1000500', () => quantitePourSaisie(1000500), '1000,5'],
+  ['Champ quantité 0', () => quantitePourSaisie(0), '0'],
+  ['Champ prix 12550', () => prixPourSaisie(12550), '125,50'],
+  ['Champ prix 7', () => prixPourSaisie(7), '0,07'],
+
+  // ----- Aller-retour : afficher puis relire redonne le même entier -----
+  ...[0, 1, 70, 999, 1000, 1005, 2500, 123456789, 1000000000000].map((milliemes) => [
+    `Aller-retour quantité ${milliemes}`,
+    () => analyserQuantite(formaterQuantite(milliemes)),
+    accepte(milliemes)
+  ]),
+  ...[0, 7, 435, 1999, 12550, 1000000000000].map((centimes) => [
+    `Aller-retour prix ${centimes}`,
+    () => analyserPrix(prixPourSaisie(centimes)),
+    accepte(centimes)
+  ]),
+
+  // ----- Valeur d'une ligne : Math.round(quantité × prix / 1000) -----
+  ['Valeur 2,5 × 125,50', () => calculerValeurCentimes(2500, 12550), 31375n],
+  ['Valeur 1 × 125,50', () => calculerValeurCentimes(1000, 12550), 12550n],
+  ['Valeur 0 × 125,50', () => calculerValeurCentimes(0, 12550), 0n],
+  ['Valeur 0,001 × 125,50 (12,55 arrondi à 13)', () => calculerValeurCentimes(1, 12550), 13n],
+  ['Valeur 0,001 × 14,99 (1,499 arrondi à 1)', () => calculerValeurCentimes(1, 1499), 1n],
+  ['Valeur 0,001 × 5,00 (0,5 arrondi à 1)', () => calculerValeurCentimes(1, 500), 1n],
+  ['Valeur 0,003 × 5,00 (1,5 arrondi à 2)', () => calculerValeurCentimes(3, 500), 2n],
+  ['Valeur -2,5 × 125,50 (stock négatif)', () => calculerValeurCentimes(-2500, 12550), -31375n],
+  ['Valeur -0,001 × 5,00 (-0,5 arrondi à 0)', () => calculerValeurCentimes(-1, 500), 0n],
+  ['Valeur -0,003 × 5,00 (-1,5 arrondi à -1)', () => calculerValeurCentimes(-3, 500), -1n],
+  ['Valeur maximale exacte', () => calculerValeurCentimes(1000000000000, 1000000000000), 1000000000000000000000n],
+
+  // ----- Même résultat que la formule de CLAUDE.md sur des cas ordinaires -----
+  ...[[2500, 12550], [333, 1000], [1, 500], [-1, 500], [-3, 500], [7, 143], [123456, 98765]].map(
+    ([quantite, prix]) => [
+      `Identique à Math.round pour ${quantite} × ${prix}`,
+      () => calculerValeurCentimes(quantite, prix),
+      BigInt(Math.round(quantite * prix / 1000))
+    ]
+  )
+];
+
+function lancer() {
+  const corps = document.getElementById('resultats');
+  let reussis = 0;
+
+  for (const [nom, calcul, attendu] of ESSAIS) {
+    let obtenu;
+    try {
+      obtenu = normaliser(calcul());
+    } catch (erreur) {
+      obtenu = 'erreur : ' + erreur.message;
+    }
+    const attenduNormalise = normaliser(attendu);
+    const reussi = obtenu === attenduNormalise;
+    if (reussi) {
+      reussis += 1;
+    }
+
+    const ligne = document.createElement('tr');
+    const celluleNom = document.createElement('td');
+    celluleNom.textContent = nom;
+    const celluleAttendu = document.createElement('td');
+    celluleAttendu.textContent = attenduNormalise;
+    const celluleResultat = document.createElement('td');
+    celluleResultat.dataset.resultat = reussi ? 'reussi' : 'echec';
+    celluleResultat.textContent = (reussi ? '✅ Réussi' : '❌ Échec') + ' — ' + obtenu;
+    ligne.append(celluleNom, celluleAttendu, celluleResultat);
+    corps.append(ligne);
+  }
+
+  const bilan = document.getElementById('bilan');
+  bilan.textContent = `${reussis} essais réussis sur ${ESSAIS.length}.`;
+  bilan.className = reussis === ESSAIS.length ? 'message-info' : 'message-erreur';
+  bilan.hidden = false;
+}
+
+lancer();

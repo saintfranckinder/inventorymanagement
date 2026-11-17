@@ -3,21 +3,31 @@
 // le compte connecté, et compare la réponse au résultat attendu.
 //
 // Phase 3 : isolation des comptes et contrôle des champs de users/{uid}.
-// Les essais sur les produits et les mouvements seront ajoutés en phase 4.
+// Phase 4a : produits (fiche modifiable, quantité intouchable).
+// Les essais sur les mouvements seront ajoutés en phase 4b.
+//
+// Le compte de test garde un produit « Produit d'essai (règles) », archivé à
+// la fin de chaque passage : il n'apparaît donc pas dans la liste.
 
 import { onAuthStateChanged } from '../vendor/firebase-auth.js';
 import {
+  collection,
   deleteDoc,
   doc,
   getDocFromServer,
+  getDocsFromServer,
+  increment,
+  query,
   serverTimestamp,
   setDoc,
-  updateDoc
+  updateDoc,
+  where
 } from '../vendor/firebase-firestore.js';
 import { demarrerFirebase } from './firebase-init.js';
 
 const DELAI_MAX_MS = 15000;
 const AUTRE_COMPTE = 'compte-de-quelqu-un-d-autre';
+const ID_PRODUIT_ESSAI = 'essai-regles';
 
 function element(id) {
   return document.getElementById(id);
@@ -69,7 +79,24 @@ function ajouterLigne(nom, attendu, obtenu) {
   return reussi;
 }
 
-function listeDesEssais(db, uid, entrepot) {
+// Fiche de produit valide pour une création. `modifications` remplace ou
+// ajoute des champs, pour fabriquer les cas interdits.
+function produitValide(modifications = {}) {
+  return {
+    nom: 'Produit d’essai (règles)',
+    unite: 'sac',
+    quantiteMilliemes: 0,
+    seuilAlerteMilliemes: 1500,
+    prixAchatCentimes: 12550,
+    archive: false,
+    dernierMouvementId: null,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    ...modifications
+  };
+}
+
+function essaisEntrepot(db, uid, entrepot) {
   const monEntrepot = doc(db, 'users', uid);
   const entrepotValide = {
     nomEntrepot: 'Essai',
@@ -108,17 +135,12 @@ function listeDesEssais(db, uid, entrepot) {
       operation: () => getDocFromServer(doc(db, 'verification', 'connexion'))
     },
     {
-      nom: 'Lire un produit (fermé jusqu’à la phase 4)',
-      attendu: 'refuse',
-      operation: () => getDocFromServer(doc(db, 'users', uid, 'products', 'essai'))
-    },
-    {
       nom: 'Ajouter un champ non prévu à son entrepôt',
       attendu: 'refuse',
       operation: () => updateDoc(monEntrepot, { champNonPrevu: true })
     },
     {
-      nom: 'Modifier la date de création',
+      nom: 'Modifier la date de création de l’entrepôt',
       attendu: 'refuse',
       operation: () => updateDoc(monEntrepot, { createdAt: serverTimestamp() })
     },
@@ -133,12 +155,12 @@ function listeDesEssais(db, uid, entrepot) {
       operation: () => updateDoc(monEntrepot, { nomEntrepot: '' })
     },
     {
-      nom: 'Enregistrer un nom de 101 caractères',
+      nom: 'Enregistrer un nom d’entrepôt de 101 caractères',
       attendu: 'refuse',
       operation: () => updateDoc(monEntrepot, { nomEntrepot: 'x'.repeat(101) })
     },
     {
-      nom: 'Enregistrer un nom qui n’est pas du texte',
+      nom: 'Enregistrer un nom d’entrepôt qui n’est pas du texte',
       attendu: 'refuse',
       operation: () => updateDoc(monEntrepot, { nomEntrepot: 12345 })
     },
@@ -155,6 +177,195 @@ function listeDesEssais(db, uid, entrepot) {
   ];
 }
 
+function essaisProduits(db, uid, produitEssaiExiste) {
+  const mesProduits = collection(db, 'users', uid, 'products');
+  const produitEssai = doc(mesProduits, ID_PRODUIT_ESSAI);
+  // Un nouvel identifiant à chaque tentative de création interdite.
+  const nouveau = () => doc(mesProduits);
+
+  const essais = [];
+
+  // Le produit d'essai n'est créé qu'une fois : il ne peut pas être supprimé.
+  if (!produitEssaiExiste) {
+    essais.push({
+      nom: 'Créer un produit valide (stock 0, sans mouvement)',
+      attendu: 'autorise',
+      operation: () => setDoc(produitEssai, produitValide())
+    });
+  }
+
+  essais.push(
+    {
+      nom: 'Lire la liste de ses produits',
+      attendu: 'autorise',
+      operation: () => getDocsFromServer(query(mesProduits, where('archive', '==', false)))
+    },
+    {
+      nom: 'Modifier la fiche d’un produit (nom, unité, seuil, prix)',
+      attendu: 'autorise',
+      operation: () => updateDoc(produitEssai, {
+        nom: 'Produit d’essai (règles)',
+        unite: 'kg',
+        seuilAlerteMilliemes: 2500,
+        prixAchatCentimes: 9999,
+        archive: false,
+        updatedAt: serverTimestamp()
+      })
+    },
+    {
+      nom: 'Modifier directement la quantité d’un produit',
+      attendu: 'refuse',
+      operation: () => updateDoc(produitEssai, {
+        quantiteMilliemes: 5000,
+        updatedAt: serverTimestamp()
+      })
+    },
+    {
+      nom: 'Augmenter la quantité sans mouvement',
+      attendu: 'refuse',
+      operation: () => updateDoc(produitEssai, {
+        quantiteMilliemes: increment(1000),
+        updatedAt: serverTimestamp()
+      })
+    },
+    {
+      nom: 'Modifier le dernier mouvement sans mouvement',
+      attendu: 'refuse',
+      operation: () => updateDoc(produitEssai, {
+        dernierMouvementId: 'mouvement-invente',
+        updatedAt: serverTimestamp()
+      })
+    },
+    {
+      nom: 'Modifier un produit sans mettre la date à jour',
+      attendu: 'refuse',
+      operation: () => updateDoc(produitEssai, { nom: 'Sans date' })
+    },
+    {
+      nom: 'Modifier la date de création d’un produit',
+      attendu: 'refuse',
+      operation: () => updateDoc(produitEssai, {
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      })
+    },
+    {
+      nom: 'Ajouter un champ non prévu à un produit',
+      attendu: 'refuse',
+      operation: () => updateDoc(produitEssai, {
+        champNonPrevu: true,
+        updatedAt: serverTimestamp()
+      })
+    },
+    {
+      nom: 'Enregistrer un prix négatif',
+      attendu: 'refuse',
+      operation: () => updateDoc(produitEssai, {
+        prixAchatCentimes: -1,
+        updatedAt: serverTimestamp()
+      })
+    },
+    {
+      nom: 'Enregistrer un prix à virgule (non entier)',
+      attendu: 'refuse',
+      operation: () => updateDoc(produitEssai, {
+        prixAchatCentimes: 12.5,
+        updatedAt: serverTimestamp()
+      })
+    },
+    {
+      nom: 'Enregistrer un seuil d’alerte négatif',
+      attendu: 'refuse',
+      operation: () => updateDoc(produitEssai, {
+        seuilAlerteMilliemes: -1000,
+        updatedAt: serverTimestamp()
+      })
+    },
+    {
+      nom: 'Enregistrer un nom de produit vide',
+      attendu: 'refuse',
+      operation: () => updateDoc(produitEssai, { nom: '', updatedAt: serverTimestamp() })
+    },
+    {
+      nom: 'Enregistrer un nom de produit de 101 caractères',
+      attendu: 'refuse',
+      operation: () => updateDoc(produitEssai, {
+        nom: 'x'.repeat(101),
+        updatedAt: serverTimestamp()
+      })
+    },
+    {
+      nom: 'Enregistrer une unité de 31 caractères',
+      attendu: 'refuse',
+      operation: () => updateDoc(produitEssai, {
+        unite: 'x'.repeat(31),
+        updatedAt: serverTimestamp()
+      })
+    },
+    {
+      nom: 'Créer un produit avec un stock différent de 0',
+      attendu: 'refuse',
+      operation: () => setDoc(nouveau(), produitValide({ quantiteMilliemes: 5000 }))
+    },
+    {
+      nom: 'Créer un produit avec un dernier mouvement inventé',
+      attendu: 'refuse',
+      operation: () => setDoc(nouveau(), produitValide({ dernierMouvementId: 'mouvement-invente' }))
+    },
+    {
+      nom: 'Créer un produit déjà archivé',
+      attendu: 'refuse',
+      operation: () => setDoc(nouveau(), produitValide({ archive: true }))
+    },
+    {
+      nom: 'Créer un produit avec une date choisie par l’appareil',
+      attendu: 'refuse',
+      operation: () => setDoc(nouveau(), produitValide({ createdAt: new Date(2000, 0, 1) }))
+    },
+    {
+      nom: 'Créer un produit avec un champ non prévu',
+      attendu: 'refuse',
+      operation: () => setDoc(nouveau(), produitValide({ champNonPrevu: true }))
+    },
+    {
+      nom: 'Créer un produit sans unité',
+      attendu: 'refuse',
+      operation: () => setDoc(nouveau(), produitValide({ unite: '' }))
+    },
+    {
+      nom: 'Supprimer un produit',
+      attendu: 'refuse',
+      operation: () => deleteDoc(produitEssai)
+    },
+    {
+      nom: 'Lire un produit d’un autre compte',
+      attendu: 'refuse',
+      operation: () => getDocFromServer(doc(db, 'users', AUTRE_COMPTE, 'products', ID_PRODUIT_ESSAI))
+    },
+    {
+      nom: 'Créer un produit dans un autre compte',
+      attendu: 'refuse',
+      operation: () => setDoc(
+        doc(db, 'users', AUTRE_COMPTE, 'products', ID_PRODUIT_ESSAI),
+        produitValide()
+      )
+    },
+    {
+      nom: 'Lire un mouvement (fermé jusqu’à la phase 4b)',
+      attendu: 'refuse',
+      operation: () => getDocFromServer(doc(db, 'users', uid, 'movements', 'essai'))
+    },
+    {
+      // En dernier : le produit d'essai disparaît ainsi de la liste.
+      nom: 'Archiver un produit',
+      attendu: 'autorise',
+      operation: () => updateDoc(produitEssai, { archive: true, updatedAt: serverTimestamp() })
+    }
+  );
+
+  return essais;
+}
+
 async function lancerLesTests(db, utilisateur) {
   const bouton = element('bouton-lancer');
   bouton.disabled = true;
@@ -164,6 +375,7 @@ async function lancerLesTests(db, utilisateur) {
 
   // Les essais portent sur l'entrepôt du compte : il doit déjà exister.
   let entrepot;
+  let produitEssaiExiste;
   try {
     const instantane = await getDocFromServer(doc(db, 'users', utilisateur.uid));
     if (!instantane.exists()) {
@@ -180,8 +392,24 @@ async function lancerLesTests(db, utilisateur) {
     bouton.disabled = false;
     return;
   }
+  try {
+    const produit = await getDocFromServer(
+      doc(db, 'users', utilisateur.uid, 'products', ID_PRODUIT_ESSAI)
+    );
+    produitEssaiExiste = produit.exists();
+  } catch (erreur) {
+    afficherMessage(
+      'Impossible de lire les produits de ce compte (' + (erreur.code || 'erreur') + '). ' +
+      'Les règles publiées dans la console sont sans doute plus anciennes que le fichier firestore.rules.'
+    );
+    bouton.disabled = false;
+    return;
+  }
 
-  const essais = listeDesEssais(db, utilisateur.uid, entrepot);
+  const essais = [
+    ...essaisEntrepot(db, utilisateur.uid, entrepot),
+    ...essaisProduits(db, utilisateur.uid, produitEssaiExiste)
+  ];
   let reussis = 0;
   for (const essai of essais) {
     const obtenu = await essayer(essai.operation);
@@ -191,7 +419,8 @@ async function lancerLesTests(db, utilisateur) {
   }
 
   const bilan = element('bilan');
-  bilan.textContent = `${reussis} essais réussis sur ${essais.length}.`;
+  bilan.textContent = `${reussis} essais réussis sur ${essais.length}.` +
+    (produitEssaiExiste ? ' (La création du produit d’essai n’est pas rejouée : il existe déjà.)' : '');
   bilan.className = reussis === essais.length ? 'message-info' : 'message-erreur';
   bilan.hidden = false;
   bouton.disabled = false;

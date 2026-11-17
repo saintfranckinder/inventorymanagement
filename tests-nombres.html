@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Test des conversions de nombres</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <header class="entete">
+    <h1>Test des conversions de nombres</h1>
+  </header>
+
+  <main>
+    <p>
+      Cette page vérifie que les quantités et les prix saisis sont convertis
+      sans aucune erreur d'arrondi. Elle ne modifie aucune donnée et fonctionne
+      sans connexion.
+    </p>
+
+    <p id="bilan" class="message-info" role="status" hidden></p>
+
+    <table class="resultats">
+      <thead>
+        <tr>
+          <th scope="col">Essai</th>
+          <th scope="col">Attendu</th>
+          <th scope="col">Résultat</th>
+        </tr>
+      </thead>
+      <tbody id="resultats"></tbody>
+    </table>
+
+    <p><a href="./">Retour à l'application</a></p>
+  </main>
+
+  <script type="module" src="./js/tests-nombres.js"></script>
+</body>
+</html>

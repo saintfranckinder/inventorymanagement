@@ -12,7 +12,7 @@ Dossier de travail : `C:\GitHub\Inventory Management\inventorymanagement` (dép�
 | 1 | Audit et plan | **Terminée le 2026-11-16** (analyse validée, aucun code écrit) |
 | 2 | Structure, Firebase, persistance hors ligne | **Terminée le 2026-11-16** (deux vérifications du propriétaire restent à faire) |
 | 3 | Connexion, premier lancement, confidentialité | **Faite le 2026-11-16** ; trois tests du propriétaire restent à faire (Google, e-mail de réinitialisation, même adresse) |
-| 4a | Produits et conversion des nombres | À faire |
+| 4a | Produits et conversion des nombres | **Terminée le 2026-11-16** |
 | 4b | Mouvements, règles complètes, historique | À faire |
 | — | Vérification des secrets, dépôt public, GitHub Pages activé | À faire (fin de la phase 4b) |
 | 5 | Tableau de bord | À faire |
@@ -125,6 +125,39 @@ Constats :
   - Page `tests-nombres.html` entièrement verte (`2,5`, `-2,5`, `1 000`, plus de 3 décimales refusées, etc.).
   - Modifier un produit ne change jamais sa quantité.
 
+**Compte rendu de la phase 4a (2026-11-16)**
+
+Tests exécutés par l'assistant, dans le navigateur intégré, sur `http://localhost:8080/`, avec le compte de test :
+
+| Test | Résultat |
+|---|---|
+| `tests-nombres.html` : 98 essais sur 98 (dont `1,005`, `4,35`, `-2,5`, `1 000`, très grands nombres) | Réussi |
+| Formulaire : nom vide, unité vide, trop de décimales, texte non numérique refusés | Réussi |
+| Valeur comprise affichée sous les champs ; `1.000` affiché comme 1 | Réussi |
+| Ajout de deux produits : affichage immédiat « En attente de synchronisation », puis confirmation | Réussi |
+| Sur le serveur : 9 champs, quantité 0, `dernierMouvementId` vide, 2,5 enregistré `2500`, 1 250,50 enregistré `125050` | Réussi |
+| Nom en double refusé, sans tenir compte des majuscules ni des espaces | Réussi |
+| Modification du nom, du seuil et du prix : quantité et `dernierMouvementId` inchangés | Réussi |
+| Archivage : annulation respectée, puis produit retiré de la liste et conservé sur le serveur | Réussi |
+| `tests-regles.html` : 39 essais sur 39 au premier passage, 38 sur 38 au second (la création du produit d'essai n'est pas rejouée) | Réussi |
+| Règles version 3 encore actives : message « Impossible de charger les produits » | Réussi |
+| Formulaire à 360 pixels, cibles d'au moins 48 pixels | Réussi |
+
+Tests non exécutés :
+
+- Ajout ou modification hors ligne, puis retour en ligne.
+- Deux appareils modifiant le même produit.
+- Message d'avertissement de l'archivage quand le stock n'est pas à 0 (aucun produit n'a encore de stock).
+- Smartphone : impossible avant la mise en ligne.
+
+Constats :
+
+- La valeur d'une ligne (`calculerValeurCentimes`) est calculée en grands entiers (BigInt) : même résultat que la formule de `CLAUDE.md`, mais exact avec de très grands nombres.
+- Les règles exigent `updatedAt` égal à l'heure du serveur à chaque modification d'un produit : le lot de mouvement de la phase 4b devra l'écrire aussi.
+- Les bornes de quantité des règles (±10^15 millièmes) sont volontairement plus larges que celles du formulaire (10^12), pour ne pas refuser une opération légitime faite hors ligne.
+- Le compte de test contient maintenant : « Riz 25 kg (Tchako) » (actif), « Huile » et « Produit d'essai (règles) » (archivés).
+- `js/interface.js` regroupe les fonctions d'affichage partagées, auparavant dans `js/app.js`.
+
 ### Phase 4b : mouvements, règles, historique
 - **Résultat :**
   - Entrées, sorties, ajustements par lot unique (`increment`, `dernierMouvementId`, mouvement).
@@ -199,11 +232,12 @@ Ces points viennent de l'analyse et n'ont pas été testés.
 À trancher avec le propriétaire au début de la phase concernée.
 
 - Trier l'historique par `dateServeur` et afficher `dateAppareil` comme « fait le » (phase 4b).
-- N'écouter en temps réel que les produits non archivés (phase 4a).
+- *(Tranché : décision 22.)* N'écouter en temps réel que les produits non archivés (phase 4a).
 - Filtre par produit dans l'historique : prévu par `DEMARRAGE.md` (phase 6) mais absent de `CLAUDE.md` ; il exige un index à créer dans la console.
 - Annoncer une taille raisonnable d'entrepôt (environ 500 produits) à cause du quota de lectures.
 - Facultatif : numéro de version affiché ; regroupement des appuis rapides sur `+1` ; vérification dans les règles que le compte n'est pas en cours de suppression.
-- Peut-on désarchiver un produit ? Un produit archivé compte-t-il dans la valeur du stock ?
+- *(Tranché : décisions 23 et 24.)* Peut-on désarchiver un produit ? Un produit archivé compte-t-il dans la valeur du stock ?
+- Les produits archivés doivent-ils figurer dans l'export Excel (feuille `Stock`) ? À trancher en phase 9.
 - *(Tranché : décision 18.)* Liste des devises proposées au premier lancement.
 
 ## 5. Problèmes connus
@@ -249,9 +283,10 @@ Règles de conception retenues pour le code :
 
 ## 8. Notes de passation
 
-- **Phase actuelle :** phases 0, 1 et 2 terminées ; phase 3 faite et dans un commit local (tests du propriétaire en attente) ; phase 4a à faire.
+- **Phase actuelle :** phases 0, 1 et 2 terminées ; phase 3 faite et dans un commit local (tests du propriétaire en attente) ; phase 4a terminée et dans un commit local ; phase 4b à faire.
+- **Phase 4a, journal intermédiaire du 2026-11-16 (terminée depuis : voir le compte rendu de la phase 4a, section 2) :** code écrit (`js/nombres.js`, `js/tests-nombres.js`, `tests-nombres.html`, `js/interface.js`, `js/produits.js`, `js/ecran-produits.js`, `js/app.js`, `index.html`, `css/style.css`, `js/tests-regles.js`, `firestore.rules` version 4). `tests-nombres.html` : 98 essais sur 98. Formulaire de produit vérifié en local (contrôles, aides de saisie, 360 pixels). **En attente :** publication de `firestore.rules` version 4 par le propriétaire ; ensuite ajouter, modifier, archiver un produit avec le compte de test et relancer `tests-regles.html`.
 - **Phase 3, journal intermédiaire du 2026-11-16 (blocage résolu depuis : voir le compte rendu de la phase 3, section 2) :** code écrit (`index.html`, `css/style.css`, `js/app.js`, `js/auth.js`, `js/entrepot.js`, `js/messages-erreur.js`, `js/tests-regles.js`, `tests-regles.html`, `firestore.rules` version 3). Testé en local avec le compte de test (identifiants dans `.env.test`, fichier ignoré par Git) : inscription, mot de passe trop court, adresse déjà utilisée, mauvais mot de passe, déconnexion, reconnexion, mot de passe oublié (adresse sans compte), confidentialité, affichage à 360 pixels. **Blocage constaté :** après l'annonce de la publication, le serveur refuse toujours la lecture et la création de `users/{uid}` pour le compte de test (`permission-denied`), alors que le jeton de connexion, le projet et la base `(default)` sont corrects. Les règles actives sur le serveur ne sont donc pas la version 3 : vérifier dans la console (Firestore > Règles) que la ligne 4 indique « Version des regles : 3 (phase 3) » et qu'aucune erreur n'a empêché la publication. **En attente :** le propriétaire doit publier `firestore.rules` dans la console ; ensuite tester le premier lancement et lancer `tests-regles.html`. Restent aussi les tests du propriétaire : connexion Google, e-mail de réinitialisation, même adresse par les deux méthodes.
 - **Travail terminé :** analyse, plan (ce fichier), décisions 8 à 15 dans `DECISIONS.md`.
 - **Fichiers modifiés :** `PLAN.md` (créé), `DECISIONS.md` (décisions ajoutées), `CLAUDE.md` et `DEMARRAGE.md` (alignés sur les décisions 8 à 14). Phase 0 : `.gitignore` et `README.md` créés ; premier commit local fait.
 - **Phase 2 :** fichiers créés : `index.html`, `css/style.css`, `js/app.js`, `js/firebase-config.js`, `js/firebase-init.js`, `firestore.rules`, `demarrer.bat`, `outils/serveur-local.ps1`, `vendor/` (SDK Firebase 13.4.0 corrigé, SheetJS 0.20.3, `LISEZMOI.md`). Commit local fait.
-- **Prochaine action précise :** le propriétaire fait ses trois tests de la phase 3 (Google, e-mail de réinitialisation, même adresse par les deux méthodes), puis vérifie et publie les commits dans GitHub Desktop. Ensuite, phase 4a (produits et conversion des nombres). À trancher au début de la 4a : écouter seulement les produits non archivés, possibilité de désarchiver, produits archivés dans la valeur du stock (section 4).
+- **Prochaine action précise :** le propriétaire fait ses trois tests de la phase 3 (Google, e-mail de réinitialisation, même adresse par les deux méthodes), puis vérifie et publie les commits dans GitHub Desktop. Ensuite, phase 4b (mouvements, règles du lien produit-mouvement, liste locale des opérations non confirmées, historique). Avant de coder la 4b : expliquer simplement au propriétaire comment les règles vérifient qu'un mouvement correspond à la modification de stock. À trancher au début de la 4b : tri de l'historique par `dateServeur` (section 4). À la fin de la 4b : recherche de secrets, puis dépôt public et GitHub Pages (décision 10).

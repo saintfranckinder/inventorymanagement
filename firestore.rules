@@ -1,10 +1,12 @@
 rules_version = '2';
 
 // Regles de securite de la base Firestore.
-// Version des regles : 3 (phase 3).
+// Version des regles : 4 (phase 4a).
 //
-// Phase 3 : chaque utilisateur accede uniquement a son document users/{uid}.
-// Les produits et les mouvements restent fermes jusqu'a la phase 4.
+// Phase 4a : chaque utilisateur accede a son document users/{uid} et a ses
+// produits. La quantite d'un produit ne peut pas encore changer : cela
+// arrivera en phase 4b, uniquement par un mouvement de stock.
+// Les mouvements restent fermes jusqu'a la phase 4b.
 // Tout ce qui n'est pas explicitement autorise ici est refuse.
 //
 // Ce fichier n'est pas applique automatiquement : il faut copier son contenu
@@ -38,6 +40,41 @@ service cloud.firestore {
         && d.suppressionDemandee is bool;
     }
 
+    // Controle des champs d'un produit : uniquement les neuf champs prevus.
+    // Quantites en milliemes et prix en centimes, toujours des entiers.
+    // Les bornes sont plus larges que celles du formulaire, pour ne jamais
+    // refuser une operation legitime faite hors ligne.
+    function produitValide(d) {
+      return d.keys().hasOnly(['nom', 'unite', 'quantiteMilliemes', 'seuilAlerteMilliemes',
+                               'prixAchatCentimes', 'archive', 'dernierMouvementId',
+                               'createdAt', 'updatedAt'])
+        && d.keys().hasAll(['nom', 'unite', 'quantiteMilliemes', 'seuilAlerteMilliemes',
+                            'prixAchatCentimes', 'archive', 'dernierMouvementId',
+                            'createdAt', 'updatedAt'])
+        && d.nom is string
+        && d.nom.size() >= 1
+        && d.nom.size() <= 100
+        && d.unite is string
+        && d.unite.size() >= 1
+        && d.unite.size() <= 30
+        && d.quantiteMilliemes is int
+        && d.quantiteMilliemes >= -1000000000000000
+        && d.quantiteMilliemes <= 1000000000000000
+        && d.seuilAlerteMilliemes is int
+        && d.seuilAlerteMilliemes >= 0
+        && d.seuilAlerteMilliemes <= 1000000000000
+        && d.prixAchatCentimes is int
+        && d.prixAchatCentimes >= 0
+        && d.prixAchatCentimes <= 1000000000000
+        && d.archive is bool
+        && (d.dernierMouvementId == null
+            || (d.dernierMouvementId is string
+                && d.dernierMouvementId.size() >= 1
+                && d.dernierMouvementId.size() <= 100))
+        && d.createdAt is timestamp
+        && d.updatedAt is timestamp;
+    }
+
     match /users/{uid} {
       // Lecture de son propre document uniquement.
       allow get: if estProprietaire(uid);
@@ -58,6 +95,32 @@ service cloud.firestore {
         && request.resource.data.suppressionDemandee == resource.data.suppressionDemandee;
 
       // Suppression : refusee pour l'instant (phase 7).
+
+      match /products/{productId} {
+        // Lecture de ses propres produits (un par un, ou en liste).
+        allow read: if estProprietaire(uid);
+
+        // Creation : stock a 0, aucun mouvement, non archive, dates du serveur.
+        // (Le stock initial par mouvement arrive en phase 4b.)
+        allow create: if estProprietaire(uid)
+          && produitValide(request.resource.data)
+          && request.resource.data.quantiteMilliemes == 0
+          && request.resource.data.dernierMouvementId == null
+          && request.resource.data.archive == false
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.updatedAt == request.time;
+
+        // Modification de la fiche (nom, unite, seuil, prix, archivage).
+        // La quantite et le dernier mouvement ne changent pas ici.
+        allow update: if estProprietaire(uid)
+          && produitValide(request.resource.data)
+          && request.resource.data.createdAt == resource.data.createdAt
+          && request.resource.data.updatedAt == request.time
+          && request.resource.data.quantiteMilliemes == resource.data.quantiteMilliemes
+          && request.resource.data.dernierMouvementId == resource.data.dernierMouvementId;
+
+        // Suppression : toujours refusee (sauf suppression du compte, phase 7).
+      }
     }
   }
 }

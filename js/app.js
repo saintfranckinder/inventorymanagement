@@ -1,5 +1,5 @@
 // Enchaînement des écrans : connexion, inscription, mot de passe oublié,
-// confidentialité, premier lancement, puis accueil (provisoire en phase 3).
+// confidentialité, premier lancement, puis écran des produits.
 
 import {
   LONGUEUR_MIN_MOT_DE_PASSE,
@@ -11,6 +11,11 @@ import {
   surveillerConnexion
 } from './auth.js';
 import {
+  arreterEcranProduits,
+  brancherEcranProduits,
+  demarrerEcranProduits
+} from './ecran-produits.js';
+import {
   DEVISES,
   LONGUEUR_MAX_NOM_ENTREPOT,
   creerEntrepot,
@@ -18,12 +23,17 @@ import {
   surveillerEntrepot
 } from './entrepot.js';
 import { demarrerFirebase, VERSION_SDK_FIREBASE } from './firebase-init.js';
+import { afficherMessage, afficherVue, effacerMessages, element, vueActuelle } from './interface.js';
 import { messageErreur } from './messages-erreur.js';
 
-const VERSION_APP = '0.3.0';
+const VERSION_APP = '0.4.0';
 
 // Écrans accessibles sans être connecté.
 const VUES_SANS_COMPTE = ['vue-connexion', 'vue-inscription', 'vue-oubli', 'vue-confidentialite'];
+
+// Écrans de travail d'un compte connecté. Tant que l'utilisateur est sur l'un
+// d'eux, une simple mise à jour de l'entrepôt ne doit pas le déplacer.
+const VUES_DE_TRAVAIL = ['vue-accueil', 'vue-produit'];
 
 const AVERTISSEMENT_STOCKAGE =
   'Ce navigateur n’enregistre pas les données sur l’appareil. ' +
@@ -36,45 +46,7 @@ let utilisateur = null;
 let arreterEcouteEntrepot = null;
 let memoireHorsLigneVerifiee = false;
 
-function element(id) {
-  return document.getElementById(id);
-}
-
 // ---------- Affichage ----------
-
-function vueActuelle() {
-  const vue = document.querySelector('[data-vue]:not([hidden])');
-  return vue ? vue.id : null;
-}
-
-function effacerMessages() {
-  for (const message of document.querySelectorAll('.message-erreur, .message-info')) {
-    message.hidden = true;
-    message.textContent = '';
-  }
-}
-
-function afficherVue(id) {
-  if (vueActuelle() === id) {
-    return;
-  }
-  for (const vue of document.querySelectorAll('[data-vue]')) {
-    vue.hidden = vue.id !== id;
-  }
-  effacerMessages();
-  // Place le lecteur d'écran et le clavier au début du nouvel écran.
-  const titre = element(id).querySelector('h2');
-  if (titre) {
-    titre.tabIndex = -1;
-    titre.focus();
-  }
-}
-
-function afficherMessage(id, texte) {
-  const zone = element(id);
-  zone.textContent = texte;
-  zone.hidden = false;
-}
 
 function afficherProbleme(titre, texte) {
   element('probleme-titre').textContent = titre;
@@ -132,9 +104,14 @@ function surEtatEntrepot(etat) {
     element('accueil-entrepot').textContent = etat.donnees.nomEntrepot;
     element('accueil-devise').textContent = nomDevise(etat.donnees.devise);
     element('accueil-compte').textContent = utilisateur.email || 'Compte sans adresse e-mail';
-    afficherVue('vue-accueil');
+    demarrerEcranProduits(firebase.db, utilisateur.uid, etat.donnees);
+    if (!VUES_DE_TRAVAIL.includes(vueActuelle())) {
+      afficherVue('vue-accueil');
+    }
     return;
   }
+
+  arreterEcranProduits();
 
   if (!etat.depuisCache) {
     // Le serveur confirme qu'aucun entrepôt n'existe : c'est un nouveau compte.
@@ -165,6 +142,7 @@ function surChangementUtilisateur(nouvelUtilisateur) {
     arreterEcouteEntrepot();
     arreterEcouteEntrepot = null;
   }
+  arreterEcranProduits();
   utilisateur = nouvelUtilisateur;
   viderMotsDePasse();
 
@@ -362,6 +340,7 @@ async function demarrer() {
   brancherInscription();
   brancherMotDePasseOublie();
   brancherPremierLancement();
+  brancherEcranProduits();
 
   surveillerConnexion(firebase.auth, surChangementUtilisateur);
 }

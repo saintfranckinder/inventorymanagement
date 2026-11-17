@@ -172,26 +172,59 @@
       </nav>
     </section>
 
-    <!-- Accueil (provisoire : le tableau de bord arrive en phase 5) -->
+    <!-- Produits (liste simple : le tableau de bord complet arrive en phase 5) -->
     <section id="vue-accueil" data-vue hidden>
-      <h2>Votre entrepôt</h2>
-      <dl class="fiche">
-        <div>
-          <dt>Nom</dt>
-          <dd id="accueil-entrepot"></dd>
-        </div>
-        <div>
-          <dt>Devise</dt>
-          <dd id="accueil-devise"></dd>
-        </div>
-        <div>
-          <dt>Compte</dt>
-          <dd id="accueil-compte"></dd>
-        </div>
-      </dl>
-      <p class="aide">Les produits et les mouvements de stock arrivent dans les prochaines étapes.</p>
+      <h2 id="accueil-entrepot"></h2>
+      <p class="aide">
+        <span id="accueil-devise"></span><br>
+        <span id="accueil-compte"></span>
+      </p>
+
+      <p id="erreur-accueil" class="message-erreur" role="alert" hidden></p>
+
+      <button type="button" id="bouton-ajouter-produit" class="bouton bouton-principal">Ajouter un produit</button>
+
+      <h3>Produits</h3>
+      <p id="produits-vide" class="aide" hidden>Aucun produit pour l'instant.</p>
+      <ul id="liste-produits" class="liste-produits"></ul>
 
       <button type="button" class="bouton bouton-secondaire" data-deconnexion>Se déconnecter</button>
+    </section>
+
+    <!-- Ajouter ou modifier un produit -->
+    <section id="vue-produit" data-vue hidden>
+      <h2 id="produit-titre">Ajouter un produit</h2>
+
+      <form id="formulaire-produit" novalidate>
+        <label for="produit-nom">Nom du produit</label>
+        <input id="produit-nom" type="text" autocomplete="off">
+
+        <label for="produit-unite">Unité</label>
+        <input id="produit-unite" type="text" autocomplete="off" autocapitalize="none" aria-describedby="aide-produit-unite">
+        <p id="aide-produit-unite" class="aide-champ">Exemples : sac, kg, pièce, carton.</p>
+
+        <label for="produit-seuil">Seuil d'alerte</label>
+        <input id="produit-seuil" type="text" inputmode="decimal" autocomplete="off" aria-describedby="aide-produit-seuil">
+        <p id="aide-produit-seuil" class="aide-champ" aria-live="polite"></p>
+
+        <label for="produit-prix">Prix d'achat unitaire</label>
+        <input id="produit-prix" type="text" inputmode="decimal" autocomplete="off" aria-describedby="aide-produit-prix">
+        <p id="aide-produit-prix" class="aide-champ" aria-live="polite"></p>
+
+        <dl id="produit-quantite-bloc" class="fiche" hidden>
+          <div>
+            <dt>Quantité actuelle</dt>
+            <dd id="produit-quantite"></dd>
+          </div>
+        </dl>
+        <p id="produit-note-quantite" class="aide"></p>
+
+        <p id="erreur-produit" class="message-erreur" role="alert" hidden></p>
+
+        <button type="submit" id="bouton-enregistrer-produit" class="bouton bouton-principal">Enregistrer</button>
+        <button type="button" id="bouton-annuler-produit" class="bouton bouton-secondaire">Annuler</button>
+        <button type="button" id="bouton-archiver-produit" class="bouton bouton-danger" hidden>Archiver ce produit</button>
+      </form>
     </section>
 
     <!-- Problème : attente d'Internet ou erreur du serveur -->
