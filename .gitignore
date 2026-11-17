@@ -1,0 +1,13 @@
+# Fichiers secrets : ne jamais les publier
+.env
+.env.*
+
+# Dépendances installées automatiquement
+node_modules/
+
+# Réglages personnels de Claude Code
+.claude/settings.local.json
+
+# Fichiers créés par Windows et macOS
+Thumbs.db
+.DS_Store
