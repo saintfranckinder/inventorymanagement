@@ -59,7 +59,7 @@ Ne pas changer de modèle simplement parce qu'une tâche prend du temps.
 
 - Claude Code fonctionne dans l'application de bureau (onglet Code).
 - GitHub Desktop est installé.
-- Dépôt `saintfranckinder/inventorymanagement` créé sur GitHub, en **privé**.
+- Dépôt `saintfranckinder/minstock` créé sur GitHub, en **privé** (appelé `inventorymanagement` jusqu'au 2026-11-18).
 - Projet Firebase créé, plan Spark.
 - Firestore : édition Standard, base `(default)`, emplacement `nam5`, mode production.
 - Authentication : Google et adresse e-mail / mot de passe activés.
@@ -244,7 +244,7 @@ Objectifs :
 
 - Manifeste et icônes.
 - Service worker qui met en cache l'interface, le SDK Firebase et SheetJS de `/vendor`.
-- Chemins compatibles avec l'adresse GitHub Pages, qui contient le nom du dépôt (`https://saintfranckinder.github.io/inventorymanagement/`).
+- Chemins compatibles avec l'adresse GitHub Pages, qui contient le nom du dépôt (`https://saintfranckinder.github.io/minstock/`).
 
 Tests : installation sur le téléphone ; réouverture en mode avion après une première visite en ligne.
 

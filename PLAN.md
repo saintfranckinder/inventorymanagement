@@ -4,6 +4,8 @@ Ce fichier suit l'avancement. `CLAUDE.md` reste le cahier des charges ; `DECISIO
 
 Dossier de travail : `C:\GitHub\Inventory Management\inventorymanagement` (dépôt cloné par le propriétaire avec GitHub Desktop le 2026-11-16).
 
+Dépôt GitHub : `saintfranckinder/minstock`, renommé par le propriétaire le 2026-11-18 (ancien nom : `inventorymanagement`). Adresse prévue du site : `https://saintfranckinder.github.io/minstock/`. Le dossier de travail garde son nom.
+
 ## 1. État d'avancement
 
 | Phase | Travail | État |
@@ -28,7 +30,7 @@ Dossier de travail : `C:\GitHub\Inventory Management\inventorymanagement` (dép�
 ## 2. Détail des phases : résultat attendu et tests
 
 ### Phase 0 : préparer le dossier
-- **Résultat :** le dossier est un vrai dépôt Git relié à `saintfranckinder/inventorymanagement` ; Git fonctionne (celui de GitHub Desktop suffit) ; `.gitignore` et `README.md` existent.
+- **Résultat :** le dossier est un vrai dépôt Git relié à `saintfranckinder/minstock` (appelé `inventorymanagement` jusqu'au 2026-11-18) ; Git fonctionne (celui de GitHub Desktop suffit) ; `.gitignore` et `README.md` existent.
 - **Test :** un commit local apparaît dans l'onglet **History** de GitHub Desktop.
 
 ### Phase 2 : structure, Firebase, persistance
@@ -286,7 +288,7 @@ Ces points viennent de l'analyse et n'ont pas été testés.
 
 ## 5. Problèmes connus
 
-1. *(Résolu le 2026-11-16.)* Le dépôt est cloné dans `C:\GitHub\Inventory Management\inventorymanagement` et relié à `saintfranckinder/inventorymanagement`.
+1. *(Résolu le 2026-11-16.)* Le dépôt est cloné dans `C:\GitHub\Inventory Management\inventorymanagement` et relié à `saintfranckinder/minstock`. Renommé sur GitHub le 2026-11-18 (ancien nom : `inventorymanagement`) ; GitHub Desktop a mis à jour l'adresse du dépôt tout seul (vérifié le 2026-11-18).
 2. **La commande `git` n'est pas dans le terminal, mais ce n'est pas bloquant.** Git for Windows est absent ; le Git interne de GitHub Desktop fonctionne (version 2.53, vérifié le 2026-11-16) et sert aux commits locaux. Chemin : `%LOCALAPPDATA%\GitHubDesktop\app-*\resources\app\git\cmd\git.exe` (le numéro de version change à chaque mise à jour de GitHub Desktop : toujours le rechercher). Le nom et une adresse `noreply` sont déjà réglés : l'adresse personnelle n'apparaîtra pas dans les commits.
 3. **Node.js, Java et Python ne sont pas installés** : pas d'émulateur Firebase, serveur local par script PowerShell.
 4. **Une ancienne copie des fichiers existe dans `C:\Inventory Management`.** Elle n'est plus utilisée et ne contient ni ce plan ni les nouvelles décisions. Le propriétaire peut la supprimer.
@@ -339,7 +341,7 @@ Règles de conception retenues pour le code :
 
 | Phase | Résultat | Preuve |
 |---|---|---|
-| 0 | `.gitignore`, `README.md`, dépôt relié à `saintfranckinder/inventorymanagement` | commit `cecf8d3` |
+| 0 | `.gitignore`, `README.md`, dépôt relié à `saintfranckinder/minstock` (ancien nom : `inventorymanagement`) | commit `cecf8d3` |
 | 1 | Analyse des risques, plan, décisions 8 à 15, `CLAUDE.md` et `DEMARRAGE.md` alignés | commit `cecf8d3` |
 | 2 | Structure, SDK Firebase 13.4.0 et SheetJS 0.20.3 dans `vendor/` (import corrigé), mémoire hors ligne avec avertissement, serveur local | compte rendu de la phase 2 |
 | 3 | Connexion Google et e-mail, inscription, mot de passe oublié, premier lancement, confidentialité, règles version 3 | `tests-regles.html` : 14 sur 14 |
@@ -437,5 +439,5 @@ Les règles de conception de la section 7 restent à respecter dans toute la sui
    - rechercher des secrets dans tous les fichiers suivis et dans tout l'historique Git (`.env.test` doit rester absent ; `js/firebase-config.js` est normal) ;
    - vérifier que les commits n'exposent que l'adresse `noreply` ;
    - guider le propriétaire clic par clic : dépôt en public, GitHub Pages (branche `main`, dossier racine), ajout de `saintfranckinder.github.io` aux domaines autorisés de Firebase Authentication ;
-   - premier test sur smartphone à l'adresse `https://saintfranckinder.github.io/inventorymanagement/` : connexion, mouvement de stock, affichage à 360 pixels.
+   - premier test sur smartphone à l'adresse `https://saintfranckinder.github.io/minstock/` : connexion, mouvement de stock, affichage à 360 pixels.
 3. **Ensuite :** phase 5, tableau de bord (recherche, valeur du stock « indicative », boutons `+1` / `-1`, alertes `Stock bas` et `Rupture`).
