@@ -16,7 +16,7 @@ Dépôt GitHub : `saintfranckinder/minstock`, renommé par le propriétaire le 2
 | 3 | Connexion, premier lancement, confidentialité | **Faite le 2026-11-16** ; trois tests du propriétaire restent à faire (Google, e-mail de réinitialisation, même adresse) |
 | 4a | Produits et conversion des nombres | **Terminée le 2026-11-16** |
 | 4b | Mouvements, règles complètes, historique | **Terminée le 2026-11-16** (tests hors ligne et à deux appareils non faits) |
-| — | Vérification des secrets, dépôt public, GitHub Pages activé | **En cours** : recherche de secrets faite le 2026-11-18, aucun secret ; reste la publication (voir section 8.7) |
+| — | Vérification des secrets, dépôt public, GitHub Pages activé | **En cours** : dépôt public et site en ligne le 2026-11-18 ; reste le premier test sur smartphone (voir section 8.7) |
 | 5 | Tableau de bord | À faire |
 | 6 | Formulaires, historique lisible, paramètres | À faire |
 | 7 | Suppression du compte | À faire |
@@ -268,7 +268,30 @@ Constats :
 - Second compte de test : `test-isolation@example.org`, mot de passe dans `.env.test` (ignoré par Git), entrepôt « Entrepôt isolation (test) » sans produit. À supprimer en fin de projet, comme le premier.
 - Compte de test principal : 68 mouvements après ce passage.
 
-Reste à faire : « Publish branch », dépôt en public, GitHub Pages, domaine autorisé dans Firebase, premier test sur smartphone.
+**Compte rendu partiel : mise en ligne (2026-11-18)**
+
+Actions du propriétaire, guidé clic par clic : « Publish branch » dans GitHub Desktop ; `saintfranckinder.github.io` dans les domaines autorisés de Firebase Authentication ; dépôt passé en public ; GitHub Pages activé (branche `main`, dossier racine) ; protection contre l'envoi de secrets (Push protection) vérifiée dans les réglages GitHub.
+
+Vérifications de l'assistant :
+
+| Vérification | Résultat |
+|---|---|
+| Les 9 commits sont sur GitHub, identiques à la copie locale (dernier : `d5a7808`) | Réussi |
+| Le dépôt est public et GitHub Pages est actif (vu sans connexion, par l'API publique de GitHub) | Réussi |
+| `https://saintfranckinder.github.io/minstock/` : page, style, 13 modules `js/` et les 3 fichiers Firebase répondent (code 200) | Réussi |
+| Les 3 fichiers de `vendor/` ont exactement la même taille qu'en local : `.nojekyll` fonctionne (décision 41) | Réussi |
+| `.env.test` absent du site (404) et du dépôt public | Réussi |
+| Dans Chrome, le site affiche l'écran « Connexion » avec le bouton Google ; tous les fichiers de l'application viennent de `/minstock/` ; aucun appel à `gstatic.com` ; aucune erreur de l'application dans la console | Réussi |
+
+Tests non exécutés par l'assistant :
+
+- Connexion sur le site en ligne : l'assistant ne saisit pas de mot de passe sur le site public. À faire par le propriétaire, sur smartphone ; la connexion Google confirmera aussi le domaine autorisé.
+- Réglages GitHub (Push protection) et domaine autorisé dans Firebase : faits par le propriétaire, non vus par l'assistant.
+- Affichage à 360 pixels sur le site en ligne : mêmes fichiers que sur `localhost`, où il a été testé ; à confirmer sur le smartphone.
+
+Constat : juste après la mise en ligne, GitHub Pages a répondu 503 au lieu de 404 pour des fichiers inexistants ; quelques secondes plus tard, `.env.test` répondait bien 404. Défaut passager de GitHub Pages, sans conséquence.
+
+Reste à faire : premier test sur smartphone (connexion e-mail et Google, un mouvement de stock, affichage).
 
 ### Phase 5 : tableau de bord
 - **Résultat :** liste, recherche, quantité, seuil, prix, valeur « indicative », `+1` / `-1` (48 × 48 px), saisie d'une quantité précise, alertes `Stock bas` et `Rupture`.
@@ -377,7 +400,7 @@ Règles de conception retenues pour le code :
 
 ### 8.1 Phase actuelle
 
-- **Phase 4b terminée.** Prochaine étape : **« dépôt public »**, entre la phase 4b et la phase 5 (décision 10). *(2026-11-18 : recherche de secrets faite, aucun secret ; le reste de l'étape n'est pas commencé.)*
+- **Phase 4b terminée.** Prochaine étape : **« dépôt public »**, entre la phase 4b et la phase 5 (décision 10). *(2026-11-18 : recherche de secrets faite, aucun secret ; dépôt public ; site en ligne à `https://saintfranckinder.github.io/minstock/` ; reste le premier test sur smartphone.)*
 - Version de l'application : `0.5.0`. Règles Firestore : **version 5**, publiée dans la console et vérifiée active le 2026-11-16 (`tests-regles.html` : 70 essais sur 70).
 - Dépôt Git, branche `main` : `cecf8d3` (phases 0 et 1), `48d55b3` (phase 2), `f09bf30` (phase 3), `96f2a3d` (phase 4a), `d8f1b5b` (phase 4b), puis le commit de cette note. **Aucun commit n'est publié sur GitHub** (vérifié le 2026-11-18) : la première publication se fait avec **Publish branch** dans GitHub Desktop.
 
@@ -485,6 +508,6 @@ Les règles de conception de la section 7 restent à respecter dans toute la sui
    - *(Fait le 2026-11-18, avant « Publish branch », avec l'accord du propriétaire : aucun secret. Voir le compte rendu partiel de l'étape « dépôt public », section 2.)* rechercher des secrets dans tous les fichiers suivis et dans tout l'historique Git (`.env.test` doit rester absent ; `js/firebase-config.js` est normal) ;
    - *(Fait le 2026-11-18 : uniquement l'adresse `noreply`.)* vérifier que les commits n'exposent que l'adresse `noreply` ;
    - *(Fait le 2026-11-18 : décisions 40 et 41.)* page de test réservée aux comptes de test ; fichier `.nojekyll` ;
-   - guider le propriétaire clic par clic : dépôt en public, GitHub Pages (branche `main`, dossier racine), ajout de `saintfranckinder.github.io` aux domaines autorisés de Firebase Authentication ;
+   - *(Fait le 2026-11-18.)* guider le propriétaire clic par clic : dépôt en public, GitHub Pages (branche `main`, dossier racine), ajout de `saintfranckinder.github.io` aux domaines autorisés de Firebase Authentication ;
    - premier test sur smartphone à l'adresse `https://saintfranckinder.github.io/minstock/` : connexion, mouvement de stock, affichage à 360 pixels.
 3. **Ensuite :** phase 5, tableau de bord (recherche, valeur du stock « indicative », boutons `+1` / `-1`, alertes `Stock bas` et `Rupture`).

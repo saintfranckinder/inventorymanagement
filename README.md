@@ -110,6 +110,14 @@ Tous les chemins sont relatifs : l'application peut être placée chez n'importe
 
 Sur GitHub Pages, le fichier vide `.nojekyll` doit rester à la racine : sans lui, GitHub Pages pourrait ignorer certains fichiers, comme ceux de `vendor/`, et l'application ne démarrerait pas en ligne.
 
+## Version en ligne (GitHub Pages)
+
+- Adresse : `https://saintfranckinder.github.io/minstock/`
+- Réglages GitHub (onglet **Settings** > **Pages**) : **Deploy from a branch**, branche `main`, dossier **/ (root)**.
+- Domaine autorisé dans Firebase (**Authentication** > **Paramètres** > **Domaines autorisés**) : `saintfranckinder.github.io`.
+- Mise à jour : chaque **Push origin** dans GitHub Desktop met le site à jour en quelques minutes. Les règles Firestore, elles, se publient à part dans la console (voir plus haut).
+- Le dépôt est public : ne jamais y placer de mot de passe ni de clé secrète. Le fichier `.env.test` reste sur l'ordinateur (ignoré par Git).
+
 ## Limites connues
 
 - **Mémoire hors ligne :** elle dépend du navigateur. Si le navigateur bloque l'enregistrement de données sur l'appareil, l'application affiche un avertissement. En navigation privée, les navigateurs récents acceptent d'enregistrer mais effacent tout à la fermeture, et l'application ne peut pas le détecter : ne pas utiliser la navigation privée.
