@@ -29,6 +29,27 @@ import {
 export const LONGUEUR_MAX_MOTIF = 200;
 export const TAILLE_PAGE_HISTORIQUE = 50;
 
+// Annulation d'une opération (décisions 43 et 48) : l'opération inverse porte
+// l'identifiant « annulation-{identifiant d'origine} ». Les règles refusant un
+// identifiant déjà enregistré, une opération ne peut être annulée qu'une fois.
+const PREFIXE_ANNULATION = 'annulation-';
+const LONGUEUR_MAX_IDENTIFIANT = 100;   // comme dans firestore.rules
+
+export function idAnnulation(idMouvement) {
+  return PREFIXE_ANNULATION + idMouvement;
+}
+
+export function estUneAnnulation(idMouvement) {
+  return idMouvement.startsWith(PREFIXE_ANNULATION);
+}
+
+// Vrai si l'identifiant d'annulation reste accepté par les règles (toujours
+// le cas pour les identifiants créés par l'application, de 20 caractères).
+export function annulationPossiblePourId(idMouvement) {
+  return !estUneAnnulation(idMouvement) &&
+    idAnnulation(idMouvement).length <= LONGUEUR_MAX_IDENTIFIANT;
+}
+
 export const LIBELLES_TYPE = {
   entree: 'Entrée',
   sortie: 'Sortie',

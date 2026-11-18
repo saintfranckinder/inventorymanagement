@@ -10,6 +10,9 @@
 import {
   collection,
   doc,
+  getDocsFromCache,
+  getDocsFromServer,
+  limit,
   onSnapshot,
   query,
   serverTimestamp,
@@ -54,6 +57,25 @@ export function surveillerProduits(db, uid, rappel, surErreur) {
     },
     surErreur
   );
+}
+
+// Vrai si l'entrepôt contient au moins un produit, même archivé (décision 49).
+// D'abord la mémoire de l'appareil, qui connaît aussi les produits ajoutés ici
+// et pas encore envoyés ; puis le serveur, qui connaît ceux des autres
+// appareils (une seule lecture). Sans Internet, la promesse échoue : la
+// devise reste alors bloquée.
+export async function entrepotContientDesProduits(db, uid) {
+  const requete = query(collectionProduits(db, uid), limit(1));
+  try {
+    const local = await getDocsFromCache(requete);
+    if (!local.empty) {
+      return true;
+    }
+  } catch {
+    // Mémoire de l'appareil illisible : seule la réponse du serveur compte.
+  }
+  const serveur = await getDocsFromServer(requete);
+  return !serveur.empty;
 }
 
 // Ajoute un produit.

@@ -7,9 +7,9 @@
 import {
   envoyerMouvement,
   formaterVariation,
-  mettreAJourProduitDuFormulaire,
   ouvrirFormulaireMouvement,
-  signalerResultatOperation
+  signalerResultatOperation,
+  surProduitsActifs
 } from './ecran-mouvements.js';
 import { afficherMessage, afficherVue, effacerMessages, element, vueActuelle } from './interface.js';
 import { messageErreur } from './messages-erreur.js';
@@ -258,7 +258,7 @@ function afficherListe() {
 function surProduits(etat) {
   produits = etat.produits.slice().sort((a, b) => COMPARATEUR.compare(a.nom, b.nom));
   afficherListe();
-  mettreAJourProduitDuFormulaire(produits);
+  surProduitsActifs(produits);
   // Si le produit ouvert dans le formulaire vient d'être archivé ailleurs,
   // revenir à la liste.
   if (vueActuelle() === 'vue-produit' && idProduitEnCours !== null &&

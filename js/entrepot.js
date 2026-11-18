@@ -6,7 +6,8 @@ import {
   doc,
   onSnapshot,
   serverTimestamp,
-  setDoc
+  setDoc,
+  updateDoc
 } from '../vendor/firebase-firestore.js';
 
 export const LONGUEUR_MAX_NOM_ENTREPOT = 100;
@@ -63,4 +64,16 @@ export function creerEntrepot(db, uid, nomEntrepot, devise) {
     createdAt: serverTimestamp(),
     suppressionDemandee: false
   });
+}
+
+// Paramètres (décision 49). Seul le champ concerné est envoyé. Comme
+// ci-dessus, la promesse ne se termine que lorsque le serveur a répondu.
+export function modifierNomEntrepot(db, uid, nomEntrepot) {
+  return updateDoc(referenceEntrepot(db, uid), { nomEntrepot });
+}
+
+// À n'appeler qu'après avoir vérifié qu'aucun produit n'existe : changer la
+// devise ne convertit pas les montants.
+export function modifierDevise(db, uid, devise) {
+  return updateDoc(referenceEntrepot(db, uid), { devise });
 }

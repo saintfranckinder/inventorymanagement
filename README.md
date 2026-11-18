@@ -13,8 +13,10 @@ Le projet est en cours de construction. L'avancement est suivi dans `PLAN.md`.
 - Ajouter, modifier et archiver un produit : nom, unité, seuil d'alerte, prix d'achat, stock de départ.
 - Enregistrer des mouvements de stock : entrée, sortie, ajustement, avec un motif facultatif.
 - Consulter l'historique : les 50 derniers mouvements, puis « Voir plus ».
+- Annuler une opération faite par erreur, depuis l'historique.
 - Signaler les opérations que le serveur a refusées, même après fermeture de l'application.
 - Tableau de bord : valeur du stock (indicative), recherche par nom, alertes « Stock bas » et « Rupture », boutons rapides `−1` et `+1`.
+- Paramètres : changer le nom de l'entrepôt ; changer la devise tant que l'entrepôt ne contient aucun produit.
 
 ## Tableau de bord
 
@@ -29,10 +31,18 @@ Le projet est en cours de construction. L'avancement est suivi dans `PLAN.md`.
 
 - La quantité d'un produit ne change que par un mouvement. Chaque mouvement laisse une ligne dans l'historique.
 - **Entrée** et **Sortie** : saisir la quantité sans signe. **Ajustement** : saisir la correction avec son signe (`-2,5` ou `+3`).
-- Un mouvement enregistré ne peut être ni modifié ni supprimé. Une erreur se corrige par un mouvement d'ajustement.
+- Un mouvement enregistré ne peut être ni modifié ni supprimé. Une erreur se corrige avec « Annuler cette opération » dans l'historique (voir plus bas), ou par un mouvement d'ajustement.
 - Un stock peut devenir négatif. L'application avertit avant l'enregistrement et affiche ensuite « Stock négatif : à vérifier ». Avec plusieurs appareils hors ligne, elle ne peut pas l'empêcher.
 - Un mouvement apparaît tout de suite, avec la mention « En attente de synchronisation » tant que le serveur ne l'a pas confirmé.
 - L'historique est rangé selon l'heure de réception par le serveur. L'heure indiquée « Fait le » est celle de l'appareil au moment de l'opération ; si l'écart dépasse 5 minutes, les deux sont affichées.
+
+### Annuler une opération faite par erreur
+
+Dans l'historique, chaque opération propose « Annuler cette opération ». Une fenêtre de confirmation montre l'opération et le stock prévu après l'annulation, avec un avertissement s'il est négatif. Après confirmation, l'application enregistre l'opération inverse : un ajustement de valeur opposée, dont le motif décrit l'opération annulée (par exemple « Annulation : Sortie -1 sac du 18/11/2026 14:32 »). L'opération d'origine reste dans l'historique, marquée « Annulée le … ». Rien n'est effacé.
+
+- L'annulation retire seulement l'effet de cette opération : les opérations faites depuis restent comptées.
+- Une opération ne peut être annulée qu'une fois. Si on l'annule sur deux appareils, le serveur refuse la seconde fois et l'application l'indique : rien n'est compté deux fois.
+- Le bouton n'apparaît pas sur une annulation (une annulation ne s'annule pas : refaire l'opération voulue), sur une opération déjà annulée, sur une opération encore « En attente de synchronisation », ni sur un produit archivé.
 
 ### Comment un mouvement est protégé
 
@@ -41,6 +51,13 @@ Chaque opération part dans un seul envoi qui contient le changement de quantit�
 ### Opérations refusées
 
 Chaque mouvement et chaque création de produit est noté sur l'appareil jusqu'à la confirmation du serveur. Si le serveur refuse, un bloc rouge « Opérations refusées par le serveur » décrit l'opération, y compris à la réouverture de l'application. Le bouton « J'ai noté » le fait disparaître. Les simples modifications de fiche (nom, prix, seuil, archivage) ne sont pas suivies de cette façon.
+
+## Paramètres
+
+Le bouton « Paramètres », en bas de l'écran des produits, ouvre :
+
+- **Nom de l'entrepôt** : modifiable à tout moment, même sans Internet (de 1 à 100 caractères).
+- **Devise** : modifiable seulement tant que l'entrepôt ne contient aucun produit, même archivé, car changer la devise ne convertit pas les prix déjà saisis. L'application le vérifie auprès du serveur : il faut donc Internet pour changer la devise. Sans réponse du serveur, la devise reste bloquée et le bouton « Vérifier de nouveau » permet de réessayer.
 
 ## Saisie des nombres
 
@@ -84,7 +101,7 @@ Tant que les règles publiées sont en retard sur le fichier, l'application affi
 
 À refaire après chaque publication des règles.
 
-Ces essais créent dans le compte de test deux produits « Produit d'essai (règles) ». Ils sont archivés à la fin de chaque passage et n'apparaissent donc pas dans la liste. Chaque passage ajoute aussi trois mouvements à l'historique du compte de test (impossibles à supprimer, par conception) ; leur somme est nulle. Un passage dure environ une minute.
+Ces essais créent dans le compte de test deux produits « Produit d'essai (règles) ». Ils sont archivés à la fin de chaque passage et n'apparaissent donc pas dans la liste. Chaque passage ajoute aussi cinq mouvements à l'historique du compte de test, dont une opération et son annulation (impossibles à supprimer, par conception) ; leur somme est nulle. Un passage dure environ une minute.
 
 ## Tester les conversions de nombres
 
@@ -140,6 +157,9 @@ Sur GitHub Pages, le fichier vide `.nojekyll` doit rester à la racine : sans lu
 - **Produit modifié sur deux appareils :** pour le nom, l'unité, le seuil et le prix, la dernière modification arrivée au serveur l'emporte.
 - **Suivi des opérations refusées :** la liste des opérations en attente est gardée sur l'appareil. Si le stockage du navigateur est effacé ou bloqué, un refus du serveur peut passer inaperçu.
 - **Valeur du stock indicative :** elle utilise le prix d'achat actuel de chaque produit, pas les prix auxquels le stock a réellement été acheté.
-- **Appuis par erreur sur `+1` / `−1` :** chaque appui est un mouvement définitif. Il se corrige par un ajustement (en attendant le bouton « Annuler cette opération », prévu en phase 6).
+- **Appuis par erreur sur `+1` / `−1` :** chaque appui est un mouvement définitif. Il se corrige avec « Annuler cette opération » dans l'historique, une fois l'appui confirmé par le serveur.
+- **Annulation et historique chargé :** la mention « Annulée » ne s'affiche que si l'annulation figure dans la partie de l'historique déjà chargée. Sans Internet, cette partie peut être incomplète ; une seconde annulation serait de toute façon refusée par le serveur.
+- **Changement de devise :** la vérification « aucun produit » est faite par l'application, pas par les règles de sécurité. Un produit ajouté sans Internet sur un autre appareil, au moment même où la devise change, ne serait pas détecté. Le risque est faible avec un seul utilisateur.
+- **Produit renommé :** l'historique garde le nom du produit au moment de chaque opération.
 - **Ajustement d'inventaire :** la correction est saisie à la main. Si un autre appareil a modifié le stock entre-temps, le chiffre affiché au moment de la saisie n'était peut-être plus à jour.
 - **Quota gratuit :** chaque mouvement coûte deux écritures et quelques lectures de contrôle. La limite gratuite est de 20 000 écritures et 50 000 lectures par jour pour tous les comptes réunis ; si elle est atteinte, l'application se bloque jusqu'au lendemain, sans perte de données.

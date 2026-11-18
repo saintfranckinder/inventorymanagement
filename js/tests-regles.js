@@ -5,10 +5,11 @@
 // Phase 3 : isolation des comptes et contrôle des champs de users/{uid}.
 // Phase 4a : produits (fiche modifiable, quantité intouchable).
 // Phase 4b : mouvements et lien produit-mouvement.
+// Phase 6 : annulation d'une opération (identifiant « annulation-… »).
 //
 // Le compte de test garde deux produits d'essai, archivés à la fin de chaque
 // passage : ils n'apparaissent donc pas dans la liste. Chaque passage ajoute
-// trois mouvements à l'historique du compte de test (un mouvement ne peut pas
+// cinq mouvements à l'historique du compte de test (un mouvement ne peut pas
 // être supprimé) ; leur somme est nulle.
 //
 // Décision 40 : la page étant publiée avec le site, elle ne se lance qu'avec un
@@ -408,6 +409,9 @@ function essaisMouvements(db, uid, produitAvecStockExiste) {
   const idEntree = nouvelId();
   const idSortie = nouvelId();
   const idAjustement = nouvelId();
+  // Opération à annuler, et son annulation (décisions 43 et 48).
+  const idAAnnuler = nouvelId();
+  const idSonAnnulation = 'annulation-' + idAAnnuler;
   let quantiteDepart = null;
 
   const mouvement = (idProduit, delta, type, modifications = {}) => ({
@@ -509,6 +513,37 @@ function essaisMouvements(db, uid, produitAvecStockExiste) {
     },
     {
       nom: 'Après +2,5 puis -1 puis -1,5, la quantité est revenue au départ',
+      attendu: 'vrai',
+      operation: async () => (await lireQuantite()) === quantiteDepart
+    },
+    {
+      nom: 'Entrée de 1 (opération à annuler ensuite)',
+      attendu: 'autorise',
+      operation: () => lot({ idMouvement: idAAnnuler, delta: 1000, type: 'entree' })
+    },
+    {
+      nom: 'Annuler cette entrée : ajustement de -1, numéro « annulation-… »',
+      attendu: 'autorise',
+      operation: () => lot({
+        idMouvement: idSonAnnulation, delta: -1000, type: 'ajustement',
+        modifications: { motif: 'Annulation : Entrée +1 kg' }
+      })
+    },
+    {
+      nom: 'Après l’annulation, la quantité est revenue exactement au départ',
+      attendu: 'vrai',
+      operation: async () => (await lireQuantite()) === quantiteDepart
+    },
+    {
+      nom: 'Annuler une seconde fois la même opération (autre appareil)',
+      attendu: 'refuse',
+      operation: () => lot({
+        idMouvement: idSonAnnulation, delta: -1000, type: 'ajustement',
+        modifications: { motif: 'Annulation : Entrée +1 kg' }
+      })
+    },
+    {
+      nom: 'Après la seconde annulation, rien n’a été compté deux fois',
       attendu: 'vrai',
       operation: async () => (await lireQuantite()) === quantiteDepart
     },

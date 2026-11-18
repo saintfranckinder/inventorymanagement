@@ -218,7 +218,34 @@
       <!-- Annonces des boutons « +1 » / « −1 » pour les lecteurs d'écran -->
       <p id="annonce-produits" class="lecteur-ecran" role="status" aria-live="polite"></p>
 
+      <button type="button" id="bouton-parametres" class="bouton bouton-secondaire">Paramètres</button>
       <button type="button" class="bouton bouton-secondaire" data-deconnexion>Se déconnecter</button>
+    </section>
+
+    <!-- Paramètres de l'entrepôt (phase 6, décision 49) -->
+    <section id="vue-parametres" data-vue hidden>
+      <h2>Paramètres</h2>
+      <button type="button" id="bouton-retour-parametres" class="bouton bouton-secondaire">Retour aux produits</button>
+
+      <form id="formulaire-nom-entrepot" class="bloc-parametres" novalidate>
+        <h3>Nom de l'entrepôt</h3>
+        <label for="parametres-nom">Nouveau nom</label>
+        <input id="parametres-nom" type="text" autocomplete="off">
+        <p id="erreur-parametres-nom" class="message-erreur" role="alert" hidden></p>
+        <p id="info-parametres-nom" class="message-info" role="status" hidden></p>
+        <button type="submit" id="bouton-enregistrer-nom" class="bouton bouton-principal">Enregistrer le nom</button>
+      </form>
+
+      <form id="formulaire-devise" class="bloc-parametres" novalidate>
+        <h3>Devise</h3>
+        <label for="parametres-devise">Devise de l'entrepôt</label>
+        <select id="parametres-devise" aria-describedby="parametres-devise-etat"></select>
+        <p id="parametres-devise-etat" class="aide-champ" aria-live="polite"></p>
+        <p id="erreur-parametres-devise" class="message-erreur" role="alert" hidden></p>
+        <p id="info-parametres-devise" class="message-info" role="status" hidden></p>
+        <button type="submit" id="bouton-enregistrer-devise" class="bouton bouton-principal" hidden>Changer la devise</button>
+        <button type="button" id="bouton-verifier-devise" class="bouton bouton-secondaire" hidden>Vérifier de nouveau</button>
+      </form>
     </section>
 
     <!-- Ajouter ou modifier un produit -->
@@ -325,7 +352,14 @@
       <h2>Historique des mouvements</h2>
       <button type="button" id="bouton-retour-historique" class="bouton bouton-secondaire">Retour aux produits</button>
 
+      <p class="aide">
+        Une opération faite par erreur se corrige avec « Annuler cette
+        opération » : l'application enregistre l'opération inverse. Rien n'est
+        effacé.
+      </p>
+
       <p id="erreur-historique" class="message-erreur" role="alert" hidden></p>
+      <p id="info-historique" class="message-info" role="status" hidden></p>
       <p id="historique-vide" class="aide" hidden>Aucun mouvement pour l'instant.</p>
 
       <ul id="liste-historique" class="liste-produits"></ul>

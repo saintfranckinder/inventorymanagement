@@ -1,14 +1,18 @@
 // Écrans des mouvements de stock : formulaire d'entrée / sortie / ajustement,
-// historique (50 derniers, puis « Voir plus ») et liste des opérations
-// refusées par le serveur.
+// historique (50 derniers, puis « Voir plus ») avec « Annuler cette
+// opération » (décisions 43 et 48), et liste des opérations refusées par le
+// serveur.
 
 import { afficherMessage, afficherVue, effacerMessages, element, vueActuelle } from './interface.js';
 import {
   LIBELLES_TYPE,
   LONGUEUR_MAX_MOTIF,
   TAILLE_PAGE_HISTORIQUE,
+  annulationPossiblePourId,
   chargerMouvementsSuivants,
   enregistrerMouvement,
+  estUneAnnulation,
+  idAnnulation,
   nouvelIdMouvement,
   surveillerDerniersMouvements
 } from './mouvements.js';
@@ -44,6 +48,12 @@ let idsEnDirect = new Map();     // id -> enAttente, pour le dernier état écou
 let pagesChargees = false;
 let peutEtreDAutres = false;
 let historiquePartiel = false;
+let mouvementsRecus = false;     // la première réponse de l'écoute est arrivée
+
+// Produits non archivés, tenus à jour par l'écran des produits. Une opération
+// ne s'annule que si son produit est encore dans la liste (décision 48).
+let produitsActifs = [];
+let produitsCharges = false;
 
 // ---------- Textes partagés ----------
 
@@ -53,16 +63,24 @@ export function formaterVariation(deltaMilliemes) {
 }
 
 function libelleMouvement(type, deltaMilliemes, unite, nomProduit) {
-  return `${LIBELLES_TYPE[type]} ${formaterVariation(deltaMilliemes)} ${unite} — ${nomProduit}`;
+  return `${LIBELLES_TYPE[type] || type} ${formaterVariation(deltaMilliemes)} ${unite} — ${nomProduit}`;
+}
+
+// Zone où afficher une information arrivée plus tard : l'historique s'il est
+// ouvert, sinon l'écran des produits.
+function zoneInformation() {
+  return vueActuelle() === 'vue-historique' ? 'info-historique' : 'info-accueil';
 }
 
 // Affiche le résultat d'une opération suivie (voir operations-en-attente.js).
 // Un refus s'affiche dans le bloc « Opérations refusées », mis à jour à part.
-export function signalerResultatOperation(resultat, libelle) {
+// `messageDejaEnregistree` (facultatif) remplace le message habituel.
+export function signalerResultatOperation(resultat, libelle, messageDejaEnregistree = null) {
   if (resultat === 'deja-enregistree') {
     afficherMessage(
-      'info-accueil',
-      `Cette opération était déjà enregistrée : ${libelle}. Rien n’a été compté deux fois.`
+      zoneInformation(),
+      messageDejaEnregistree ||
+        `Cette opération était déjà enregistrée : ${libelle}. Rien n’a été compté deux fois.`
     );
   }
 }
@@ -170,9 +188,16 @@ function mettreAJourApercu() {
     `Stock après l’opération : ${formaterQuantite(apres)} ${produitDuFormulaire.unite} ` +
     '(estimation d’après ce que cet appareil connaît).';
   if (apres < 0) {
-    alerte.textContent = 'Attention : le stock deviendra négatif.';
+    alerte.textContent = texteStockNegatif(produitDuFormulaire.quantiteMilliemes);
     alerte.hidden = false;
   }
+}
+
+// Avertissement quand le stock sera négatif après l'opération.
+function texteStockNegatif(quantiteAvantMilliemes) {
+  return quantiteAvantMilliemes < 0
+    ? 'Attention : le stock restera négatif.'
+    : 'Attention : le stock deviendra négatif.';
 }
 
 function afficherProduitDuFormulaire() {
@@ -202,9 +227,17 @@ export function ouvrirFormulaireMouvement(produit, preremplissage = null) {
   mettreAJourApercu();
 }
 
-// Appelé à chaque mise à jour de la liste des produits : le stock affiché
-// dans le formulaire ouvert reste à jour.
-export function mettreAJourProduitDuFormulaire(produits) {
+// Appelé par l'écran des produits à chaque mise à jour de la liste des
+// produits non archivés : l'historique (boutons « Annuler cette opération »)
+// et le stock affiché dans le formulaire ouvert restent à jour.
+export function surProduitsActifs(produits) {
+  produitsActifs = produits;
+  produitsCharges = true;
+  afficherHistorique();
+  mettreAJourProduitDuFormulaire(produits);
+}
+
+function mettreAJourProduitDuFormulaire(produits) {
   if (!produitDuFormulaire || vueActuelle() !== 'vue-mouvement') {
     return;
   }
@@ -232,12 +265,16 @@ function fermerFormulaireMouvement() {
 //     l'enregistrement local, même sans Internet.
 // `produit` : { id, nom, unite }. Renvoie le libellé de l'opération, ou null
 // si aucun compte n'est ouvert.
-export function envoyerMouvement(produit, type, deltaMilliemes, motif) {
+// `options` (facultatif, pour une annulation) :
+//   idMouvement            : identifiant imposé (« annulation-… ») ;
+//   libelle                : texte montré si le serveur refuse l'opération ;
+//   messageDejaEnregistree : texte montré si elle était déjà enregistrée.
+export function envoyerMouvement(produit, type, deltaMilliemes, motif, options = {}) {
   if (!contexte) {
     return null;
   }
   const mouvement = {
-    idMouvement: nouvelIdMouvement(contexte.db, contexte.uid),
+    idMouvement: options.idMouvement || nouvelIdMouvement(contexte.db, contexte.uid),
     idProduit: produit.id,
     nomProduit: produit.nom,
     unite: produit.unite,
@@ -256,11 +293,11 @@ export function envoyerMouvement(produit, type, deltaMilliemes, motif) {
     {
       id: mouvement.idMouvement,
       chemin: ['users', contexte.uid, 'movements', mouvement.idMouvement],
-      libelle,
+      libelle: options.libelle || libelle,
       dateAppareil: mouvement.dateAppareil
     },
     enregistrerMouvement(contexte.db, contexte.uid, mouvement),
-    (resultat) => signalerResultatOperation(resultat, libelle)
+    (resultat) => signalerResultatOperation(resultat, libelle, options.messageDejaEnregistree)
   );
   return libelle;
 }
@@ -307,45 +344,187 @@ function paragraphe(classe, texte) {
   return ligne;
 }
 
+// ---------- Annulation d'une opération (décisions 43 et 48) ----------
+
+function estEnAttente(mouvement) {
+  return mouvement.enAttente || mouvement.dateServeur === null;
+}
+
+function produitActif(idProduit) {
+  return produitsActifs.find((produit) => produit.id === idProduit) || null;
+}
+
+// L'annulation de cette opération, si elle figure dans l'historique chargé
+// (même pas encore confirmée). Une annulation est toujours plus récente que
+// l'opération qu'elle annule : si l'opération est chargée, son annulation
+// l'est aussi.
+function annulationDe(mouvement) {
+  return mouvementsConnus.get(idAnnulation(mouvement.id)) || null;
+}
+
+// Le bouton « Annuler cette opération » n'apparaît pas (décision 48) :
+//   - sur une annulation (une annulation ne s'annule pas) ;
+//   - sur une opération déjà annulée ;
+//   - sur une opération pas encore confirmée : si le serveur la refusait,
+//     l'annulation, elle, serait acceptée et fausserait le stock ;
+//   - sur un produit qui n'est plus dans la liste (archivé).
+function peutEtreAnnule(mouvement) {
+  return contexte !== null &&
+    annulationPossiblePourId(mouvement.id) &&
+    annulationDe(mouvement) === null &&
+    !estEnAttente(mouvement) &&
+    produitActif(mouvement.idProduit) !== null;
+}
+
+// « Sortie -1 sac — Ciment, faite le 18/11/2026 14:32 »
+function descriptionOperation(mouvement) {
+  const libelle = libelleMouvement(
+    mouvement.type, mouvement.deltaMilliemes, mouvement.unite, mouvement.nomProduit
+  );
+  return mouvement.dateAppareil
+    ? `${libelle}, faite le ${FORMAT_DATE.format(mouvement.dateAppareil)}`
+    : libelle;
+}
+
+// Motif de l'annulation : « Annulation : Sortie -1 sac du 18/11/2026 14:32 ».
+// Le nom du produit est déjà dans le mouvement.
+function motifAnnulation(mouvement) {
+  let texte = `Annulation : ${LIBELLES_TYPE[mouvement.type] || mouvement.type} ` +
+    `${formaterVariation(mouvement.deltaMilliemes)} ${mouvement.unite}`;
+  if (mouvement.dateAppareil) {
+    texte += ` du ${FORMAT_DATE.format(mouvement.dateAppareil)}`;
+  }
+  return texte.slice(0, LONGUEUR_MAX_MOTIF);
+}
+
+// Crée l'opération inverse, après confirmation. Elle part par le même chemin
+// que les autres mouvements (un seul lot, suivi jusqu'à la réponse du
+// serveur) ; rien n'est modifié ni supprimé.
+function annulerOperation(idMouvement) {
+  effacerMessages();
+  const mouvement = mouvementsConnus.get(idMouvement);
+  // Nouvelle vérification au moment de l'appui : l'état a pu changer.
+  if (!mouvement || !peutEtreAnnule(mouvement)) {
+    afficherMessage('erreur-historique', 'Cette opération ne peut plus être annulée.');
+    return;
+  }
+  const produit = produitActif(mouvement.idProduit);
+  const correction = -mouvement.deltaMilliemes;
+  const apres = produit.quantiteMilliemes + correction;
+  const description = descriptionOperation(mouvement);
+
+  let question = 'Annuler cette opération ?\n\n' + description + '\n\n' +
+    `L’application va enregistrer l’opération inverse : ` +
+    `${LIBELLES_TYPE.ajustement} ${formaterVariation(correction)} ${mouvement.unite}.\n` +
+    `Stock de « ${produit.nom} » après l’annulation : ${formaterQuantite(apres)} ${produit.unite} ` +
+    '(estimation d’après ce que cet appareil connaît).';
+  if (apres < 0) {
+    question += '\n' + texteStockNegatif(produit.quantiteMilliemes);
+  }
+  question += '\n\nL’opération restera dans l’historique, marquée « Annulée ». ' +
+    'Une annulation ne peut pas être annulée.';
+  if (!window.confirm(question)) {
+    return;
+  }
+
+  envoyerMouvement(produit, 'ajustement', correction, motifAnnulation(mouvement), {
+    idMouvement: idAnnulation(mouvement.id),
+    libelle: `Annulation de : ${description}`,
+    messageDejaEnregistree:
+      `Cette opération avait déjà été annulée, peut-être depuis un autre appareil : ` +
+      `${description}. Rien n’a été compté deux fois.`
+  });
+  afficherMessage('info-historique', `Opération annulée : ${description}.`);
+}
+
+function boutonAnnuler(mouvement) {
+  const bouton = document.createElement('button');
+  bouton.type = 'button';
+  bouton.className = 'bouton bouton-secondaire';
+  bouton.textContent = 'Annuler cette opération';
+  bouton.setAttribute('aria-label', `Annuler cette opération : ${descriptionOperation(mouvement)}`);
+  bouton.addEventListener('click', () => annulerOperation(mouvement.id));
+  return bouton;
+}
+
+// ---------- Affichage de l'historique ----------
+
+function ligneHistorique(mouvement) {
+  const article = document.createElement('li');
+  article.className = 'mouvement';
+  article.dataset.mouvement = mouvement.id;
+  // Permet de garder le focus clavier sur cette ligne quand la liste est
+  // reconstruite (par exemple juste après une annulation).
+  article.tabIndex = -1;
+
+  const titre = document.createElement('h4');
+  titre.textContent = mouvement.nomProduit;
+  article.append(titre);
+
+  article.append(paragraphe(
+    'mouvement-variation',
+    `${LIBELLES_TYPE[mouvement.type] || mouvement.type} : ` +
+    `${formaterVariation(mouvement.deltaMilliemes)} ${mouvement.unite}`
+  ));
+
+  // Heure de l'opération (appareil) et heure de réception (serveur) ne
+  // sont jamais confondues.
+  if (mouvement.dateAppareil) {
+    article.append(paragraphe('', 'Fait le ' + FORMAT_DATE.format(mouvement.dateAppareil)));
+  }
+  if (estEnAttente(mouvement)) {
+    article.append(paragraphe('produit-attente', 'En attente de synchronisation'));
+  } else if (mouvement.dateAppareil &&
+      Math.abs(mouvement.dateServeur - mouvement.dateAppareil) > ECART_SYNCHRONISATION_MS) {
+    article.append(paragraphe(
+      'aide',
+      'Reçu par le serveur le ' + FORMAT_DATE.format(mouvement.dateServeur)
+    ));
+  }
+  if (mouvement.motif) {
+    article.append(paragraphe('', 'Motif : ' + mouvement.motif));
+  }
+
+  const annulation = annulationDe(mouvement);
+  if (annulation) {
+    article.append(paragraphe(
+      'mouvement-annulee',
+      annulation.dateAppareil
+        ? 'Annulée le ' + FORMAT_DATE.format(annulation.dateAppareil)
+        : 'Annulée'
+    ));
+  } else if (peutEtreAnnule(mouvement)) {
+    article.append(boutonAnnuler(mouvement));
+  } else if (produitsCharges && annulationPossiblePourId(mouvement.id) &&
+      !estEnAttente(mouvement) && produitActif(mouvement.idProduit) === null) {
+    article.append(paragraphe('aide', 'Produit archivé : cette opération ne peut plus être annulée.'));
+  }
+  return article;
+}
+
 function afficherHistorique() {
   const liste = element('liste-historique');
+
+  // Ligne qui a le focus clavier, pour le lui rendre après reconstruction.
+  const actif = document.activeElement;
+  const ligneActive = actif && liste.contains(actif) ? actif.closest('li[data-mouvement]') : null;
+  const idActif = ligneActive ? ligneActive.dataset.mouvement : null;
+  const surUnBouton = Boolean(ligneActive) && actif.tagName === 'BUTTON';
+
   liste.textContent = '';
   const mouvements = mouvementsTries();
-  element('historique-vide').hidden = mouvements.length > 0;
+  element('historique-vide').hidden = !mouvementsRecus || mouvements.length > 0;
 
   for (const mouvement of mouvements) {
-    const article = document.createElement('li');
-    article.className = 'mouvement';
+    liste.append(ligneHistorique(mouvement));
+  }
 
-    const titre = document.createElement('h4');
-    titre.textContent = mouvement.nomProduit;
-    article.append(titre);
-
-    article.append(paragraphe(
-      'mouvement-variation',
-      `${LIBELLES_TYPE[mouvement.type] || mouvement.type} : ` +
-      `${formaterVariation(mouvement.deltaMilliemes)} ${mouvement.unite}`
-    ));
-
-    // Heure de l'opération (appareil) et heure de réception (serveur) ne
-    // sont jamais confondues.
-    if (mouvement.dateAppareil) {
-      article.append(paragraphe('', 'Fait le ' + FORMAT_DATE.format(mouvement.dateAppareil)));
+  if (idActif) {
+    const ligne = liste.querySelector(`li[data-mouvement="${CSS.escape(idActif)}"]`);
+    if (ligne) {
+      const bouton = surUnBouton ? ligne.querySelector('button') : null;
+      (bouton || ligne).focus({ preventScroll: true });
     }
-    if (mouvement.enAttente || mouvement.dateServeur === null) {
-      article.append(paragraphe('produit-attente', 'En attente de synchronisation'));
-    } else if (mouvement.dateAppareil &&
-        Math.abs(mouvement.dateServeur - mouvement.dateAppareil) > ECART_SYNCHRONISATION_MS) {
-      article.append(paragraphe(
-        'aide',
-        'Reçu par le serveur le ' + FORMAT_DATE.format(mouvement.dateServeur)
-      ));
-    }
-    if (mouvement.motif) {
-      article.append(paragraphe('', 'Motif : ' + mouvement.motif));
-    }
-
-    liste.append(article);
   }
 
   element('bouton-voir-plus').hidden = !peutEtreDAutres;
@@ -353,6 +532,7 @@ function afficherHistorique() {
 }
 
 function surMouvements(etat) {
+  mouvementsRecus = true;
   // Un mouvement qui était « en attente » et qui a disparu de l'écoute a été
   // refusé par le serveur : il sort de l'historique.
   const nouveauxIds = new Map(etat.mouvements.map((mouvement) => [mouvement.id, mouvement.enAttente]));
@@ -454,6 +634,9 @@ export function arreterEcranMouvements() {
   pagesChargees = false;
   peutEtreDAutres = false;
   historiquePartiel = false;
+  mouvementsRecus = false;
+  produitsActifs = [];
+  produitsCharges = false;
   element('liste-historique').textContent = '';
   element('historique-vide').hidden = true;
   element('bouton-voir-plus').hidden = true;

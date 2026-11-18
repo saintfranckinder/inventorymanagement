@@ -116,6 +116,13 @@ select {
   font-size: 16px;
 }
 
+/* Une liste bloquée (devise) reste lisible, y compris en extérieur. */
+select:disabled {
+  background: #eef1f4;
+  color: var(--texte);
+  opacity: 1;
+}
+
 .aide-champ {
   margin: -0.75rem 0 1rem;
   color: var(--texte-discret);
@@ -490,6 +497,35 @@ select {
 
 .mouvement-variation {
   font-weight: 600;
+}
+
+/* « Annuler cette opération » et la mention « Annulée » (phase 6). */
+.mouvement .bouton {
+  margin: 0.75rem 0 0;
+}
+
+.mouvement .mouvement-annulee {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 0.125rem 0.625rem;
+  border-radius: 999px;
+  background: var(--texte-discret);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+/* ---------- Paramètres ---------- */
+
+.bloc-parametres {
+  margin: 0 0 1.5rem;
+  padding: 0 1rem 0.25rem;
+  background: var(--carte);
+  border: 1px solid var(--bordure-legere);
+  border-radius: 0.5rem;
+}
+
+.bloc-parametres h3 {
+  margin: 1rem 0 0.75rem;
 }
 
 .bloc-refus {

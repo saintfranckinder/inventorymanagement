@@ -18,8 +18,8 @@ Dépôt GitHub : `saintfranckinder/minstock`, renommé par le propriétaire le 2
 | 4b | Mouvements, règles complètes, historique | **Terminée le 2026-11-16** (tests hors ligne et à deux appareils non faits) |
 | — | Vérification des secrets, dépôt public, GitHub Pages activé | **Terminée le 2026-11-18** (site en ligne ; premier test sur smartphone réussi selon le propriétaire) |
 | 5 | Tableau de bord | **Terminée le 2026-11-18** (test sur smartphone réussi le même jour, selon le propriétaire) |
-| 6 | Formulaires, historique lisible (avec « Annuler cette opération »), paramètres | **Prochaine étape** (voir section 8.7) |
-| 6b | Carnet de fournisseurs (décision 42) | À faire |
+| 6 | Formulaires, historique lisible (avec « Annuler cette opération »), paramètres | **Faite le 2026-11-18** ; test sur smartphone du propriétaire à faire |
+| 6b | Carnet de fournisseurs (décision 42) | **Prochaine étape** (voir section 8.7) |
 | 7 | Suppression du compte | À faire |
 | 8 | Hors ligne et indicateur de synchronisation | À faire |
 | 9 | Export Excel | À faire |
@@ -364,6 +364,51 @@ Non précisé : lisibilité des étiquettes en extérieur ; modèle du télépho
 - **Résultat :** formulaire d'ajout et de modification ; historique lisible (les deux dates distinguées) ; bouton « Annuler cette opération » sur chaque ligne (décision 43) ; nom de l'entrepôt modifiable ; devise modifiable seulement sans produit.
 - **Tests :** devise bloquée dès qu'un produit existe ; historique compréhensible après renommage d'un produit ; annulation : le stock revient exactement à sa valeur, l'opération d'origine est marquée « annulée », une seconde annulation de la même opération est refusée sans double comptage, une annulation ne propose pas d'être annulée.
 
+**Compte rendu de la phase 6 (2026-11-18)**
+
+Choix validés par le propriétaire avant de coder : décisions 47 (pas de filtre par produit dans l'historique), 48 (cas où le bouton « Annuler cette opération » n'apparaît pas) et 49 (devise vérifiée auprès du serveur). Les règles Firestore ne changent pas (version 5) ; aucune nouvelle donnée dans la base.
+
+Ce qui a été fait :
+
+- Historique : bouton « Annuler cette opération » sur chaque ligne qui le permet ; fenêtre de confirmation (opération, opération inverse, stock estimé après, avertissement si négatif) ; opération inverse `ajustement` d'identifiant `annulation-{id}` envoyée par `envoyerMouvement`, le seul chemin d'envoi ; mention « Annulée le … » sur l'opération d'origine ; « Produit archivé : cette opération ne peut plus être annulée » ; court texte d'aide en haut de l'historique ; le focus clavier reste sur la même ligne quand la liste est reconstruite.
+- Message propre à une annulation déjà faite sur un autre appareil ; les messages « déjà enregistrée » s'affichent dans l'historique quand il est ouvert.
+- Écran « Paramètres » (nouveau fichier `js/ecran-parametres.js`) : nom de l'entrepôt ; devise modifiable seulement si aucun produit n'existe (mémoire de l'appareil, puis serveur ; vérifiée de nouveau juste avant d'enregistrer ; délai maximal de 15 secondes) ; bouton « Vérifier de nouveau » sans Internet.
+- Petites retouches : « le stock restera négatif » au lieu de « deviendra négatif » quand il l'est déjà (formulaire de mouvement et annulation) ; liste de devises bloquée gardée lisible (texte foncé sur fond gris clair).
+- `tests-regles.html` : 5 essais d'annulation de plus (72 au total).
+- Version `0.7.0`.
+
+Tests exécutés par l'assistant, dans le navigateur intégré, sur `http://localhost:8080/`, avec les deux comptes de test :
+
+| Test | Résultat |
+|---|---|
+| `tests-nombres.html` : 104 sur 104 | Réussi |
+| `tests-regles.html` : 72 sur 72, dont annulation acceptée, quantité revenue exactement au départ, seconde annulation refusée, rien compté deux fois | Réussi |
+| Fenêtre de confirmation, réponse « Annuler » : rien n'est envoyé | Réussi |
+| Annuler une entrée de +1 (« Essai phase 5 (stock bas) ») : de 7 à 6 pièces sur le serveur ; ligne « Ajustement : -1 pièce », motif « Annulation : Entrée +1 pièce du 18/11/2026 10:49 » ; origine « Annulée le … » ; focus resté sur la ligne | Réussi |
+| Annuler une sortie de -1 (« Essai phase 5 (zéro) ») : de 0 à 1 pièce sur le serveur | Réussi |
+| Ajustement de -2,5 sur « Ciment » (de -1,5 à -4) : pas de bouton tant qu'il est en attente, bouton après confirmation ; annulation avec « le stock restera négatif » ; retour exact à -1,5 sac sur le serveur | Réussi |
+| Seconde annulation de la même opération, envoyée comme par un autre appareil : refusée par le serveur, stock inchangé (-1,5), message « Cette opération avait déjà été annulée… Rien n'a été compté deux fois. », aucune opération refusée affichée | Réussi |
+| Pas de bouton sur une annulation ni sur une opération déjà annulée ; « Produit archivé » sur les opérations des produits archivés | Réussi |
+| Paramètres, compte avec produits : devise bloquée avec explication ; nom vide, nom de 101 caractères refusés ; même nom signalé ; nouveau nom enregistré sur le serveur et affiché sur l'écran des produits, puis nom d'origine remis ; tentative forcée de changer la devise : rien n'est envoyé | Réussi |
+| Paramètres, second compte de test (aucun produit) : devise libre ; passage à USD puis retour à HTG, vérifiés sur le serveur et sur l'écran des produits | Réussi |
+| Paramètres sans réseau (réseau Firestore coupé) : « Vérification impossible sans Internet », bouton « Vérifier de nouveau » ; réseau rétabli : devise libre, focus sur la liste des devises | Réussi |
+| Produit renommé puis nom d'origine remis : l'historique garde l'ancien nom sur les anciennes lignes | Réussi |
+| Archivage d'un produit avec du stock : la confirmation indique « il reste 6 pièce en stock » (réponse « Annuler ») | Réussi |
+| 360 pixels : aucun défilement horizontal ; boutons et champs de 294 × 48 pixels ; police de 16 pixels | Réussi |
+
+Tests non exécutés :
+
+- Smartphone : à faire par le propriétaire après un **Push origin**.
+- Coupure réelle d'Internet (mode avion) pendant la vérification de la devise : la vérification s'arrête au plus tard après 15 secondes ; phase 8.
+- Deux vrais appareils qui annulent la même opération : remplacé par l'envoi direct de la même annulation (même chemin que l'application) et par `tests-regles.html`.
+- Affichage des deux heures quand l'écart dépasse 5 minutes : aucun mouvement de ce type dans le compte de test ; phase 8 (essais hors ligne).
+- Lecteur d'écran réel et vraie navigation au clavier (touche Tab) : focus vérifié par programme seulement.
+
+Constats :
+
+- Le compte de test contient 4 mouvements de plus dans l'application (deux annulations, un ajustement de -2,5 sur « Ciment » et son annulation), plus 5 à chaque passage de `tests-regles.html`.
+- L'historique affiché au démarrage peut contenir plus de 50 lignes (les mouvements gardés en mémoire de l'appareil d'une session précédente, plus les 50 derniers du serveur). Comportement de la phase 4b, sans conséquence ; noté pour mémoire.
+
 ### Phase 6b : carnet de fournisseurs
 - **Résultat :** liste des fournisseurs, recherche simple, formulaire d'ajout et de modification (nom obligatoire ; téléphone, WhatsApp, e-mail, adresse, produits fournis, notes), archivage ; règles Firestore version 6 pour `users/{uid}/suppliers` ; texte de confidentialité complété (décision 42).
 - **Avant de coder :** proposer les longueurs maximales de chaque champ ; trancher les questions de la section 4 sur les fournisseurs ; expliquer comment les fournisseurs sont lus (écoute permanente ou chargement à l'ouverture de l'écran) au regard du quota de lectures.
@@ -414,7 +459,7 @@ Ces points viennent de l'analyse et n'ont pas été testés.
 
 - *(Tranché : décision 32.)* Trier l'historique par `dateServeur` et afficher `dateAppareil` comme « fait le » (phase 4b).
 - *(Tranché : décision 22.)* N'écouter en temps réel que les produits non archivés (phase 4a).
-- Filtre par produit dans l'historique : prévu par `DEMARRAGE.md` (phase 6) mais absent de `CLAUDE.md` ; il exige un index à créer dans la console.
+- *(Tranché : décision 47, pas pour l'instant.)* Filtre par produit dans l'historique : prévu par `DEMARRAGE.md` (phase 6) mais absent de `CLAUDE.md` ; il exige un index à créer dans la console.
 - Annoncer une taille raisonnable d'entrepôt (environ 500 produits) à cause du quota de lectures.
 - Facultatif : numéro de version affiché ; regroupement des appuis rapides sur `+1` ; vérification dans les règles que le compte n'est pas en cours de suppression.
 - *(Tranché : décisions 23 et 24.)* Peut-on désarchiver un produit ? Un produit archivé compte-t-il dans la valeur du stock ?
@@ -471,10 +516,10 @@ Règles de conception retenues pour le code :
 
 ### 8.1 Phase actuelle
 
-- **Phase 5 (tableau de bord) terminée le 2026-11-18**, test sur smartphone réussi le même jour. Prochaine étape : **phase 6** (formulaires, historique lisible avec « Annuler cette opération », paramètres). Plan présenté au propriétaire le 2026-11-18 ; rien n'est codé avant son accord.
-- Version de l'application : `0.6.0`. Règles Firestore : **version 5**, publiée dans la console, vérifiée active le 2026-11-16 (70 essais sur 70) et le 2026-11-18 (67 sur 67, produits d'essai déjà créés).
+- **Phase 6 (historique avec « Annuler cette opération », paramètres) faite le 2026-11-18**, test sur smartphone du propriétaire à faire. Phase 5 terminée le même jour (test sur smartphone réussi). Prochaine étape : **phase 6b** (carnet de fournisseurs). Rien n'est commencé.
+- Version de l'application : `0.7.0`. Règles Firestore : **version 5**, publiée dans la console, vérifiée active le 2026-11-16 (70 essais sur 70) et le 2026-11-18 (72 sur 72 après la phase 6, produits d'essai déjà créés).
 - Dépôt GitHub : `saintfranckinder/minstock`, **public**. Site : `https://saintfranckinder.github.io/minstock/` (GitHub Pages, branche `main`, dossier racine).
-- Dépôt Git, branche `main` : `cecf8d3` (phases 0 et 1), `48d55b3` (phase 2), `f09bf30` (phase 3), `96f2a3d` (phase 4a), `d8f1b5b` (phase 4b), `2f53da4` (note de passation), `b26abb6` (dépôt renommé), `e166a30` (recherche de secrets), `d5a7808` (décisions 40 et 41), `86d4eb4` (mise en ligne), `e1a5c70` (fin de l'étape « dépôt public »), `e202b2a` (décisions 42 et 43), `7e156a3` (phase 5), puis la note du test sur smartphone de la phase 5. Le propriétaire envoie chaque commit avec **Push origin** dans GitHub Desktop ; le site se met à jour quelques minutes après.
+- Dépôt Git, branche `main` : `cecf8d3` (phases 0 et 1), `48d55b3` (phase 2), `f09bf30` (phase 3), `96f2a3d` (phase 4a), `d8f1b5b` (phase 4b), `2f53da4` (note de passation), `b26abb6` (dépôt renommé), `e166a30` (recherche de secrets), `d5a7808` (décisions 40 et 41), `86d4eb4` (mise en ligne), `e1a5c70` (fin de l'étape « dépôt public »), `e202b2a` (décisions 42 et 43), `7e156a3` (phase 5), `eb40c59` (test sur smartphone de la phase 5), puis le commit de la phase 6. Le propriétaire envoie chaque commit avec **Push origin** dans GitHub Desktop ; le site se met à jour quelques minutes après.
 
 ### 8.2 Travail terminé
 
@@ -487,9 +532,10 @@ Règles de conception retenues pour le code :
 | 4a | Conversion des nombres, produits (ajout, modification, archivage), règles version 4 | `tests-nombres.html` : 98 sur 98 ; `tests-regles.html` : 39 sur 39 |
 | 4b | Mouvements (entrée, sortie, ajustement), stock de départ, historique (50 derniers puis « Voir plus »), suivi local des opérations refusées, règles version 5 | `tests-regles.html` : 70 sur 70 ; essais dans l'application (compte rendu de la phase 4b) |
 | Dépôt public | Recherche de secrets, dépôt renommé `minstock`, page de test réservée aux comptes de test, `.nojekyll`, dépôt public, GitHub Pages | comptes rendus de l'étape « dépôt public » (section 2) |
-| 5 | Tableau de bord : valeur du stock indicative et total, recherche, alertes « Stock bas » / « Rupture », boutons `−1` / `+1` | `tests-nombres.html` : 104 sur 104 ; `tests-regles.html` : 67 sur 67 ; compte rendu de la phase 5 |
+| 5 | Tableau de bord : valeur du stock indicative et total, recherche, alertes « Stock bas » / « Rupture », boutons `−1` / `+1` | `tests-nombres.html` : 104 sur 104 ; `tests-regles.html` : 67 sur 67 ; compte rendu de la phase 5 ; test sur smartphone réussi |
+| 6 | « Annuler cette opération » dans l'historique, écran « Paramètres » (nom de l'entrepôt, devise tant qu'aucun produit n'existe) | `tests-regles.html` : 72 sur 72 ; compte rendu de la phase 6 |
 
-Les tests des phases 2 à 5 ont été exécutés par l'assistant dans le navigateur intégré, sur `http://localhost:8080/`, avec le compte de test. Tests sur smartphone faits par le propriétaire le 2026-11-18, sur le site en ligne (étape « dépôt public », puis phase 5).
+Les tests des phases 2 à 6 ont été exécutés par l'assistant dans le navigateur intégré, sur `http://localhost:8080/`, avec le compte de test. Tests sur smartphone faits par le propriétaire le 2026-11-18, sur le site en ligne (étape « dépôt public », puis phase 5).
 
 ### 8.3 Travail restant
 
@@ -506,16 +552,17 @@ Les tests des phases 2 à 5 ont été exécutés par l'assistant dans le navigat
 | *(Premier test fait le 2026-11-18 par le propriétaire.)* Affichage sur smartphone, à refaire pour chaque nouvel écran | Phases 5, 6, 6b, 9, 10 |
 | *(Fait le 2026-11-18 par le propriétaire ; lisibilité en extérieur non précisée.)* Tableau de bord sur smartphone : recherche, boutons `−1` / `+1` au doigt, alertes | Phase 5 (propriétaire) |
 | *(Fait le 2026-11-18 avec le second compte de test.)* Second compte réel qui ne voit pas les données du premier | Étape « dépôt public » |
-| Avertissement d'archivage quand le stock n'est pas à 0 ; affichage des deux heures quand l'écart dépasse 5 minutes | Phase 6 |
+| *(Avertissement d'archivage fait le 2026-11-18.)* Affichage des deux heures quand l'écart dépasse 5 minutes | Phase 8 |
+| Historique et Paramètres sur smartphone : annuler une opération au doigt, renommer l'entrepôt, devise bloquée | Phase 6 (propriétaire) |
 | Hors ligne réel (mode avion) : ajout de produit, mouvement, retour en ligne ; coupure entre l'envoi et la réponse ; « Voir plus » sans Internet ; premier chargement sans Internet sur un nouvel appareil | Phase 8 |
 | Deux appareils qui modifient le même produit | Phase 8 ou 12 |
 | Réouverture de l'application en mode avion | Phase 10 |
 
 Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé par le propriétaire pendant la phase 3, et le test « Serveur injoignable » n'a plus d'objet (la page de vérification a été remplacée en phase 3 ; le comportement hors ligne se teste en phases 8 et 10).
 
-**Étapes du plan :** phases 6, 6b, puis 7 à 13 (section 2).
+**Étapes du plan :** phase 6b, puis 7 à 13 (section 2).
 
-**Questions encore ouvertes (section 4) :** filtre par produit dans l'historique (phase 6 ; exige un index à créer dans la console) ; taille d'entrepôt raisonnable à annoncer (environ 500 produits) ; produits archivés dans l'export Excel (phase 9) ; fournisseurs : suppression ou archivage, noms en double, fournisseurs archivés dans l'export (phase 6b) ; options facultatives.
+**Questions encore ouvertes (section 4) :** taille d'entrepôt raisonnable à annoncer (environ 500 produits) ; produits archivés dans l'export Excel (phase 9) ; fournisseurs : suppression ou archivage, noms en double, fournisseurs archivés dans l'export (phase 6b) ; options facultatives.
 
 **Point à vérifier (section 3, n° 3) :** taille de lot sûre pour la suppression du compte (phase 7) et les données de démonstration (phase 11).
 
@@ -525,33 +572,34 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 
 | Fichier | Rôle | Phases |
 |---|---|---|
-| `index.html`, `css/style.css` | Tous les écrans de l'application | 2, 3, 4a, 4b, 5 |
-| `js/app.js` | Démarrage, enchaînement des écrans, connexion ; numéro de version | 2, 3, 4a, 4b, 5 |
+| `index.html`, `css/style.css` | Tous les écrans de l'application | 2, 3, 4a, 4b, 5, 6 |
+| `js/app.js` | Démarrage, enchaînement des écrans, connexion ; numéro de version | 2, 3, 4a, 4b, 5, 6 |
 | `js/firebase-config.js` | Configuration web Firebase (ce n'est pas un secret) | 2 |
 | `js/firebase-init.js` | Démarrage de Firebase, mémoire hors ligne, test du stockage local | 2, 3 |
 | `js/auth.js` | Connexion, inscription, mot de passe oublié, déconnexion | 3 |
 | `js/messages-erreur.js` | Erreurs Firebase traduites en français | 3 |
-| `js/entrepot.js` | Document `users/{uid}`, liste des devises | 3 |
+| `js/entrepot.js` | Document `users/{uid}`, liste des devises ; changement du nom et de la devise | 3, 6 |
+| `js/ecran-parametres.js` | Écran « Paramètres » : nom de l'entrepôt, devise tant qu'aucun produit n'existe (décision 49) | 6 |
 | `js/interface.js` | Fonctions d'affichage partagées | 4a |
 | `js/nombres.js` | **Seule** conversion saisie ↔ entiers ; valeur d'une ligne et total du stock | 4a, 5 |
-| `js/produits.js` | Lecture et écriture des produits ; stock de départ | 4a, 4b |
+| `js/produits.js` | Lecture et écriture des produits ; stock de départ ; « l'entrepôt contient-il un produit ? » | 4a, 4b, 6 |
 | `js/ecran-produits.js` | Tableau de bord (valeurs, recherche, alertes, `−1` / `+1`) et formulaire des produits | 4a, 4b, 5 |
-| `js/mouvements.js` | Lot d'une opération de stock ; lecture de l'historique | 4b |
+| `js/mouvements.js` | Lot d'une opération de stock ; lecture de l'historique ; identifiant `annulation-…` | 4b, 6 |
 | `js/operations-en-attente.js` | Suivi local des opérations non confirmées (`localStorage`, clé `operations-en-attente:{uid}`) | 4b |
-| `js/ecran-mouvements.js` | Formulaire de mouvement, `envoyerMouvement` (seul chemin d'envoi d'un mouvement), historique, opérations refusées | 4b, 5 |
+| `js/ecran-mouvements.js` | Formulaire de mouvement, `envoyerMouvement` (seul chemin d'envoi d'un mouvement), historique avec « Annuler cette opération », opérations refusées | 4b, 5, 6 |
 | `firestore.rules` | Règles de sécurité, version 5 | 2, 3, 4a, 4b |
-| `tests-regles.html`, `js/tests-regles.js` | 70 essais des règles sur le vrai serveur (compte de test en `@example.com` uniquement, décision 40 ; environ une minute) | 3, 4a, 4b, dépôt public |
+| `tests-regles.html`, `js/tests-regles.js` | 75 essais des règles sur le vrai serveur, 72 quand les produits d'essai existent déjà (compte de test en `@example.com` uniquement, décision 40 ; environ une minute) | 3, 4a, 4b, dépôt public, 6 |
 | `tests-nombres.html`, `js/tests-nombres.js` | 104 essais de conversion et de calcul, sans connexion | 4a, 5 |
 | `vendor/` | SDK Firebase 13.4.0 (import corrigé), SheetJS 0.20.3, `LISEZMOI.md` | 2 |
 | `demarrer.bat`, `outils/serveur-local.ps1` | Serveur local sur `http://localhost:8080/` | 2 |
 | `.gitignore`, `.gitattributes` | Fichiers exclus de Git ; `vendor/*.js` jamais modifiés par Git | 0, 2 |
 | `.nojekyll` | Fichier vide : GitHub Pages publie tout tel quel (décision 41) | dépôt public |
 | `CLAUDE.md`, `DEMARRAGE.md` | Cahier des charges et méthode de travail | 1 |
-| `PLAN.md`, `DECISIONS.md`, `README.md` | Suivi, décisions 1 à 46, documentation | Toutes |
+| `PLAN.md`, `DECISIONS.md`, `README.md` | Suivi, décisions 1 à 49, documentation | Toutes |
 
 **Hors Git :** `.env.test` contient l'adresse et le mot de passe des deux comptes de test. Il est ignoré par Git et n'apparaît dans aucun commit (vérifié le 2026-11-18).
 
-**État du compte de test dans Firebase :** entrepôt « Entrepôt de test » (HTG) ; produits actifs « Riz 25 kg (Tchako) » à 8 sac (dernier contrôle de l'assistant), puis, d'après les captures du test sur smartphone, « Ciment » à -1,5 sac, « Essai phase 5 (stock bas) » à 7 pièces (seuil 5) et « Essai phase 5 (zéro) » à 0 pièce (seuil 0) ; produits archivés « Huile » et deux « Produit d'essai (règles) » ; environ 94 mouvements au 2026-11-18 après le test sur smartphone, plus 3 à chaque passage de `tests-regles.html`. Les mouvements ne peuvent pas être supprimés. Second compte de test `test-isolation@example.org` (créé le 2026-11-18) : entrepôt « Entrepôt isolation (test) » (HTG), aucun produit.
+**État du compte de test dans Firebase :** entrepôt « Entrepôt de test » (HTG) ; produits actifs, vérifiés sur le serveur après la phase 6 : « Riz 25 kg (Tchako) » à 8 sac, « Ciment » à -1,5 sac, « Essai phase 5 (stock bas) » à 6 pièces (seuil 5) et « Essai phase 5 (zéro) » à 1 pièce (seuil 0) ; produits archivés « Huile » et deux « Produit d'essai (règles) » ; environ 103 mouvements au 2026-11-18 après la phase 6, plus 5 à chaque passage de `tests-regles.html`. Les mouvements ne peuvent pas être supprimés. Second compte de test `test-isolation@example.org` (créé le 2026-11-18) : entrepôt « Entrepôt isolation (test) » (HTG), aucun produit ; sa devise a été passée à USD puis remise à HTG pendant les essais de la phase 6. Il doit rester sans produit pour pouvoir refaire l'essai du changement de devise.
 
 ### 8.5 Erreurs rencontrées
 
@@ -564,7 +612,7 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 
 ### 8.6 Décisions prises
 
-Toutes sont dans `DECISIONS.md` (46 décisions, aucune effacée) :
+Toutes sont dans `DECISIONS.md` (49 décisions, aucune effacée) :
 
 - **1 à 7 (choix initiaux) :** Firestore en plan Spark ; connexion Google et e-mail ; quantités et prix en entiers ; `dernierMouvementId` ; GitHub Pages ; publication du code par le propriétaire.
 - **8 à 15 (audit) :** page `tests-regles.html` à la place du simulateur ; règles tolérantes au hors-ligne et suivi local des opérations ; dépôt public dès la fin de la phase 4b ; SDK local corrigé et serveur local ; règles produit-mouvement complétées ; suppression du compte avec reconnexion d'abord ; phase 4 coupée en deux ; dossier de travail.
@@ -575,13 +623,14 @@ Toutes sont dans `DECISIONS.md` (46 décisions, aucune effacée) :
 - **40 et 41 (étape « dépôt public ») :** page `tests-regles.html` réservée aux comptes en `@example.com` ; fichier `.nojekyll` pour GitHub Pages.
 - **42 et 43 (évolutions demandées par le propriétaire) :** carnet de fournisseurs en phase 6b ; « Annuler cette opération » par opération inverse en phase 6.
 - **44 à 46 (phase 5) :** boutons `+1` / `−1` (formulaire prérempli si le stock deviendrait négatif) ; total du stock égal à la somme des lignes, stock négatif compté en négatif ; recherche sans majuscules ni accents, alertes « Stock bas » et « Rupture ».
+- **47 à 49 (phase 6) :** pas de filtre par produit dans l'historique pour l'instant ; cas où « Annuler cette opération » n'apparaît pas (annulation, déjà annulée, en attente, produit archivé) ; devise modifiable seulement si le serveur confirme qu'aucun produit n'existe.
 
 Les règles de conception de la section 7 restent à respecter dans toute la suite.
 
 ### 8.7 Prochaine action précise
 
-*(La phase 5 est terminée, test sur smartphone compris : détail dans son compte rendu, section 2.)*
+*(La phase 6 est faite : détail dans son compte rendu, section 2.)*
 
-1. **Propriétaire :** lire le plan de la phase 6 présenté par l'assistant le 2026-11-18, répondre à ses questions et donner son accord. Quand il le souhaite : **Push origin** dans GitHub Desktop (note du test sur smartphone), les deux tests restants de la phase 3 et le message d'aide quand la fenêtre Google est bloquée.
-2. **Assistant :** coder la phase 6 seulement après l'accord du propriétaire, par petites étapes. Au début d'une nouvelle session (ouverte dans `C:\GitHub\Inventory Management\inventorymanagement`) : lire `CLAUDE.md`, `PLAN.md` et `DECISIONS.md` ; si l'accord sur la phase 6 n'est pas noté ici, présenter de nouveau son plan (objectif, fichiers, risques, tests) et attendre.
-3. **Phase 6 :** formulaire d'ajout et de modification ; historique lisible (les deux dates) ; bouton « Annuler cette opération » (décision 43, `CLAUDE.md` section 6, règle 12) ; nom de l'entrepôt modifiable ; devise modifiable seulement sans produit. Question ouverte à trancher : filtre par produit dans l'historique (index à créer dans la console).
+1. **Propriétaire :** cliquer sur **Push origin** dans GitHub Desktop, attendre quelques minutes, vérifier « Version 0.7.0 » en bas de l'écran, puis tester sur le smartphone avec le compte de test : annuler une opération dans l'historique, ouvrir « Paramètres », renommer l'entrepôt puis remettre « Entrepôt de test », constater que la devise est bloquée. Aucune action dans la console Firebase (règles inchangées). Quand il le souhaite : les deux tests restants de la phase 3 et le message d'aide quand la fenêtre Google est bloquée.
+2. **Assistant, au début de la prochaine session (ouverte dans `C:\GitHub\Inventory Management\inventorymanagement`) :** lire `CLAUDE.md`, `PLAN.md` et `DECISIONS.md`, noter le résultat du test sur smartphone de la phase 6, puis présenter le plan de la phase 6b (objectif, fichiers, risques, tests) et attendre l'accord du propriétaire avant de coder.
+3. **Phase 6b (carnet de fournisseurs, décision 42) :** avant de coder, proposer les longueurs maximales des champs ; trancher les questions de la section 4 (suppression ou archivage, noms en double, fournisseurs archivés dans l'export) ; expliquer comment les fournisseurs sont lus au regard du quota. Règles Firestore version 6 à publier par le propriétaire.
