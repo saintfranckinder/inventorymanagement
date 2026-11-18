@@ -10,11 +10,11 @@ Dossier de travail : `C:\GitHub\Inventory Management\inventorymanagement` (dép�
 |---|---|---|
 | 0 | Préparer le dossier (Git, `.gitignore`, `README.md`) | **Terminée le 2026-11-16** |
 | 1 | Audit et plan | **Terminée le 2026-11-16** (analyse validée, aucun code écrit) |
-| 2 | Structure, Firebase, persistance hors ligne | **Terminée le 2026-11-16** (deux vérifications du propriétaire restent à faire) |
+| 2 | Structure, Firebase, persistance hors ligne | **Terminée le 2026-11-16** |
 | 3 | Connexion, premier lancement, confidentialité | **Faite le 2026-11-16** ; trois tests du propriétaire restent à faire (Google, e-mail de réinitialisation, même adresse) |
 | 4a | Produits et conversion des nombres | **Terminée le 2026-11-16** |
 | 4b | Mouvements, règles complètes, historique | **Terminée le 2026-11-16** (tests hors ligne et à deux appareils non faits) |
-| — | Vérification des secrets, dépôt public, GitHub Pages activé | À faire (fin de la phase 4b) |
+| — | Vérification des secrets, dépôt public, GitHub Pages activé | **Prochaine étape** (voir section 8.7) |
 | 5 | Tableau de bord | À faire |
 | 6 | Formulaires, historique lisible, paramètres | À faire |
 | 7 | Suppression du compte | À faire |
@@ -213,7 +213,7 @@ Tests non exécutés :
 Constats :
 
 - **Point incertain n° 1 levé :** les règles voient bien la quantité après l'addition faite par le serveur (`increment`), dans `request.resource` comme dans `getAfter()`.
-- **Point à vérifier n° 3 :** les lots de l'application (2 écritures, 9 vérifications au plus) passent sous la limite de 20 vérifications par lot. La taille de lot sûre pour la suppression du compte reste à déterminer en phase 7.
+- **Point à vérifier n° 3 :** les lots de l'application (2 écritures) sont acceptés. La limite documentée par Firebase est de 20 appels de vérification par lot et 10 par écriture ; les appels répétés sur un même document ne comptent qu'une fois. Le nombre exact d'appels n'a pas été mesuré. La taille de lot sûre pour la suppression du compte reste à déterminer en phase 7.
 - Les refus et le cas « déjà enregistrée » ont été provoqués en appelant les fonctions de l'application avec des données fabriquées, pas par une vraie coupure de réseau.
 - L'historique du compte de test contient maintenant 65 mouvements, dont 56 « Essai du bouton Voir plus ». Ils ne peuvent pas être supprimés.
 - Compte de test : « Riz 25 kg (Tchako) » à 7 sac, « Ciment » à -2,5 sac, trois produits archivés.
@@ -325,13 +325,117 @@ Règles de conception retenues pour le code :
 - Les règles ne refusent jamais un mouvement à cause d'un état qui a pu changer sur un autre appareil (nom, archivage).
 - Après la mise en service, ne publier que des changements de règles compatibles avec les versions déjà installées.
 
-## 8. Notes de passation
+## 8. Note de passation
 
-- **Phase actuelle :** phases 0, 1 et 2 terminées ; phase 3 faite et dans un commit local (tests du propriétaire en attente) ; phase 4a terminée et dans un commit local ; phase 4b terminée et dans un commit local ; étape « dépôt public » à faire avant la phase 5.
-- **Phase 4b, journal intermédiaire du 2026-11-16 (terminée depuis : voir le compte rendu de la phase 4b, section 2) :** code écrit (`js/mouvements.js`, `js/operations-en-attente.js`, `js/ecran-mouvements.js`, `js/produits.js`, `js/ecran-produits.js`, `js/app.js`, `index.html`, `css/style.css`, `js/tests-regles.js`, `firestore.rules` version 5). Formulaire de mouvement vérifié en local (types, aperçu, alerte de stock négatif, contrôles). **En attente :** publication de `firestore.rules` version 5 par le propriétaire ; ensuite lancer `tests-regles.html` (preuve du lien produit-mouvement, point incertain n° 1 : les règles voient-elles la quantité après l'addition du serveur ?), tester entrée, sortie, ajustement, stock de départ, historique et opération refusée.
-- **Phase 4a, journal intermédiaire du 2026-11-16 (terminée depuis : voir le compte rendu de la phase 4a, section 2) :** code écrit (`js/nombres.js`, `js/tests-nombres.js`, `tests-nombres.html`, `js/interface.js`, `js/produits.js`, `js/ecran-produits.js`, `js/app.js`, `index.html`, `css/style.css`, `js/tests-regles.js`, `firestore.rules` version 4). `tests-nombres.html` : 98 essais sur 98. Formulaire de produit vérifié en local (contrôles, aides de saisie, 360 pixels). **En attente :** publication de `firestore.rules` version 4 par le propriétaire ; ensuite ajouter, modifier, archiver un produit avec le compte de test et relancer `tests-regles.html`.
-- **Phase 3, journal intermédiaire du 2026-11-16 (blocage résolu depuis : voir le compte rendu de la phase 3, section 2) :** code écrit (`index.html`, `css/style.css`, `js/app.js`, `js/auth.js`, `js/entrepot.js`, `js/messages-erreur.js`, `js/tests-regles.js`, `tests-regles.html`, `firestore.rules` version 3). Testé en local avec le compte de test (identifiants dans `.env.test`, fichier ignoré par Git) : inscription, mot de passe trop court, adresse déjà utilisée, mauvais mot de passe, déconnexion, reconnexion, mot de passe oublié (adresse sans compte), confidentialité, affichage à 360 pixels. **Blocage constaté :** après l'annonce de la publication, le serveur refuse toujours la lecture et la création de `users/{uid}` pour le compte de test (`permission-denied`), alors que le jeton de connexion, le projet et la base `(default)` sont corrects. Les règles actives sur le serveur ne sont donc pas la version 3 : vérifier dans la console (Firestore > Règles) que la ligne 4 indique « Version des regles : 3 (phase 3) » et qu'aucune erreur n'a empêché la publication. **En attente :** le propriétaire doit publier `firestore.rules` dans la console ; ensuite tester le premier lancement et lancer `tests-regles.html`. Restent aussi les tests du propriétaire : connexion Google, e-mail de réinitialisation, même adresse par les deux méthodes.
-- **Travail terminé :** analyse, plan (ce fichier), décisions 8 à 15 dans `DECISIONS.md`.
-- **Fichiers modifiés :** `PLAN.md` (créé), `DECISIONS.md` (décisions ajoutées), `CLAUDE.md` et `DEMARRAGE.md` (alignés sur les décisions 8 à 14). Phase 0 : `.gitignore` et `README.md` créés ; premier commit local fait.
-- **Phase 2 :** fichiers créés : `index.html`, `css/style.css`, `js/app.js`, `js/firebase-config.js`, `js/firebase-init.js`, `firestore.rules`, `demarrer.bat`, `outils/serveur-local.ps1`, `vendor/` (SDK Firebase 13.4.0 corrigé, SheetJS 0.20.3, `LISEZMOI.md`). Commit local fait.
-- **Prochaine action précise :** le propriétaire fait ses trois tests de la phase 3 (Google, e-mail de réinitialisation, même adresse par les deux méthodes), puis vérifie et publie les commits dans GitHub Desktop. Ensuite, étape « dépôt public » (décision 10), avec l'accord du propriétaire : recherche de secrets dans les fichiers et tout l'historique Git, puis le propriétaire publie les commits, passe le dépôt en public, active GitHub Pages et ajoute `saintfranckinder.github.io` aux domaines autorisés de Firebase Authentication. Premier test sur smartphone à ce moment. Ensuite, phase 5 (tableau de bord : recherche, valeur du stock, boutons `+1` / `-1`, alertes `Stock bas` et `Rupture`).
+*Mise à jour le 2026-11-18. Cette note remplace les journaux intermédiaires des phases 3, 4a et 4b : leurs blocages sont résolus, et leur contenu est repris dans les comptes rendus de la section 2 et dans l'historique Git.*
+
+### 8.1 Phase actuelle
+
+- **Phase 4b terminée.** Prochaine étape : **« dépôt public »**, entre la phase 4b et la phase 5 (décision 10). Rien n'est commencé pour cette étape.
+- Version de l'application : `0.5.0`. Règles Firestore : **version 5**, publiée dans la console et vérifiée active le 2026-11-16 (`tests-regles.html` : 70 essais sur 70).
+- Dépôt Git, branche `main` : `cecf8d3` (phases 0 et 1), `48d55b3` (phase 2), `f09bf30` (phase 3), `96f2a3d` (phase 4a), `d8f1b5b` (phase 4b), puis le commit de cette note. **Aucun commit n'est publié sur GitHub** (vérifié le 2026-11-18) : la première publication se fait avec **Publish branch** dans GitHub Desktop.
+
+### 8.2 Travail terminé
+
+| Phase | Résultat | Preuve |
+|---|---|---|
+| 0 | `.gitignore`, `README.md`, dépôt relié à `saintfranckinder/inventorymanagement` | commit `cecf8d3` |
+| 1 | Analyse des risques, plan, décisions 8 à 15, `CLAUDE.md` et `DEMARRAGE.md` alignés | commit `cecf8d3` |
+| 2 | Structure, SDK Firebase 13.4.0 et SheetJS 0.20.3 dans `vendor/` (import corrigé), mémoire hors ligne avec avertissement, serveur local | compte rendu de la phase 2 |
+| 3 | Connexion Google et e-mail, inscription, mot de passe oublié, premier lancement, confidentialité, règles version 3 | `tests-regles.html` : 14 sur 14 |
+| 4a | Conversion des nombres, produits (ajout, modification, archivage), règles version 4 | `tests-nombres.html` : 98 sur 98 ; `tests-regles.html` : 39 sur 39 |
+| 4b | Mouvements (entrée, sortie, ajustement), stock de départ, historique (50 derniers puis « Voir plus »), suivi local des opérations refusées, règles version 5 | `tests-regles.html` : 70 sur 70 ; essais dans l'application (compte rendu de la phase 4b) |
+
+Tous ces tests ont été exécutés par l'assistant dans le navigateur intégré, sur `http://localhost:8080/`, avec le compte de test. Aucun test n'a encore été fait sur smartphone.
+
+### 8.3 Travail restant
+
+**Tests du propriétaire en attente (phase 3) :**
+
+1. Connexion avec Google (fenêtre popup), et message d'aide si la popup est bloquée.
+2. Réception de l'e-mail « Mot de passe oublié », en français.
+3. Même adresse e-mail par les deux méthodes, dans les deux ordres.
+
+**Tests non faits, à reprendre dans la phase indiquée :**
+
+| Test | Phase |
+|---|---|
+| Tout l'affichage et la connexion Google sur smartphone | Étape « dépôt public » |
+| Second compte réel qui ne voit pas les données du premier | Étape « dépôt public » ou phase 12 |
+| Avertissement d'archivage quand le stock n'est pas à 0 ; affichage des deux heures quand l'écart dépasse 5 minutes | Phase 6 |
+| Hors ligne réel (mode avion) : ajout de produit, mouvement, retour en ligne ; coupure entre l'envoi et la réponse ; « Voir plus » sans Internet ; premier chargement sans Internet sur un nouvel appareil | Phase 8 |
+| Deux appareils qui modifient le même produit | Phase 8 ou 12 |
+| Réouverture de l'application en mode avion | Phase 10 |
+
+Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé par le propriétaire pendant la phase 3, et le test « Serveur injoignable » n'a plus d'objet (la page de vérification a été remplacée en phase 3 ; le comportement hors ligne se teste en phases 8 et 10).
+
+**Étapes du plan :** étape « dépôt public », puis phases 5 à 13 (section 2).
+
+**Questions encore ouvertes (section 4) :** filtre par produit dans l'historique (phase 6 ; exige un index à créer dans la console) ; taille d'entrepôt raisonnable à annoncer (environ 500 produits) ; produits archivés dans l'export Excel (phase 9) ; options facultatives.
+
+**Point à vérifier (section 3, n° 3) :** taille de lot sûre pour la suppression du compte (phase 7) et les données de démonstration (phase 11).
+
+**À nettoyer en fin de projet (phases 12 et 13) :** supprimer le compte de test `test-phase3@example.com` dans la console Firebase (Authentication) et ses données, ou le parcours de suppression de la phase 7 ; supprimer `.env.test`. Le propriétaire peut supprimer dès maintenant l'ancienne copie `C:\Inventory Management`, inutilisée.
+
+### 8.4 Fichiers du projet
+
+| Fichier | Rôle | Phases |
+|---|---|---|
+| `index.html`, `css/style.css` | Tous les écrans de l'application | 2, 3, 4a, 4b |
+| `js/app.js` | Démarrage, enchaînement des écrans, connexion | 2, 3, 4a, 4b |
+| `js/firebase-config.js` | Configuration web Firebase (ce n'est pas un secret) | 2 |
+| `js/firebase-init.js` | Démarrage de Firebase, mémoire hors ligne, test du stockage local | 2, 3 |
+| `js/auth.js` | Connexion, inscription, mot de passe oublié, déconnexion | 3 |
+| `js/messages-erreur.js` | Erreurs Firebase traduites en français | 3 |
+| `js/entrepot.js` | Document `users/{uid}`, liste des devises | 3 |
+| `js/interface.js` | Fonctions d'affichage partagées | 4a |
+| `js/nombres.js` | **Seule** conversion saisie ↔ entiers ; valeur d'une ligne | 4a |
+| `js/produits.js` | Lecture et écriture des produits ; stock de départ | 4a, 4b |
+| `js/ecran-produits.js` | Liste et formulaire des produits | 4a, 4b |
+| `js/mouvements.js` | Lot d'une opération de stock ; lecture de l'historique | 4b |
+| `js/operations-en-attente.js` | Suivi local des opérations non confirmées (`localStorage`, clé `operations-en-attente:{uid}`) | 4b |
+| `js/ecran-mouvements.js` | Formulaire de mouvement, historique, opérations refusées | 4b |
+| `firestore.rules` | Règles de sécurité, version 5 | 2, 3, 4a, 4b |
+| `tests-regles.html`, `js/tests-regles.js` | 70 essais des règles sur le vrai serveur (compte de test, environ une minute) | 3, 4a, 4b |
+| `tests-nombres.html`, `js/tests-nombres.js` | 98 essais de conversion, sans connexion | 4a |
+| `vendor/` | SDK Firebase 13.4.0 (import corrigé), SheetJS 0.20.3, `LISEZMOI.md` | 2 |
+| `demarrer.bat`, `outils/serveur-local.ps1` | Serveur local sur `http://localhost:8080/` | 2 |
+| `.gitignore`, `.gitattributes` | Fichiers exclus de Git ; `vendor/*.js` jamais modifiés par Git | 0, 2 |
+| `CLAUDE.md`, `DEMARRAGE.md` | Cahier des charges et méthode de travail | 1 |
+| `PLAN.md`, `DECISIONS.md`, `README.md` | Suivi, décisions 1 à 39, documentation | Toutes |
+
+**Hors Git :** `.env.test` contient l'adresse et le mot de passe du compte de test. Il est ignoré par Git et n'apparaît dans aucun commit (vérifié le 2026-11-18).
+
+**État du compte de test dans Firebase :** entrepôt « Entrepôt de test » (HTG) ; produits actifs « Riz 25 kg (Tchako) » à 7 sac et « Ciment » à -2,5 sac ; produits archivés « Huile » et deux « Produit d'essai (règles) » ; 65 mouvements, plus 3 à chaque passage de `tests-regles.html`. Les mouvements ne peuvent pas être supprimés.
+
+### 8.5 Erreurs rencontrées
+
+1. **Règles publiées mais pas actives tout de suite (phase 3).** Le serveur a refusé l'accès (`permission-denied`) pendant plusieurs minutes après l'annonce de la publication, alors que la connexion, le projet et la base étaient corrects. La version 3 est ensuite devenue active ; la cause n'est pas identifiée. Conduite à tenir : faire vérifier la ligne « Version des regles » dans la console, attendre quelques minutes, relancer `tests-regles.html`. Les versions 4 et 5 n'ont pas posé ce problème.
+2. **Mauvais dossier au départ.** L'audit a commencé dans `C:\Inventory Management`, qui n'est pas un dépôt Git. Le vrai dépôt est `C:\GitHub\Inventory Management\inventorymanagement`. Une session ouverte dans l'ancien dossier charge une ancienne version de `CLAUDE.md`.
+3. **Git for Windows demandé à tort.** Le Git de GitHub Desktop suffit (section 5, point 2).
+4. **Port 8080 déjà occupé.** Quand le propriétaire a lancé `demarrer.bat`, un second serveur ne démarre pas (« Impossible de demarrer le serveur sur le port 8080 ») : sans gravité, il suffit d'utiliser celui qui tourne. Arrêter le serveur lancé par l'assistant fait apparaître une tâche « échouée » : sans gravité.
+5. **Outils du navigateur intégré.** Un passage de `tests-regles.html` dure environ une minute, plus que le délai d'un appel de script (45 secondes) : lancer les essais, puis lire le bilan dans un second appel. Un onglet qui affiche un fichier local ne peut pas changer d'adresse : un nouvel onglet s'ouvre, sans conséquence.
+6. **Aucun défaut connu dans le code.** Deux retouches mineures ont été faites pendant les tests : le message « adresse déjà utilisée » (phase 3) et l'effacement du message d'erreur du formulaire de produit pendant la saisie (phase 4a).
+
+### 8.6 Décisions prises
+
+Toutes sont dans `DECISIONS.md` (39 décisions, aucune effacée) :
+
+- **1 à 7 (choix initiaux) :** Firestore en plan Spark ; connexion Google et e-mail ; quantités et prix en entiers ; `dernierMouvementId` ; GitHub Pages ; publication du code par le propriétaire.
+- **8 à 15 (audit) :** page `tests-regles.html` à la place du simulateur ; règles tolérantes au hors-ligne et suivi local des opérations ; dépôt public dès la fin de la phase 4b ; SDK local corrigé et serveur local ; règles produit-mouvement complétées ; suppression du compte avec reconnexion d'abord ; phase 4 coupée en deux ; dossier de travail.
+- **16 et 17 (phase 2) :** versions fixes Firebase 13.4.0 et SheetJS 0.20.3 ; port 8080 toujours le même.
+- **18 à 21 (phase 3) :** devises HTG, USD, EUR, DOP, CAD ; pas de vérification de l'adresse e-mail ; premier lancement seulement si le serveur confirme qu'aucun entrepôt n'existe ; mot de passe de 8 caractères au moins.
+- **22 à 31 (phase 4a) :** écoute des seuls produits non archivés ; archivage définitif ; produits archivés hors de la valeur du stock ; archivage possible avec du stock ; noms de produits uniques dans le formulaire ; unité obligatoire ; règles de saisie des nombres ; limites des nombres ; calcul de la valeur en grands entiers ; `updatedAt` à l'heure du serveur exigé.
+- **32 à 39 (phase 4b) :** historique trié par heure du serveur ; types Entrée, Sortie, Ajustement ; stock négatif autorisé et signalé ; signe cohérent avec le type ; mouvements acceptés sur un produit archivé ; suivi des mouvements et des créations de produit ; stock de départ par un mouvement ; identifiants contrôlés.
+
+Les règles de conception de la section 7 restent à respecter dans toute la suite.
+
+### 8.7 Prochaine action précise
+
+1. **Propriétaire :** faire les trois tests de la phase 3 (section 8.3), puis vérifier les commits dans GitHub Desktop (onglet **History**) et cliquer sur **Publish branch**.
+2. **Assistant, dans une nouvelle session ouverte dans `C:\GitHub\Inventory Management\inventorymanagement` :** lire `CLAUDE.md`, `PLAN.md` et `DECISIONS.md`, puis proposer l'étape « dépôt public » et attendre l'accord du propriétaire :
+   - rechercher des secrets dans tous les fichiers suivis et dans tout l'historique Git (`.env.test` doit rester absent ; `js/firebase-config.js` est normal) ;
+   - vérifier que les commits n'exposent que l'adresse `noreply` ;
+   - guider le propriétaire clic par clic : dépôt en public, GitHub Pages (branche `main`, dossier racine), ajout de `saintfranckinder.github.io` aux domaines autorisés de Firebase Authentication ;
+   - premier test sur smartphone à l'adresse `https://saintfranckinder.github.io/inventorymanagement/` : connexion, mouvement de stock, affichage à 360 pixels.
+3. **Ensuite :** phase 5, tableau de bord (recherche, valeur du stock « indicative », boutons `+1` / `-1`, alertes `Stock bas` et `Rupture`).
