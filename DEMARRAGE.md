@@ -209,13 +209,22 @@ Objectifs :
 - Formulaire simple d'ajout et de modification.
 - Historique lisible, filtre par produit, dates et motifs.
 - Paramètres : nom de l'entrepôt ; devise modifiable seulement si l'entrepôt ne contient aucun produit.
+- Historique : bouton « Annuler cette opération », qui crée l'opération inverse (CLAUDE.md, section 6, règle 12 ; décision 43).
+
+### Phase 6b : carnet de fournisseurs
+
+Objectifs :
+
+- Liste, ajout, modification et archivage des fournisseurs : nom, téléphone, WhatsApp, e-mail, adresse, produits fournis, notes (décision 42).
+- Règles Firestore version 6 pour `users/{uid}/suppliers`, avec leurs essais dans `tests-regles.html`.
+- Texte de confidentialité complété.
 
 ### Phase 7 : suppression du compte
 
 Objectifs :
 
 - Bouton « Supprimer mon compte et mes données », double confirmation, rappel d'exporter avant.
-- Parcours décrit dans CLAUDE.md (section 8) : reconnexion demandée en premier, suppression en ligne uniquement, reprise automatique si elle est interrompue.
+- Parcours décrit dans CLAUDE.md (section 8) : reconnexion demandée en premier, suppression en ligne uniquement, reprise automatique si elle est interrompue. Les fournisseurs sont supprimés avec le reste.
 
 Tests : uniquement avec un compte de test, jamais avec le compte du propriétaire.
 
@@ -233,7 +242,7 @@ Tests : section 9 de ce guide, sauf l'étape 8 (rouvrir en mode avion), qui exig
 Objectifs :
 
 - SheetJS local dans `/vendor`.
-- Fichier `stock_AAAA-MM-JJ.xlsx` avec les feuilles `Stock` et `Historique` (historique complet), nombres convertis en décimaux.
+- Fichier `stock_AAAA-MM-JJ.xlsx` avec les feuilles `Stock`, `Historique` (historique complet) et `Fournisseurs`, nombres convertis en décimaux.
 - Avertissement si l'appareil est hors ligne ou si des écritures sont en attente.
 
 Tests : ouvrir le fichier dans Excel et vérifier les quantités à virgule.

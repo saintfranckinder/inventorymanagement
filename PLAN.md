@@ -18,7 +18,8 @@ Dépôt GitHub : `saintfranckinder/minstock`, renommé par le propriétaire le 2
 | 4b | Mouvements, règles complètes, historique | **Terminée le 2026-11-16** (tests hors ligne et à deux appareils non faits) |
 | — | Vérification des secrets, dépôt public, GitHub Pages activé | **Terminée le 2026-11-18** (site en ligne ; premier test sur smartphone réussi selon le propriétaire) |
 | 5 | Tableau de bord | **Prochaine étape** (voir section 8.7) |
-| 6 | Formulaires, historique lisible, paramètres | À faire |
+| 6 | Formulaires, historique lisible (avec « Annuler cette opération »), paramètres | À faire |
+| 6b | Carnet de fournisseurs (décision 42) | À faire |
 | 7 | Suppression du compte | À faire |
 | 8 | Hors ligne et indicateur de synchronisation | À faire |
 | 9 | Export Excel | À faire |
@@ -309,11 +310,16 @@ Non précisé : modèle du téléphone et navigateur ; type de clavier proposé 
 - **Tests :** smartphone (360 px) et ordinateur ; alertes orange et rouge avec leur texte.
 
 ### Phase 6 : formulaires, historique, paramètres
-- **Résultat :** formulaire d'ajout et de modification ; historique lisible (les deux dates distinguées) ; nom de l'entrepôt modifiable ; devise modifiable seulement sans produit.
-- **Tests :** devise bloquée dès qu'un produit existe ; historique compréhensible après renommage d'un produit.
+- **Résultat :** formulaire d'ajout et de modification ; historique lisible (les deux dates distinguées) ; bouton « Annuler cette opération » sur chaque ligne (décision 43) ; nom de l'entrepôt modifiable ; devise modifiable seulement sans produit.
+- **Tests :** devise bloquée dès qu'un produit existe ; historique compréhensible après renommage d'un produit ; annulation : le stock revient exactement à sa valeur, l'opération d'origine est marquée « annulée », une seconde annulation de la même opération est refusée sans double comptage, une annulation ne propose pas d'être annulée.
+
+### Phase 6b : carnet de fournisseurs
+- **Résultat :** liste des fournisseurs, recherche simple, formulaire d'ajout et de modification (nom obligatoire ; téléphone, WhatsApp, e-mail, adresse, produits fournis, notes), archivage ; règles Firestore version 6 pour `users/{uid}/suppliers` ; texte de confidentialité complété (décision 42).
+- **Avant de coder :** proposer les longueurs maximales de chaque champ ; trancher les questions de la section 4 sur les fournisseurs ; expliquer comment les fournisseurs sont lus (écoute permanente ou chargement à l'ouverture de l'écran) au regard du quota de lectures.
+- **Tests :** `tests-regles.html` complété (champs inconnus, longueurs, types, accès à un autre compte refusés) ; ajout, modification, archivage dans l'application ; un compte ne voit pas les fournisseurs d'un autre ; affichage à 360 pixels et sur smartphone.
 
 ### Phase 7 : suppression du compte
-- **Résultat :** double confirmation, rappel d'exporter, reconnexion demandée en premier, suppression en ligne uniquement, reprise automatique si `suppressionDemandee` est vrai.
+- **Résultat :** double confirmation, rappel d'exporter, reconnexion demandée en premier, suppression en ligne uniquement, reprise automatique si `suppressionDemandee` est vrai. Les fournisseurs sont supprimés avec le reste (décision 42).
 - **Tests (compte de test uniquement) :**
   - suppression complète ; données et compte disparus dans la console ;
   - suppression interrompue (fermer l'application au milieu), puis reprise à la connexion suivante ;
@@ -324,7 +330,7 @@ Non précisé : modèle du téléphone et navigateur ; type de clavier proposé 
 - **Tests :** étapes 1 à 7 et 9 à 11 de `DEMARRAGE.md` section 9 (application restée ouverte). L'étape 8 (rouvrir en mode avion) est testée en phase 10.
 
 ### Phase 9 : export Excel
-- **Résultat :** `stock_AAAA-MM-JJ.xlsx`, feuilles `Stock` et `Historique`, SheetJS local (pris sur le site officiel de l'éditeur, version fixe), avertissements hors ligne / en attente.
+- **Résultat :** `stock_AAAA-MM-JJ.xlsx`, feuilles `Stock`, `Historique` et `Fournisseurs` (décision 42), SheetJS local (pris sur le site officiel de l'éditeur, version fixe), avertissements hors ligne / en attente.
 - **Tests :** ouverture dans Excel, décimales correctes ; export hors ligne avec avertissement ; téléchargement sur smartphone.
 
 ### Phase 10 : PWA
@@ -363,6 +369,7 @@ Ces points viennent de l'analyse et n'ont pas été testés.
 - *(Tranché : décisions 23 et 24.)* Peut-on désarchiver un produit ? Un produit archivé compte-t-il dans la valeur du stock ?
 - Les produits archivés doivent-ils figurer dans l'export Excel (feuille `Stock`) ? À trancher en phase 9.
 - *(Tranché : décision 18.)* Liste des devises proposées au premier lancement.
+- Fournisseurs (phase 6b) : suppression définitive plutôt qu'archivage, puisque ce sont des données personnelles de tiers et que rien ne s'y rattache ? Deux fournisseurs du même nom autorisés ? Fournisseurs archivés dans l'export Excel ?
 
 ## 5. Problèmes connus
 
@@ -387,6 +394,7 @@ Corrigés le 2026-11-16 avec l'accord du propriétaire. Ce tableau garde la trac
 | `DEMARRAGE.md` §3 | Git for Windows installé, dépôt cloné | Déplacé dans « Reste à faire sur l'ordinateur » (section 5) |
 | `DEMARRAGE.md` phase 0 | Créer `PLAN.md` vide | Ne pas remplacer `PLAN.md`, qui existe depuis la phase 1 |
 | `CLAUDE.md` §3, §5, §6 | — | Ajouts : import du SDK corrigé et serveur local (décision 11), `dernierMouvementId` vide si stock 0 (décision 12), règles tolérantes au hors-ligne et liste locale (décision 9) |
+| `CLAUDE.md` §4, §5, §8, §10, §12 et `DEMARRAGE.md` §4 (2026-11-18) | — | Ajouts validés par le propriétaire : carnet de fournisseurs, phase 6b, 3e feuille d'export, suppression du compte et confidentialité (décision 42) ; « Annuler cette opération » en phase 6, règle 12 de la section 6 (décision 43) ; ordre de priorité : fournisseurs avant les données de démonstration |
 
 ## 7. Résumé de l'analyse des risques (phase 1)
 
@@ -451,9 +459,9 @@ Les tests des phases 2 à 4b ont été exécutés par l'assistant dans le naviga
 
 Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé par le propriétaire pendant la phase 3, et le test « Serveur injoignable » n'a plus d'objet (la page de vérification a été remplacée en phase 3 ; le comportement hors ligne se teste en phases 8 et 10).
 
-**Étapes du plan :** phases 5 à 13 (section 2).
+**Étapes du plan :** phases 5, 6, 6b, puis 7 à 13 (section 2).
 
-**Questions encore ouvertes (section 4) :** filtre par produit dans l'historique (phase 6 ; exige un index à créer dans la console) ; taille d'entrepôt raisonnable à annoncer (environ 500 produits) ; produits archivés dans l'export Excel (phase 9) ; options facultatives.
+**Questions encore ouvertes (section 4) :** filtre par produit dans l'historique (phase 6 ; exige un index à créer dans la console) ; taille d'entrepôt raisonnable à annoncer (environ 500 produits) ; produits archivés dans l'export Excel (phase 9) ; fournisseurs : suppression ou archivage, noms en double, fournisseurs archivés dans l'export (phase 6b) ; options facultatives.
 
 **Point à vérifier (section 3, n° 3) :** taille de lot sûre pour la suppression du compte (phase 7) et les données de démonstration (phase 11).
 
@@ -485,7 +493,7 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 | `.gitignore`, `.gitattributes` | Fichiers exclus de Git ; `vendor/*.js` jamais modifiés par Git | 0, 2 |
 | `.nojekyll` | Fichier vide : GitHub Pages publie tout tel quel (décision 41) | dépôt public |
 | `CLAUDE.md`, `DEMARRAGE.md` | Cahier des charges et méthode de travail | 1 |
-| `PLAN.md`, `DECISIONS.md`, `README.md` | Suivi, décisions 1 à 41, documentation | Toutes |
+| `PLAN.md`, `DECISIONS.md`, `README.md` | Suivi, décisions 1 à 43, documentation | Toutes |
 
 **Hors Git :** `.env.test` contient l'adresse et le mot de passe des deux comptes de test. Il est ignoré par Git et n'apparaît dans aucun commit (vérifié le 2026-11-18).
 
@@ -502,7 +510,7 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 
 ### 8.6 Décisions prises
 
-Toutes sont dans `DECISIONS.md` (41 décisions, aucune effacée) :
+Toutes sont dans `DECISIONS.md` (43 décisions, aucune effacée) :
 
 - **1 à 7 (choix initiaux) :** Firestore en plan Spark ; connexion Google et e-mail ; quantités et prix en entiers ; `dernierMouvementId` ; GitHub Pages ; publication du code par le propriétaire.
 - **8 à 15 (audit) :** page `tests-regles.html` à la place du simulateur ; règles tolérantes au hors-ligne et suivi local des opérations ; dépôt public dès la fin de la phase 4b ; SDK local corrigé et serveur local ; règles produit-mouvement complétées ; suppression du compte avec reconnexion d'abord ; phase 4 coupée en deux ; dossier de travail.
@@ -511,6 +519,7 @@ Toutes sont dans `DECISIONS.md` (41 décisions, aucune effacée) :
 - **22 à 31 (phase 4a) :** écoute des seuls produits non archivés ; archivage définitif ; produits archivés hors de la valeur du stock ; archivage possible avec du stock ; noms de produits uniques dans le formulaire ; unité obligatoire ; règles de saisie des nombres ; limites des nombres ; calcul de la valeur en grands entiers ; `updatedAt` à l'heure du serveur exigé.
 - **32 à 39 (phase 4b) :** historique trié par heure du serveur ; types Entrée, Sortie, Ajustement ; stock négatif autorisé et signalé ; signe cohérent avec le type ; mouvements acceptés sur un produit archivé ; suivi des mouvements et des créations de produit ; stock de départ par un mouvement ; identifiants contrôlés.
 - **40 et 41 (étape « dépôt public ») :** page `tests-regles.html` réservée aux comptes en `@example.com` ; fichier `.nojekyll` pour GitHub Pages.
+- **42 et 43 (évolutions demandées par le propriétaire) :** carnet de fournisseurs en phase 6b ; « Annuler cette opération » par opération inverse en phase 6.
 
 Les règles de conception de la section 7 restent à respecter dans toute la suite.
 
@@ -519,5 +528,5 @@ Les règles de conception de la section 7 restent à respecter dans toute la sui
 *(L'étape « dépôt public » est terminée : détail dans ses comptes rendus, section 2.)*
 
 1. **Propriétaire :** cliquer sur **Push origin** dans GitHub Desktop pour envoyer les derniers commits. Quand il le souhaite : les deux tests restants de la phase 3 (e-mail « Mot de passe oublié » ; même adresse par les deux méthodes) et le message d'aide quand la fenêtre Google est bloquée.
-2. **Assistant, au début de la prochaine session (ouverte dans `C:\GitHub\Inventory Management\inventorymanagement`) :** lire `CLAUDE.md`, `PLAN.md` et `DECISIONS.md`, puis présenter le plan de la phase 5 (objectif, fichiers, risques, tests) et attendre l'accord du propriétaire avant de coder.
+2. **Assistant, au début de la prochaine session (ouverte dans `C:\GitHub\Inventory Management\inventorymanagement`) :** lire `CLAUDE.md`, `PLAN.md` et `DECISIONS.md`, puis présenter le plan de la phase 5 (objectif, fichiers, risques, tests) et attendre l'accord du propriétaire avant de coder. *(2026-11-18 : plan présenté ; accord du propriétaire encore attendu sur deux choix proposés par l'assistant : un `−1` qui rendrait le stock négatif ouvre le formulaire « Mouvement de stock » prérempli, avec l'avertissement ; la valeur d'un produit en stock négatif est comptée telle quelle, négative, dans le total.)*
 3. **Phase 5, tableau de bord :** recherche par nom ; valeur du stock « indicative » ; boutons `+1` / `-1` d'au moins 48 × 48 pixels, par le même lot que les autres mouvements ; saisie d'une quantité précise ; alertes `Stock bas` (orange) et `Rupture` (rouge) avec leur texte. Tests à 360 pixels sur `localhost`, puis sur le smartphone du propriétaire après un **Push origin**.

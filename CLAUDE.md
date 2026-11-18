@@ -93,13 +93,14 @@ L'application gère un seul entrepôt par compte utilisateur.
 5. Actions rapides `-1` et `+1`, avec zones tactiles d'au moins 48 × 48 pixels.
 6. Action permettant de saisir une quantité précise, par exemple `+10` ou `-2,5`, avec motif facultatif.
 7. Formulaire simple pour ajouter ou modifier un produit.
-8. Historique des entrées, sorties et ajustements, avec date, heure, produit, quantité et motif (50 derniers, puis « Voir plus »).
-9. Export Excel en un clic, avec deux feuilles : `Stock` et `Historique`.
+8. Historique des entrées, sorties et ajustements, avec date, heure, produit, quantité et motif (50 derniers, puis « Voir plus »). Chaque ligne propose « Annuler cette opération » (section 6, règle 12).
+9. Export Excel en un clic, avec trois feuilles : `Stock`, `Historique` et `Fournisseurs`.
 10. Données de démonstration, uniquement lorsque l'entrepôt est vide.
 11. Indicateur de l'état de connexion et de synchronisation (voir section 7).
 12. Paramètres : modifier le nom de l'entrepôt. La devise n'est modifiable que si l'entrepôt ne contient encore aucun produit (changer la devise ne convertit pas les montants).
 13. Bouton « Supprimer mon compte et mes données », avec double confirmation (voir section 8).
-14. Court texte de confidentialité accessible depuis l'écran de connexion : données collectées (adresse e-mail, nom du compte Google le cas échéant, données de stock), usage, absence de revente ou de partage, possibilité de supprimer son compte.
+14. Court texte de confidentialité accessible depuis l'écran de connexion : données collectées (adresse e-mail, nom du compte Google le cas échéant, données de stock, coordonnées des fournisseurs saisies par l'utilisateur), usage, absence de revente ou de partage, possibilité de supprimer son compte.
+15. Carnet de fournisseurs (phase 6b, décision 42) : ajouter, modifier et archiver un fournisseur, avec nom, téléphone, WhatsApp, e-mail, adresse, produits fournis et notes. Le carnet est indépendant du stock : il ne crée ni ne modifie aucun mouvement.
 
 ### Ordre de priorité si le temps manque
 
@@ -108,7 +109,8 @@ L'application gère un seul entrepôt par compte utilisateur.
 3. Fonctionnement hors ligne.
 4. Export Excel.
 5. Installation sur téléphone (PWA).
-6. Données de démonstration.
+6. Carnet de fournisseurs.
+7. Données de démonstration.
 
 ### Hors périmètre de la première version
 
@@ -123,6 +125,7 @@ Ne pas développer sans demande explicite :
 - Méthodes de valorisation avancées (coût moyen pondéré, premier entré premier sorti).
 - Comptabilité complète, facturation ou gestion des ventes.
 - Notifications complexes.
+- Lien entre les mouvements et les fournisseurs (choisir un fournisseur lors d'une entrée) : « niveau 2 », non retenu pour l'instant (décision 42).
 
 ## 5. Modèle de données
 
@@ -144,6 +147,7 @@ Pour éviter les erreurs d'arrondi des nombres à virgule, **toutes les quantit�
 - `users/{uid}` : `nomEntrepot`, `devise`, `createdAt`, `suppressionDemandee` (booléen, `false` par défaut).
 - `users/{uid}/products/{productId}` : `nom`, `unite`, `quantiteMilliemes`, `seuilAlerteMilliemes`, `prixAchatCentimes`, `archive`, `dernierMouvementId`, `createdAt`, `updatedAt`.
 - `users/{uid}/movements/{movementId}` : `productId`, `nomProduit`, `unite`, `deltaMilliemes`, `type`, `motif`, `auteurUid`, `dateAppareil`, `dateServeur`.
+- `users/{uid}/suppliers/{supplierId}` (phase 6b, décision 42) : `nom`, `telephone`, `whatsapp`, `email`, `adresse`, `produitsFournis`, `notes`, `archive`, `createdAt`, `updatedAt`. Seul `nom` est obligatoire. `produitsFournis` est un texte libre, sans lien avec les produits du stock.
 
 ### Règles
 
@@ -171,6 +175,7 @@ Ne pas ajouter d'autres champs ou collections sans expliquer leur utilité et ob
 9. Avant d'écrire les règles de sécurité, expliquer simplement comment elles vérifient qu'un mouvement correspond à la modification de stock associée.
 10. Les règles de sécurité ne refusent pas un mouvement à cause d'un état qui a pu changer sur un autre appareil pendant que l'appareil était hors ligne (produit renommé ou archivé). Raison : une écriture hors ligne refusée après la fermeture de l'application disparaît sans message (décision 9).
 11. L'appareil garde une liste locale des opérations pas encore confirmées par le serveur. À chaque ouverture, une opération absente du serveur est signalée comme refusée. Cette liste reste sur l'appareil : elle n'ajoute aucun champ ni collection dans Firestore (décision 9).
+12. **Annuler une opération faite par erreur (phase 6, décision 43).** Chaque ligne de l'historique propose « Annuler cette opération ». Après confirmation, l'application crée l'opération inverse : un mouvement `ajustement` de valeur opposée, envoyé comme tout autre mouvement (règle 2), dont l'identifiant est `annulation-{identifiant de l'opération d'origine}` et dont le motif décrit l'opération annulée. Un identifiant déjà enregistré étant refusé par les règles, une opération ne peut être annulée qu'une seule fois, même depuis deux appareils. L'opération d'origine reste dans l'historique, marquée « annulée ». Une annulation ne s'annule pas : pour revenir en arrière, refaire l'opération voulue. Aucun mouvement n'est modifié ni supprimé (règle 5).
 
 ## 7. Dates et synchronisation
 
@@ -198,7 +203,7 @@ Ne pas afficher un nombre exact de modifications en attente. Ne pas attribuer à
 
 - Un utilisateur ne peut lire et écrire que dans `users/{son uid}`.
 - Tout accès non autorisé est refusé par défaut.
-- Valider dans les règles les types, les champs autorisés, les longueurs des textes (nom 100 caractères, unité 30, motif 200) et les valeurs numériques (entiers, `deltaMilliemes` différent de 0).
+- Valider dans les règles les types, les champs autorisés, les longueurs des textes (nom 100 caractères, unité 30, motif 200) et les valeurs numériques (entiers, `deltaMilliemes` différent de 0). Les longueurs des champs des fournisseurs sont fixées au début de la phase 6b.
 
 ### Lien entre produit et mouvement
 
@@ -219,7 +224,7 @@ Principe à appliquer, puis à vérifier avec la page de test `tests-regles.html
 1. Double confirmation à l'écran, avec rappel d'exporter les données avant.
 2. Demander à l'utilisateur de se reconnecter avant de supprimer quoi que ce soit. La suppression n'est possible qu'en ligne (décision 13).
 3. Écrire `suppressionDemandee: true` sur `users/{uid}`. Une suppression demandée ne s'annule pas.
-4. Supprimer les mouvements, les produits, puis le document `users/{uid}`. Si la suppression est interrompue, elle reprend automatiquement à la connexion suivante tant que `suppressionDemandee` est vrai.
+4. Supprimer les mouvements, les produits, les fournisseurs, puis le document `users/{uid}`. Si la suppression est interrompue, elle reprend automatiquement à la connexion suivante tant que `suppressionDemandee` est vrai.
 5. Supprimer le compte Firebase Authentication. Si Firebase exige malgré tout une connexion récente, demander à l'utilisateur de se reconnecter, puis réessayer.
 6. Tester ce parcours avec un compte de test, jamais avec le compte du propriétaire.
 
@@ -245,7 +250,7 @@ Principe à appliquer, puis à vérifier avec la page de test `tests-regles.html
 
 - Le bouton principal est `Exporter le stock (Excel)`.
 - Générer le fichier dans le navigateur, sans service externe payant.
-- Le fichier contient les feuilles `Stock` et `Historique` (historique complet, chargé au moment de l'export), avec les quantités et montants convertis en nombres décimaux.
+- Le fichier contient les feuilles `Stock`, `Historique` (historique complet, chargé au moment de l'export) et `Fournisseurs` (décision 42), avec les quantités et montants convertis en nombres décimaux.
 - Nom du fichier : `stock_AAAA-MM-JJ.xlsx`.
 - Si l'appareil est hors ligne ou si des mouvements sont encore en attente, avertir l'utilisateur que l'export peut ne pas contenir les données non synchronisées d'autres appareils, et que l'historique peut être incomplet s'il n'a pas été entièrement chargé.
 - L'export est la seule sauvegarde disponible : le plan Spark n'inclut aucune sauvegarde automatique du serveur. Le dire clairement à l'utilisateur.
@@ -284,6 +289,8 @@ Le propriétaire doit pouvoir suivre les tests avec des instructions en françai
 - Vérifier que chaque mouvement modifie exactement la quantité (aucune erreur d'arrondi).
 - Vérifier qu'un mouvement n'est pas dupliqué lors d'une nouvelle tentative.
 - Vérifier qu'une modification directe de la quantité sans mouvement est refusée.
+- Annuler une opération : le stock revient exactement à sa valeur ; une seconde annulation de la même opération est refusée, y compris depuis un autre appareil.
+- Fournisseurs : ajouter, modifier et archiver ; un compte ne voit pas les fournisseurs d'un autre.
 - Vérifier les alertes de stock bas et de rupture.
 - Exporter le stock et l'historique, et ouvrir le fichier dans Excel.
 - Tester sur ordinateur et smartphone.
