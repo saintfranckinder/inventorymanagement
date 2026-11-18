@@ -16,7 +16,7 @@ Dépôt GitHub : `saintfranckinder/minstock`, renommé par le propriétaire le 2
 | 3 | Connexion, premier lancement, confidentialité | **Faite le 2026-11-16** ; trois tests du propriétaire restent à faire (Google, e-mail de réinitialisation, même adresse) |
 | 4a | Produits et conversion des nombres | **Terminée le 2026-11-16** |
 | 4b | Mouvements, règles complètes, historique | **Terminée le 2026-11-16** (tests hors ligne et à deux appareils non faits) |
-| — | Vérification des secrets, dépôt public, GitHub Pages activé | **Prochaine étape** (voir section 8.7) |
+| — | Vérification des secrets, dépôt public, GitHub Pages activé | **En cours** : recherche de secrets faite le 2026-11-18, aucun secret ; reste la publication (voir section 8.7) |
 | 5 | Tableau de bord | À faire |
 | 6 | Formulaires, historique lisible, paramètres | À faire |
 | 7 | Suppression du compte | À faire |
@@ -226,6 +226,26 @@ Constats :
 - **Résultat :** recherche de secrets dans les fichiers et tout l'historique Git ; règles publiées ; dépôt passé en public ; GitHub Pages activé ; `saintfranckinder.github.io` dans les domaines autorisés de Firebase Authentication.
 - **Test :** le lien s'ouvre sur le smartphone et la connexion fonctionne.
 
+**Compte rendu partiel : recherche de secrets (2026-11-18)**
+
+Faite avec l'accord du propriétaire **avant tout envoi sur GitHub** (le dépôt `minstock` était encore vide), avec le Git de GitHub Desktop, sur les 7 commits de la branche `main` (seule branche, aucune étiquette). Le commit de ce compte rendu a été revérifié après sa création.
+
+| Vérification | Résultat |
+|---|---|
+| Tous les fichiers ayant existé dans l'historique (34) : aucun fichier inattendu | Réussi |
+| `.env.test`, et tout fichier `.env*`, `.pem`, `.key`, compte de service, `.firebaserc` ou `.claude/` : jamais commité ; `.env.test` ignoré par Git | Réussi |
+| Clés privées et jetons connus (GitHub, AWS, Slack, compte de service Google…), `vendor/` compris : aucun | Réussi |
+| Clé d'API Google : seulement dans `js/firebase-config.js`, ce qui est normal (configuration web, pas un secret) | Réussi |
+| Mots de passe écrits en clair : aucun (3 fausses alertes : case « Afficher le mot de passe », message d'erreur) | Réussi |
+| Mot de passe du compte de test : absent des fichiers et des messages de commit (recherché sans être affiché) | Réussi |
+| Adresses e-mail : seulement l'adresse fictive du compte de test dans `PLAN.md` ; aucune adresse `gmail.com` | Réussi |
+| Auteur et validateur de tous les commits : uniquement l'adresse `noreply` de GitHub | Réussi |
+| Messages de commit : ni secret ni adresse | Réussi |
+
+Limites : la recherche porte sur des formes connues de secrets ; un secret de forme inhabituelle pourrait lui échapper. Les fichiers de `vendor/` sont des copies officielles (`vendor/LISEZMOI.md`) : ils n'ont été fouillés que pour les clés, les jetons et les adresses e-mail.
+
+Reste à faire : « Publish branch », dépôt en public, GitHub Pages, domaine autorisé dans Firebase, premier test sur smartphone.
+
 ### Phase 5 : tableau de bord
 - **Résultat :** liste, recherche, quantité, seuil, prix, valeur « indicative », `+1` / `-1` (48 × 48 px), saisie d'une quantité précise, alertes `Stock bas` et `Rupture`.
 - **Tests :** smartphone (360 px) et ordinateur ; alertes orange et rouge avec leur texte.
@@ -333,7 +353,7 @@ Règles de conception retenues pour le code :
 
 ### 8.1 Phase actuelle
 
-- **Phase 4b terminée.** Prochaine étape : **« dépôt public »**, entre la phase 4b et la phase 5 (décision 10). Rien n'est commencé pour cette étape.
+- **Phase 4b terminée.** Prochaine étape : **« dépôt public »**, entre la phase 4b et la phase 5 (décision 10). *(2026-11-18 : recherche de secrets faite, aucun secret ; le reste de l'étape n'est pas commencé.)*
 - Version de l'application : `0.5.0`. Règles Firestore : **version 5**, publiée dans la console et vérifiée active le 2026-11-16 (`tests-regles.html` : 70 essais sur 70).
 - Dépôt Git, branche `main` : `cecf8d3` (phases 0 et 1), `48d55b3` (phase 2), `f09bf30` (phase 3), `96f2a3d` (phase 4a), `d8f1b5b` (phase 4b), puis le commit de cette note. **Aucun commit n'est publié sur GitHub** (vérifié le 2026-11-18) : la première publication se fait avec **Publish branch** dans GitHub Desktop.
 
@@ -436,8 +456,8 @@ Les règles de conception de la section 7 restent à respecter dans toute la sui
 
 1. **Propriétaire :** faire les trois tests de la phase 3 (section 8.3), puis vérifier les commits dans GitHub Desktop (onglet **History**) et cliquer sur **Publish branch**.
 2. **Assistant, dans une nouvelle session ouverte dans `C:\GitHub\Inventory Management\inventorymanagement` :** lire `CLAUDE.md`, `PLAN.md` et `DECISIONS.md`, puis proposer l'étape « dépôt public » et attendre l'accord du propriétaire :
-   - rechercher des secrets dans tous les fichiers suivis et dans tout l'historique Git (`.env.test` doit rester absent ; `js/firebase-config.js` est normal) ;
-   - vérifier que les commits n'exposent que l'adresse `noreply` ;
+   - *(Fait le 2026-11-18, avant « Publish branch », avec l'accord du propriétaire : aucun secret. Voir le compte rendu partiel de l'étape « dépôt public », section 2.)* rechercher des secrets dans tous les fichiers suivis et dans tout l'historique Git (`.env.test` doit rester absent ; `js/firebase-config.js` est normal) ;
+   - *(Fait le 2026-11-18 : uniquement l'adresse `noreply`.)* vérifier que les commits n'exposent que l'adresse `noreply` ;
    - guider le propriétaire clic par clic : dépôt en public, GitHub Pages (branche `main`, dossier racine), ajout de `saintfranckinder.github.io` aux domaines autorisés de Firebase Authentication ;
    - premier test sur smartphone à l'adresse `https://saintfranckinder.github.io/minstock/` : connexion, mouvement de stock, affichage à 360 pixels.
 3. **Ensuite :** phase 5, tableau de bord (recherche, valeur du stock « indicative », boutons `+1` / `-1`, alertes `Stock bas` et `Rupture`).
