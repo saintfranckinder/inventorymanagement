@@ -17,6 +17,7 @@ Le projet est en cours de construction. L'avancement est suivi dans `PLAN.md`.
 - Signaler les opérations que le serveur a refusées, même après fermeture de l'application.
 - Tableau de bord : valeur du stock (indicative), recherche par nom, alertes « Stock bas » et « Rupture », boutons rapides `−1` et `+1`.
 - Paramètres : changer le nom de l'entrepôt ; changer la devise tant que l'entrepôt ne contient aucun produit.
+- Carnet de fournisseurs : ajouter, modifier, supprimer, rechercher, et appeler ou écrire en un appui.
 
 ## Tableau de bord
 
@@ -59,6 +60,20 @@ Le bouton « Paramètres », en bas de l'écran des produits, ouvre :
 - **Nom de l'entrepôt** : modifiable à tout moment, même sans Internet (de 1 à 100 caractères).
 - **Devise** : modifiable seulement tant que l'entrepôt ne contient aucun produit, même archivé, car changer la devise ne convertit pas les prix déjà saisis. L'application le vérifie auprès du serveur : il faut donc Internet pour changer la devise. Sans réponse du serveur, la devise reste bloquée et le bouton « Vérifier de nouveau » permet de réessayer.
 
+## Carnet de fournisseurs
+
+Le bouton « Fournisseurs », sur l'écran des produits, ouvre le carnet. Il est indépendant du stock : il ne crée et ne modifie aucun mouvement.
+
+- **Fiche d'un fournisseur :** nom (obligatoire), téléphone, WhatsApp, e-mail, adresse, produits fournis (texte libre, par exemple « ciment, fer ») et notes.
+- **Limites :** nom 100 caractères ; téléphone et WhatsApp 30 caractères, seulement des chiffres, des espaces et `+ - ( ) .` ; e-mail 254 caractères, de la forme `nom@exemple.com` ; adresse 200 ; produits fournis 500 ; notes 1 000.
+- **Recherche :** par nom ou par produit fourni (`ciment` montre qui vend du ciment), sans tenir compte des majuscules ni des accents.
+- **Boutons « Appeler », « WhatsApp » et « E-mail » :** ils ouvrent l'application correspondante du téléphone ; l'application de stock n'envoie rien elle-même. Le bouton WhatsApp n'apparaît que si le numéro commence par l'indicatif du pays (`+509…` ou `00509…`).
+- **Même nom :** deux fournisseurs peuvent porter le même nom ; l'application demande d'abord « Enregistrer quand même ? ».
+- **Supprimer :** depuis le formulaire « Modifier », après confirmation. La suppression est définitive : les coordonnées sont effacées et ne peuvent pas être récupérées.
+- **Lecture de la liste :** elle n'est chargée que pendant que l'écran « Fournisseurs » est ouvert, pour économiser le quota gratuit. Sans Internet, la liste déjà vue sur l'appareil reste affichée ; la toute première fois sur un appareil, Internet est nécessaire.
+
+Ce sont des informations sur d'autres personnes : n'enregistrer que ce qui est utile, et supprimer un fournisseur dont on n'a plus besoin.
+
 ## Saisie des nombres
 
 - La virgule et le point sont tous deux acceptés pour les décimales : `2,5` ou `2.5`.
@@ -90,7 +105,9 @@ Le fichier `firestore.rules` n'est pas appliqué automatiquement. À chaque modi
 5. Cliquez sur **Publier**.
 6. Vérifiez que la ligne « Version des regles » affichée dans la console est la même que dans le fichier.
 
-Tant que les règles publiées sont en retard sur le fichier, l'application affiche « Impossible de charger vos données ».
+Tant que les règles publiées sont en retard sur le fichier, l'application affiche « Impossible de charger vos données » (ou, pour les fournisseurs, « Impossible de charger les fournisseurs »).
+
+**Ordre à respecter quand les règles changent :** publier d'abord les règles dans la console, puis seulement envoyer le code avec **Push origin**. Les nouvelles règles restent compatibles avec la version déjà en ligne.
 
 ## Tester les règles de sécurité
 
@@ -101,7 +118,7 @@ Tant que les règles publiées sont en retard sur le fichier, l'application affi
 
 À refaire après chaque publication des règles.
 
-Ces essais créent dans le compte de test deux produits « Produit d'essai (règles) ». Ils sont archivés à la fin de chaque passage et n'apparaissent donc pas dans la liste. Chaque passage ajoute aussi cinq mouvements à l'historique du compte de test, dont une opération et son annulation (impossibles à supprimer, par conception) ; leur somme est nulle. Un passage dure environ une minute.
+Ces essais créent dans le compte de test deux produits « Produit d'essai (règles) ». Ils sont archivés à la fin de chaque passage et n'apparaissent donc pas dans la liste. Chaque passage ajoute aussi cinq mouvements à l'historique du compte de test, dont une opération et son annulation (impossibles à supprimer, par conception) ; leur somme est nulle. Un fournisseur d'essai est créé puis supprimé : il ne reste rien. Un passage dure environ une minute.
 
 ## Tester les conversions de nombres
 
@@ -161,5 +178,7 @@ Sur GitHub Pages, le fichier vide `.nojekyll` doit rester à la racine : sans lu
 - **Annulation et historique chargé :** la mention « Annulée » ne s'affiche que si l'annulation figure dans la partie de l'historique déjà chargée. Sans Internet, cette partie peut être incomplète ; une seconde annulation serait de toute façon refusée par le serveur.
 - **Changement de devise :** la vérification « aucun produit » est faite par l'application, pas par les règles de sécurité. Un produit ajouté sans Internet sur un autre appareil, au moment même où la devise change, ne serait pas détecté. Le risque est faible avec un seul utilisateur.
 - **Produit renommé :** l'historique garde le nom du produit au moment de chaque opération.
+- **Fournisseurs modifiés sans Internet :** ils ne sont pas suivis par la liste des « Opérations refusées ». Le formulaire vérifie exactement les mêmes limites que les règles, donc un refus ne devrait pas arriver. Si un fournisseur est supprimé sur un appareil pendant qu'un autre, hors ligne, le modifie, la modification est perdue et le fournisseur reste supprimé. Pour le même fournisseur modifié sur deux appareils, la dernière modification arrivée au serveur l'emporte.
+- **Fournisseur supprimé :** aucun retour en arrière possible. L'export Excel (phase 9) servira de sauvegarde.
 - **Ajustement d'inventaire :** la correction est saisie à la main. Si un autre appareil a modifié le stock entre-temps, le chiffre affiché au moment de la saisie n'était peut-être plus à jour.
 - **Quota gratuit :** chaque mouvement coûte deux écritures et quelques lectures de contrôle. La limite gratuite est de 20 000 écritures et 50 000 lectures par jour pour tous les comptes réunis ; si elle est atteinte, l'application se bloque jusqu'au lendemain, sans perte de données.

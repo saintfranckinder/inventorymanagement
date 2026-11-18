@@ -6,6 +6,8 @@
 // Phase 4a : produits (fiche modifiable, quantité intouchable).
 // Phase 4b : mouvements et lien produit-mouvement.
 // Phase 6 : annulation d'une opération (identifiant « annulation-… »).
+// Phase 6b : carnet de fournisseurs (règles version 6). Le fournisseur
+// d'essai est créé puis supprimé à chaque passage : il ne reste rien.
 //
 // Le compte de test garde deux produits d'essai, archivés à la fin de chaque
 // passage : ils n'apparaissent donc pas dans la liste. Chaque passage ajoute
@@ -41,6 +43,7 @@ const DELAI_MAX_MS = 15000;
 const AUTRE_COMPTE = 'compte-de-quelqu-un-d-autre';
 const ID_PRODUIT_ESSAI = 'essai-regles';
 const ID_PRODUIT_AVEC_STOCK = 'essai-regles-stock';
+const ID_FOURNISSEUR_ESSAI = 'essai-regles-fournisseur';
 const FIN_ADRESSE_COMPTE_DE_TEST = '@example.com';
 const MESSAGE_PAS_UN_COMPTE_DE_TEST =
   'Ce compte n’est pas un compte de test : les essais ne seront pas lancés. ' +
@@ -707,6 +710,136 @@ function essaisMouvements(db, uid, produitAvecStockExiste) {
   return essais;
 }
 
+// Carnet de fournisseurs (décisions 42, 50 et 54).
+function essaisFournisseurs(db, uid) {
+  const mesFournisseurs = collection(db, 'users', uid, 'suppliers');
+  const fournisseurEssai = doc(mesFournisseurs, ID_FOURNISSEUR_ESSAI);
+  const nouveau = () => doc(mesFournisseurs);
+
+  // Fiche valide ; `modifications` remplace ou ajoute des champs.
+  const fiche = (modifications = {}) => ({
+    nom: 'Fournisseur d’essai (règles)',
+    telephone: '+509 3712-3456',
+    whatsapp: '(509) 3712.3456',
+    email: 'essai@example.com',
+    adresse: 'Rue de l’essai\nPort-au-Prince',
+    produitsFournis: 'ciment, fer',
+    notes: 'Essai des règles',
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    ...modifications
+  });
+  const sansChamp = (champ) => {
+    const resultat = fiche();
+    delete resultat[champ];
+    return resultat;
+  };
+
+  return [
+    {
+      nom: 'Créer un fournisseur valide (tous les champs)',
+      attendu: 'autorise',
+      operation: async () => {
+        // Reste d'un passage interrompu : on repart d'une place nette.
+        await deleteDoc(fournisseurEssai).catch(() => {});
+        await setDoc(fournisseurEssai, fiche());
+      }
+    },
+    {
+      nom: 'Lire ses fournisseurs',
+      attendu: 'autorise',
+      operation: () => getDocsFromServer(query(mesFournisseurs, limit(5)))
+    },
+    {
+      nom: 'Modifier son fournisseur (téléphone et notes)',
+      attendu: 'autorise',
+      operation: () => updateDoc(fournisseurEssai, {
+        telephone: '3712 3456',
+        notes: 'Modifié',
+        updatedAt: serverTimestamp()
+      })
+    },
+    {
+      nom: 'Modifier la date de création d’un fournisseur',
+      attendu: 'refuse',
+      operation: () => updateDoc(fournisseurEssai, {
+        createdAt: Timestamp.fromDate(new Date(2000, 0, 1)),
+        updatedAt: serverTimestamp()
+      })
+    },
+    {
+      nom: 'Fournisseur avec un champ non prévu',
+      attendu: 'refuse',
+      operation: () => setDoc(nouveau(), fiche({ champNonPrevu: true }))
+    },
+    {
+      nom: 'Fournisseur sans le champ « adresse »',
+      attendu: 'refuse',
+      operation: () => setDoc(nouveau(), sansChamp('adresse'))
+    },
+    {
+      nom: 'Fournisseur sans nom (nom vide)',
+      attendu: 'refuse',
+      operation: () => setDoc(nouveau(), fiche({ nom: '' }))
+    },
+    {
+      nom: 'Nom de fournisseur de 101 caractères',
+      attendu: 'refuse',
+      operation: () => setDoc(nouveau(), fiche({ nom: 'x'.repeat(101) }))
+    },
+    {
+      nom: 'Téléphone avec des lettres',
+      attendu: 'refuse',
+      operation: () => setDoc(nouveau(), fiche({ telephone: '3712 ABCD' }))
+    },
+    {
+      nom: 'WhatsApp de 31 caractères',
+      attendu: 'refuse',
+      operation: () => setDoc(nouveau(), fiche({ whatsapp: '1'.repeat(31) }))
+    },
+    {
+      nom: 'Téléphone enregistré comme un nombre',
+      attendu: 'refuse',
+      operation: () => setDoc(nouveau(), fiche({ telephone: 37123456 }))
+    },
+    {
+      nom: 'E-mail sans @',
+      attendu: 'refuse',
+      operation: () => setDoc(nouveau(), fiche({ email: 'essai.example.com' }))
+    },
+    {
+      nom: 'Notes de 1 001 caractères',
+      attendu: 'refuse',
+      operation: () => setDoc(nouveau(), fiche({ notes: 'x'.repeat(1001) }))
+    },
+    {
+      nom: 'Date de création choisie par l’appareil',
+      attendu: 'refuse',
+      operation: () => setDoc(nouveau(), fiche({ createdAt: Timestamp.fromDate(new Date(2000, 0, 1)) }))
+    },
+    {
+      nom: 'Lire un fournisseur d’un autre compte',
+      attendu: 'refuse',
+      operation: () => getDocFromServer(doc(db, 'users', AUTRE_COMPTE, 'suppliers', 'essai'))
+    },
+    {
+      nom: 'Créer un fournisseur dans un autre compte',
+      attendu: 'refuse',
+      operation: () => setDoc(doc(db, 'users', AUTRE_COMPTE, 'suppliers', nouveau().id), fiche())
+    },
+    {
+      nom: 'Supprimer son fournisseur d’essai',
+      attendu: 'autorise',
+      operation: () => deleteDoc(fournisseurEssai)
+    },
+    {
+      nom: 'Le fournisseur supprimé n’existe plus',
+      attendu: 'vrai',
+      operation: async () => !(await getDocFromServer(fournisseurEssai)).exists()
+    }
+  ];
+}
+
 async function lancerLesTests(db, utilisateur) {
   const bouton = element('bouton-lancer');
   // Second contrôle, avant toute lecture ou écriture (décision 40).
@@ -761,7 +894,8 @@ async function lancerLesTests(db, utilisateur) {
   const essais = [
     ...essaisEntrepot(db, utilisateur.uid, entrepot),
     ...essaisProduits(db, utilisateur.uid, produitEssaiExiste),
-    ...essaisMouvements(db, utilisateur.uid, produitAvecStockExiste)
+    ...essaisMouvements(db, utilisateur.uid, produitAvecStockExiste),
+    ...essaisFournisseurs(db, utilisateur.uid)
   ];
   let reussis = 0;
   for (const essai of essais) {

@@ -215,7 +215,7 @@ Objectifs :
 
 Objectifs :
 
-- Liste, ajout, modification et archivage des fournisseurs : nom, téléphone, WhatsApp, e-mail, adresse, produits fournis, notes (décision 42).
+- Liste, recherche, ajout, modification et suppression des fournisseurs : nom, téléphone, WhatsApp, e-mail, adresse, produits fournis, notes ; boutons « Appeler », « WhatsApp » et « E-mail » (décisions 42 et 50 à 54).
 - Règles Firestore version 6 pour `users/{uid}/suppliers`, avec leurs essais dans `tests-regles.html`.
 - Texte de confidentialité complété.
 

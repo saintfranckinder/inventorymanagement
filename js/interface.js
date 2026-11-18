@@ -35,6 +35,18 @@ export function afficherVue(id) {
   window.scrollTo(0, 0);
 }
 
+// Texte comparable pour une recherche : sans majuscules ni accents, espaces et
+// apostrophes uniformisés (décision 46). Sert aux produits et aux fournisseurs.
+export function normaliserPourRecherche(texte) {
+  return texte
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[’‘]/g, '\'')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
 // Affiche un texte dans une zone de message (toujours comme du texte, jamais
 // comme du HTML).
 export function afficherMessage(id, texte) {

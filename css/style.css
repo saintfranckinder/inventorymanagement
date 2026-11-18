@@ -101,8 +101,10 @@ label {
 input[type="email"],
 input[type="password"],
 input[type="search"],
+input[type="tel"],
 input[type="text"],
-select {
+select,
+textarea {
   display: block;
   width: 100%;
   min-height: 48px;
@@ -114,6 +116,10 @@ select {
   border-radius: 0.5rem;
   font: inherit;
   font-size: 16px;
+}
+
+textarea {
+  resize: vertical;
 }
 
 /* Une liste bloquée (devise) reste lisible, y compris en extérieur. */
@@ -512,6 +518,39 @@ select:disabled {
   background: var(--texte-discret);
   color: #ffffff;
   font-weight: 700;
+}
+
+/* ---------- Fournisseurs (phase 6b) ---------- */
+
+/* Adresse, produits fournis et notes gardent leurs retours à la ligne. */
+.fournisseur .produit-detail {
+  white-space: pre-line;
+}
+
+.fournisseur .aide {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+/* « Appeler », « WhatsApp », « E-mail » : côte à côte, retour à la ligne
+   si l'écran est trop étroit. */
+.liens-contact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.75rem 0 0;
+}
+
+.liens-contact .bouton {
+  display: flex;
+  flex: 1 1 5.5rem;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  margin: 0;
+  padding: 0.625rem 0.5rem;
+  text-align: center;
+  text-decoration: none;
 }
 
 /* ---------- Paramètres ---------- */

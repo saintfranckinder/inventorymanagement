@@ -11,7 +11,14 @@ import {
   signalerResultatOperation,
   surProduitsActifs
 } from './ecran-mouvements.js';
-import { afficherMessage, afficherVue, effacerMessages, element, vueActuelle } from './interface.js';
+import {
+  afficherMessage,
+  afficherVue,
+  effacerMessages,
+  element,
+  normaliserPourRecherche,
+  vueActuelle
+} from './interface.js';
 import { messageErreur } from './messages-erreur.js';
 import { nouvelIdMouvement } from './mouvements.js';
 import { suivreOperation } from './operations-en-attente.js';
@@ -59,18 +66,6 @@ function ligneDetail(libelle, valeur) {
   ligne.className = 'produit-detail';
   ligne.textContent = `${libelle} : ${valeur}`;
   return ligne;
-}
-
-// Texte comparable pour la recherche : sans majuscules ni accents, espaces et
-// apostrophes uniformisés (décision 46, comme pour les noms en double).
-function normaliserPourRecherche(texte) {
-  return texte
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[’‘]/g, '\'')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .toLowerCase();
 }
 
 // « rupture » (rouge) si la quantité est à 0 ou en dessous ; sinon « bas »

@@ -16,6 +16,11 @@ import {
   demarrerEcranMouvements
 } from './ecran-mouvements.js';
 import {
+  arreterEcranFournisseurs,
+  brancherEcranFournisseurs,
+  demarrerEcranFournisseurs
+} from './ecran-fournisseurs.js';
+import {
   arreterEcranParametres,
   brancherEcranParametres,
   demarrerEcranParametres
@@ -36,14 +41,17 @@ import { demarrerFirebase, VERSION_SDK_FIREBASE } from './firebase-init.js';
 import { afficherMessage, afficherVue, effacerMessages, element, vueActuelle } from './interface.js';
 import { messageErreur } from './messages-erreur.js';
 
-const VERSION_APP = '0.7.0';
+const VERSION_APP = '0.8.0';
 
 // Écrans accessibles sans être connecté.
 const VUES_SANS_COMPTE = ['vue-connexion', 'vue-inscription', 'vue-oubli', 'vue-confidentialite'];
 
 // Écrans de travail d'un compte connecté. Tant que l'utilisateur est sur l'un
 // d'eux, une simple mise à jour de l'entrepôt ne doit pas le déplacer.
-const VUES_DE_TRAVAIL = ['vue-accueil', 'vue-produit', 'vue-mouvement', 'vue-historique', 'vue-parametres'];
+const VUES_DE_TRAVAIL = [
+  'vue-accueil', 'vue-produit', 'vue-mouvement', 'vue-historique', 'vue-parametres',
+  'vue-fournisseurs', 'vue-fournisseur'
+];
 
 const AVERTISSEMENT_STOCKAGE =
   'Ce navigateur n’enregistre pas les données sur l’appareil. ' +
@@ -117,6 +125,7 @@ function surEtatEntrepot(etat) {
     demarrerEcranProduits(firebase.db, utilisateur.uid, etat.donnees);
     demarrerEcranMouvements(firebase.db, utilisateur.uid);
     demarrerEcranParametres(firebase.db, utilisateur.uid, etat.donnees);
+    demarrerEcranFournisseurs(firebase.db, utilisateur.uid);
     if (!VUES_DE_TRAVAIL.includes(vueActuelle())) {
       afficherVue('vue-accueil');
     }
@@ -126,6 +135,7 @@ function surEtatEntrepot(etat) {
   arreterEcranProduits();
   arreterEcranMouvements();
   arreterEcranParametres();
+  arreterEcranFournisseurs();
 
   if (!etat.depuisCache) {
     // Le serveur confirme qu'aucun entrepôt n'existe : c'est un nouveau compte.
@@ -159,6 +169,7 @@ function surChangementUtilisateur(nouvelUtilisateur) {
   arreterEcranProduits();
   arreterEcranMouvements();
   arreterEcranParametres();
+  arreterEcranFournisseurs();
   utilisateur = nouvelUtilisateur;
   viderMotsDePasse();
 
@@ -359,6 +370,7 @@ async function demarrer() {
   brancherEcranProduits();
   brancherEcranMouvements();
   brancherEcranParametres();
+  brancherEcranFournisseurs();
 
   surveillerConnexion(firebase.auth, surChangementUtilisateur);
 }

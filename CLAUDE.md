@@ -100,7 +100,7 @@ L'application gère un seul entrepôt par compte utilisateur.
 12. Paramètres : modifier le nom de l'entrepôt. La devise n'est modifiable que si l'entrepôt ne contient encore aucun produit (changer la devise ne convertit pas les montants).
 13. Bouton « Supprimer mon compte et mes données », avec double confirmation (voir section 8).
 14. Court texte de confidentialité accessible depuis l'écran de connexion : données collectées (adresse e-mail, nom du compte Google le cas échéant, données de stock, coordonnées des fournisseurs saisies par l'utilisateur), usage, absence de revente ou de partage, possibilité de supprimer son compte.
-15. Carnet de fournisseurs (phase 6b, décision 42) : ajouter, modifier et archiver un fournisseur, avec nom, téléphone, WhatsApp, e-mail, adresse, produits fournis et notes. Le carnet est indépendant du stock : il ne crée ni ne modifie aucun mouvement.
+15. Carnet de fournisseurs (phase 6b, décisions 42 et 50 à 54) : ajouter, modifier et supprimer un fournisseur, avec nom, téléphone, WhatsApp, e-mail, adresse, produits fournis et notes ; recherche par nom ou par produit fourni ; boutons « Appeler », « WhatsApp » et « E-mail » qui ouvrent l'application correspondante du téléphone. Le carnet est indépendant du stock : il ne crée ni ne modifie aucun mouvement.
 
 ### Ordre de priorité si le temps manque
 
@@ -147,7 +147,7 @@ Pour éviter les erreurs d'arrondi des nombres à virgule, **toutes les quantit�
 - `users/{uid}` : `nomEntrepot`, `devise`, `createdAt`, `suppressionDemandee` (booléen, `false` par défaut).
 - `users/{uid}/products/{productId}` : `nom`, `unite`, `quantiteMilliemes`, `seuilAlerteMilliemes`, `prixAchatCentimes`, `archive`, `dernierMouvementId`, `createdAt`, `updatedAt`.
 - `users/{uid}/movements/{movementId}` : `productId`, `nomProduit`, `unite`, `deltaMilliemes`, `type`, `motif`, `auteurUid`, `dateAppareil`, `dateServeur`.
-- `users/{uid}/suppliers/{supplierId}` (phase 6b, décision 42) : `nom`, `telephone`, `whatsapp`, `email`, `adresse`, `produitsFournis`, `notes`, `archive`, `createdAt`, `updatedAt`. Seul `nom` est obligatoire. `produitsFournis` est un texte libre, sans lien avec les produits du stock.
+- `users/{uid}/suppliers/{supplierId}` (phase 6b, décisions 42 et 50) : `nom`, `telephone`, `whatsapp`, `email`, `adresse`, `produitsFournis`, `notes`, `createdAt`, `updatedAt`. Seul `nom` est obligatoire ; un champ facultatif non rempli vaut une chaîne vide. `produitsFournis` est un texte libre, sans lien avec les produits du stock. Un fournisseur supprimé est effacé définitivement : il n'y a pas d'archivage (décision 50).
 
 ### Règles
 
@@ -203,7 +203,7 @@ Ne pas afficher un nombre exact de modifications en attente. Ne pas attribuer à
 
 - Un utilisateur ne peut lire et écrire que dans `users/{son uid}`.
 - Tout accès non autorisé est refusé par défaut.
-- Valider dans les règles les types, les champs autorisés, les longueurs des textes (nom 100 caractères, unité 30, motif 200) et les valeurs numériques (entiers, `deltaMilliemes` différent de 0). Les longueurs des champs des fournisseurs sont fixées au début de la phase 6b.
+- Valider dans les règles les types, les champs autorisés, les longueurs des textes (nom 100 caractères, unité 30, motif 200) et les valeurs numériques (entiers, `deltaMilliemes` différent de 0). Fournisseurs (décision 54) : nom 1 à 100 caractères ; téléphone et WhatsApp 30 caractères au plus, seulement des chiffres, des espaces et `+ - ( ) .` ; e-mail 254 caractères au plus, vide ou de la forme `x@y` ; adresse 200 ; produits fournis 500 ; notes 1 000.
 
 ### Lien entre produit et mouvement
 
@@ -290,7 +290,7 @@ Le propriétaire doit pouvoir suivre les tests avec des instructions en françai
 - Vérifier qu'un mouvement n'est pas dupliqué lors d'une nouvelle tentative.
 - Vérifier qu'une modification directe de la quantité sans mouvement est refusée.
 - Annuler une opération : le stock revient exactement à sa valeur ; une seconde annulation de la même opération est refusée, y compris depuis un autre appareil.
-- Fournisseurs : ajouter, modifier et archiver ; un compte ne voit pas les fournisseurs d'un autre.
+- Fournisseurs : ajouter, modifier et supprimer ; un compte ne voit pas les fournisseurs d'un autre.
 - Vérifier les alertes de stock bas et de rupture.
 - Exporter le stock et l'historique, et ouvrir le fichier dans Excel.
 - Tester sur ordinateur et smartphone.

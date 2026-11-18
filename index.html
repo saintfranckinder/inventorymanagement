@@ -121,6 +121,12 @@
         <li>Votre adresse e-mail, pour vous connecter.</li>
         <li>Si vous utilisez Google : le nom et la photo de votre compte Google, transmis par Google au service de connexion.</li>
         <li>Les données de stock que vous saisissez : entrepôt, produits, quantités, prix et mouvements.</li>
+        <li>
+          Les coordonnées des fournisseurs que vous enregistrez : nom, téléphone,
+          WhatsApp, e-mail, adresse, produits fournis et notes. Ce sont des
+          informations sur d'autres personnes : n'enregistrez que ce qui vous
+          est utile, et supprimez un fournisseur dont vous n'avez plus besoin.
+        </li>
       </ul>
 
       <h3>Utilisation</h3>
@@ -206,6 +212,7 @@
 
       <button type="button" id="bouton-ajouter-produit" class="bouton bouton-principal">Ajouter un produit</button>
       <button type="button" id="bouton-historique" class="bouton bouton-secondaire">Historique des mouvements</button>
+      <button type="button" id="bouton-fournisseurs" class="bouton bouton-secondaire">Fournisseurs</button>
 
       <h3>Produits</h3>
       <div id="bloc-recherche" hidden>
@@ -220,6 +227,74 @@
 
       <button type="button" id="bouton-parametres" class="bouton bouton-secondaire">Paramètres</button>
       <button type="button" class="bouton bouton-secondaire" data-deconnexion>Se déconnecter</button>
+    </section>
+
+    <!-- Carnet de fournisseurs (phase 6b, décisions 42 et 50 à 54) -->
+    <section id="vue-fournisseurs" data-vue hidden>
+      <h2>Fournisseurs</h2>
+      <button type="button" id="bouton-retour-fournisseurs" class="bouton bouton-secondaire">Retour aux produits</button>
+      <button type="button" id="bouton-ajouter-fournisseur" class="bouton bouton-principal">Ajouter un fournisseur</button>
+
+      <p class="aide">
+        Le carnet est indépendant du stock : il ne crée et ne modifie aucun
+        mouvement.
+      </p>
+
+      <p id="erreur-fournisseurs" class="message-erreur" role="alert" hidden></p>
+      <p id="info-fournisseurs" class="message-info" role="status" hidden></p>
+
+      <div id="bloc-recherche-fournisseur" hidden>
+        <label for="recherche-fournisseur">Rechercher un fournisseur</label>
+        <input id="recherche-fournisseur" type="search" autocomplete="off" enterkeyhint="search" placeholder="Nom ou produit fourni">
+      </div>
+      <p id="fournisseurs-chargement" class="aide" hidden>
+        Chargement de la liste… La première fois sur cet appareil, Internet est nécessaire.
+      </p>
+      <p id="fournisseurs-vide" class="aide" hidden>Aucun fournisseur pour l'instant.</p>
+      <p id="recherche-fournisseur-aucun" class="aide" role="status" hidden></p>
+      <ul id="liste-fournisseurs" class="liste-produits"></ul>
+    </section>
+
+    <!-- Ajouter ou modifier un fournisseur -->
+    <section id="vue-fournisseur" data-vue hidden>
+      <h2 id="fournisseur-titre">Ajouter un fournisseur</h2>
+
+      <form id="formulaire-fournisseur" novalidate>
+        <label for="fournisseur-nom">Nom</label>
+        <input id="fournisseur-nom" type="text" autocomplete="off">
+
+        <label for="fournisseur-telephone">Téléphone (facultatif)</label>
+        <input id="fournisseur-telephone" type="tel" autocomplete="off" aria-describedby="aide-fournisseur-telephone">
+        <p id="aide-fournisseur-telephone" class="aide-champ">Exemple : +509 3712 3456</p>
+
+        <label for="fournisseur-whatsapp">WhatsApp (facultatif)</label>
+        <input id="fournisseur-whatsapp" type="tel" autocomplete="off" aria-describedby="aide-fournisseur-whatsapp">
+        <p id="aide-fournisseur-whatsapp" class="aide-champ">
+          Avec l'indicatif du pays au début (par exemple +509 3712 3456),
+          pour que le bouton WhatsApp fonctionne.
+        </p>
+
+        <label for="fournisseur-email">E-mail (facultatif)</label>
+        <input id="fournisseur-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false">
+
+        <label for="fournisseur-adresse">Adresse (facultatif)</label>
+        <textarea id="fournisseur-adresse" rows="2"></textarea>
+
+        <label for="fournisseur-produits">Produits fournis (facultatif)</label>
+        <textarea id="fournisseur-produits" rows="2" aria-describedby="aide-fournisseur-produits"></textarea>
+        <p id="aide-fournisseur-produits" class="aide-champ">
+          Exemple : ciment, fer, sable. Texte libre, sans lien avec le stock.
+        </p>
+
+        <label for="fournisseur-notes">Notes (facultatif)</label>
+        <textarea id="fournisseur-notes" rows="3"></textarea>
+
+        <p id="erreur-fournisseur" class="message-erreur" role="alert" hidden></p>
+
+        <button type="submit" id="bouton-enregistrer-fournisseur" class="bouton bouton-principal">Enregistrer</button>
+        <button type="button" id="bouton-annuler-fournisseur" class="bouton bouton-secondaire">Annuler</button>
+        <button type="button" id="bouton-supprimer-fournisseur" class="bouton bouton-danger" hidden>Supprimer ce fournisseur</button>
+      </form>
     </section>
 
     <!-- Paramètres de l'entrepôt (phase 6, décision 49) -->

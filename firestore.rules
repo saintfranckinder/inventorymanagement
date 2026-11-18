@@ -1,10 +1,12 @@
 rules_version = '2';
 
 // Regles de securite de la base Firestore.
-// Version des regles : 5 (phase 4b).
+// Version des regles : 6 (phase 6b).
 //
 // Phase 4b : chaque utilisateur accede a son document users/{uid}, a ses
 // produits et a ses mouvements de stock.
+// Phase 6b : ajout du carnet de fournisseurs (users/{uid}/suppliers),
+// independant du stock. Le reste est inchange depuis la version 5.
 //
 // Principe du lien produit-mouvement :
 //   - la quantite d'un produit ne change QUE dans un lot qui cree aussi un
@@ -118,6 +120,43 @@ service cloud.firestore {
         && m.dateServeur is timestamp;
     }
 
+    // Un texte facultatif : une chaine de 0 a `longueurMax` caracteres.
+    function texteFacultatif(t, longueurMax) {
+      return t is string && t.size() <= longueurMax;
+    }
+
+    // Un numero de telephone ou de WhatsApp : vide, ou seulement des
+    // chiffres, des espaces et + - ( ) . (30 caracteres au plus).
+    function telephoneValide(t) {
+      return texteFacultatif(t, 30) && t.matches('^[0-9 +().-]*$');
+    }
+
+    // Une adresse e-mail : vide, ou de la forme x@y, sans espace.
+    function emailValide(t) {
+      return texteFacultatif(t, 254) && (t == '' || t.matches('^[^@ ]+@[^@ ]+$'));
+    }
+
+    // Controle des champs d'un fournisseur (decisions 42, 50 et 54) :
+    // uniquement les neuf champs prevus ; seul le nom est obligatoire, un
+    // champ facultatif non rempli vaut une chaine vide.
+    function fournisseurValide(d) {
+      return d.keys().hasOnly(['nom', 'telephone', 'whatsapp', 'email', 'adresse',
+                               'produitsFournis', 'notes', 'createdAt', 'updatedAt'])
+        && d.keys().hasAll(['nom', 'telephone', 'whatsapp', 'email', 'adresse',
+                            'produitsFournis', 'notes', 'createdAt', 'updatedAt'])
+        && d.nom is string
+        && d.nom.size() >= 1
+        && d.nom.size() <= 100
+        && telephoneValide(d.telephone)
+        && telephoneValide(d.whatsapp)
+        && emailValide(d.email)
+        && texteFacultatif(d.adresse, 200)
+        && texteFacultatif(d.produitsFournis, 500)
+        && texteFacultatif(d.notes, 1000)
+        && d.createdAt is timestamp
+        && d.updatedAt is timestamp;
+    }
+
     // Vu depuis le PRODUIT : le mouvement designe n'existait pas avant le
     // lot, il existe apres, il porte la meme valeur et vise ce produit.
     function mouvementNouveauEtConforme(uid, productId, mouvementId, delta) {
@@ -229,6 +268,27 @@ service cloud.firestore {
 
         // Modification : toujours refusee (un mouvement est definitif).
         // Suppression : toujours refusee (sauf suppression du compte, phase 7).
+      }
+
+      match /suppliers/{supplierId} {
+        // Lecture de ses propres fournisseurs (un par un, ou en liste).
+        allow read: if estProprietaire(uid);
+
+        // Creation : champs valides, dates du serveur.
+        allow create: if estProprietaire(uid)
+          && identifiantValide(supplierId)
+          && fournisseurValide(request.resource.data)
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.updatedAt == request.time;
+
+        // Modification : champs valides, date de creation inchangee.
+        allow update: if estProprietaire(uid)
+          && fournisseurValide(request.resource.data)
+          && request.resource.data.createdAt == resource.data.createdAt
+          && request.resource.data.updatedAt == request.time;
+
+        // Suppression definitive par le proprietaire du compte (decision 50).
+        allow delete: if estProprietaire(uid);
       }
     }
   }
