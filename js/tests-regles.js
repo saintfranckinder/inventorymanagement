@@ -10,6 +10,11 @@
 // passage : ils n'apparaissent donc pas dans la liste. Chaque passage ajoute
 // trois mouvements à l'historique du compte de test (un mouvement ne peut pas
 // être supprimé) ; leur somme est nulle.
+//
+// Décision 40 : la page étant publiée avec le site, elle ne se lance qu'avec un
+// compte de test (adresse en @example.com), pour qu'un vrai entrepôt ne reçoive
+// jamais de données d'essai impossibles à supprimer. Le contrôle est fait à
+// l'ouverture (bouton bloqué) et de nouveau au lancement, avant toute écriture.
 
 import { onAuthStateChanged } from '../vendor/firebase-auth.js';
 import {
@@ -35,9 +40,25 @@ const DELAI_MAX_MS = 15000;
 const AUTRE_COMPTE = 'compte-de-quelqu-un-d-autre';
 const ID_PRODUIT_ESSAI = 'essai-regles';
 const ID_PRODUIT_AVEC_STOCK = 'essai-regles-stock';
+const FIN_ADRESSE_COMPTE_DE_TEST = '@example.com';
+const MESSAGE_PAS_UN_COMPTE_DE_TEST =
+  'Ce compte n’est pas un compte de test : les essais ne seront pas lancés. ' +
+  'Cette page ne fonctionne qu’avec une adresse qui se termine par @example.com, ' +
+  'pour ne jamais ajouter de données d’essai dans un vrai entrepôt.';
 
 function element(id) {
   return document.getElementById(id);
+}
+
+// Vrai seulement pour un compte connecté dont l'adresse se termine par
+// @example.com (domaine réservé aux exemples : personne ne peut y recevoir
+// d'e-mail, donc aucun vrai utilisateur n'a une telle adresse).
+function estUnCompteDeTest(utilisateur) {
+  const adresse = utilisateur && typeof utilisateur.email === 'string'
+    ? utilisateur.email.trim().toLowerCase()
+    : '';
+  return adresse.length > FIN_ADRESSE_COMPTE_DE_TEST.length &&
+    adresse.endsWith(FIN_ADRESSE_COMPTE_DE_TEST);
 }
 
 function afficherMessage(texte) {
@@ -653,6 +674,12 @@ function essaisMouvements(db, uid, produitAvecStockExiste) {
 
 async function lancerLesTests(db, utilisateur) {
   const bouton = element('bouton-lancer');
+  // Second contrôle, avant toute lecture ou écriture (décision 40).
+  if (!estUnCompteDeTest(utilisateur)) {
+    bouton.disabled = true;
+    afficherMessage(MESSAGE_PAS_UN_COMPTE_DE_TEST);
+    return;
+  }
   bouton.disabled = true;
   element('resultats').textContent = '';
   element('message').hidden = true;
@@ -735,11 +762,17 @@ async function demarrer() {
     element('compte').textContent = utilisateur
       ? (utilisateur.email || utilisateur.uid)
       : 'Aucun compte connecté. Connectez-vous d’abord dans l’application.';
-    element('bouton-lancer').disabled = utilisateur === null;
+    const compteDeTest = estUnCompteDeTest(utilisateur);
+    element('bouton-lancer').disabled = !compteDeTest;
+    if (utilisateur && !compteDeTest) {
+      afficherMessage(MESSAGE_PAS_UN_COMPTE_DE_TEST);
+    } else {
+      element('message').hidden = true;
+    }
   });
 
   element('bouton-lancer').addEventListener('click', () => {
-    if (utilisateur) {
+    if (estUnCompteDeTest(utilisateur)) {
       lancerLesTests(firebase.db, utilisateur);
     }
   });

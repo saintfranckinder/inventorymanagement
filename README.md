@@ -67,7 +67,7 @@ Tant que les règles publiées sont en retard sur le fichier, l'application affi
 
 ## Tester les règles de sécurité
 
-1. Ouvrez l'application et connectez-vous avec un **compte de test** (jamais votre vrai compte).
+1. Ouvrez l'application et connectez-vous avec un **compte de test** dont l'adresse se termine par `@example.com`. La page refuse tout autre compte (décision 40), pour qu'un vrai entrepôt ne reçoive jamais de données d'essai.
 2. Ouvrez `http://localhost:8080/tests-regles.html`.
 3. Cliquez sur **Lancer les tests**.
 4. Le bilan doit indiquer que tous les essais sont réussis. Un essai marqué « Échec » signifie que les règles publiées ne protègent pas correctement les données.
@@ -102,10 +102,13 @@ Une adresse e-mail correspond toujours à un seul compte et aux mêmes données.
 | `tests-regles.html` | Page de test des règles de sécurité |
 | `tests-nombres.html` | Page de test des conversions de nombres |
 | `demarrer.bat`, `outils/` | Serveur local pour tester sur cet ordinateur |
+| `.nojekyll` | Fichier vide, à garder : demande à GitHub Pages de publier tous les fichiers tels quels (décision 41) |
 | `CLAUDE.md` | Cahier des charges |
 | `PLAN.md`, `DECISIONS.md`, `DEMARRAGE.md` | Suivi, décisions et méthode de travail |
 
 Tous les chemins sont relatifs : l'application peut être placée chez n'importe quel hébergeur de fichiers statiques. À chaque nouvel hébergeur, son adresse doit être ajoutée dans la console Firebase (**Authentication** > **Paramètres** > **Domaines autorisés**), sinon la connexion est refusée.
+
+Sur GitHub Pages, le fichier vide `.nojekyll` doit rester à la racine : sans lui, GitHub Pages pourrait ignorer certains fichiers, comme ceux de `vendor/`, et l'application ne démarrerait pas en ligne.
 
 ## Limites connues
 

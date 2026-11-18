@@ -244,6 +244,30 @@ Faite avec l'accord du propriétaire **avant tout envoi sur GitHub** (le dépôt
 
 Limites : la recherche porte sur des formes connues de secrets ; un secret de forme inhabituelle pourrait lui échapper. Les fichiers de `vendor/` sont des copies officielles (`vendor/LISEZMOI.md`) : ils n'ont été fouillés que pour les clés, les jetons et les adresses e-mail.
 
+**Compte rendu partiel : protections avant la mise en public (2026-11-18)**
+
+Décisions 40 et 41, validées par le propriétaire. Tests exécutés par l'assistant, dans le navigateur intégré, sur `http://localhost:8080/` :
+
+| Test | Résultat |
+|---|---|
+| `tests-regles.html` avec `test-phase3@example.com` : 67 essais sur 67 (la création des produits d'essai n'est pas rejouée) | Réussi |
+| Aucun compte connecté : bouton « Lancer les tests » bloqué | Réussi |
+| Second compte de test `test-isolation@example.org` : bouton bloqué, message « Ce compte n'est pas un compte de test » | Réussi |
+| Même compte, bouton débloqué de force puis cliqué : aucun essai lancé, rien d'écrit | Réussi |
+| Second compte : écran « Créer votre entrepôt », puis « Aucun produit pour l'instant » ; il ne voit pas les données du premier | Réussi |
+| Page de test à 360 pixels sans défilement horizontal ; aucune erreur dans la console | Réussi |
+| Fichier vide `.nojekyll` créé à la racine | Fait |
+
+Tests non exécutés :
+
+- Le contrôle placé au début du lancement des essais ne peut pas être déclenché sans modifier la page ; il utilise la même fonction que les deux contrôles testés.
+- Effet réel de `.nojekyll` : à vérifier sur GitHub Pages (les trois fichiers Firebase doivent se charger depuis `vendor/`).
+
+Constats :
+
+- Second compte de test : `test-isolation@example.org`, mot de passe dans `.env.test` (ignoré par Git), entrepôt « Entrepôt isolation (test) » sans produit. À supprimer en fin de projet, comme le premier.
+- Compte de test principal : 68 mouvements après ce passage.
+
 Reste à faire : « Publish branch », dépôt en public, GitHub Pages, domaine autorisé dans Firebase, premier test sur smartphone.
 
 ### Phase 5 : tableau de bord
@@ -383,7 +407,7 @@ Tous ces tests ont été exécutés par l'assistant dans le navigateur intégré
 | Test | Phase |
 |---|---|
 | Tout l'affichage et la connexion Google sur smartphone | Étape « dépôt public » |
-| Second compte réel qui ne voit pas les données du premier | Étape « dépôt public » ou phase 12 |
+| *(Fait le 2026-11-18 avec le second compte de test.)* Second compte réel qui ne voit pas les données du premier | Étape « dépôt public » |
 | Avertissement d'archivage quand le stock n'est pas à 0 ; affichage des deux heures quand l'écart dépasse 5 minutes | Phase 6 |
 | Hors ligne réel (mode avion) : ajout de produit, mouvement, retour en ligne ; coupure entre l'envoi et la réponse ; « Voir plus » sans Internet ; premier chargement sans Internet sur un nouvel appareil | Phase 8 |
 | Deux appareils qui modifient le même produit | Phase 8 ou 12 |
@@ -397,7 +421,7 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 
 **Point à vérifier (section 3, n° 3) :** taille de lot sûre pour la suppression du compte (phase 7) et les données de démonstration (phase 11).
 
-**À nettoyer en fin de projet (phases 12 et 13) :** supprimer le compte de test `test-phase3@example.com` dans la console Firebase (Authentication) et ses données, ou le parcours de suppression de la phase 7 ; supprimer `.env.test`. Le propriétaire peut supprimer dès maintenant l'ancienne copie `C:\Inventory Management`, inutilisée.
+**À nettoyer en fin de projet (phases 12 et 13) :** supprimer les comptes de test `test-phase3@example.com` et `test-isolation@example.org` dans la console Firebase (Authentication) et leurs données, ou par le parcours de suppression de la phase 7 ; supprimer `.env.test`. Le propriétaire peut supprimer dès maintenant l'ancienne copie `C:\Inventory Management`, inutilisée.
 
 ### 8.4 Fichiers du projet
 
@@ -418,17 +442,18 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 | `js/operations-en-attente.js` | Suivi local des opérations non confirmées (`localStorage`, clé `operations-en-attente:{uid}`) | 4b |
 | `js/ecran-mouvements.js` | Formulaire de mouvement, historique, opérations refusées | 4b |
 | `firestore.rules` | Règles de sécurité, version 5 | 2, 3, 4a, 4b |
-| `tests-regles.html`, `js/tests-regles.js` | 70 essais des règles sur le vrai serveur (compte de test, environ une minute) | 3, 4a, 4b |
+| `tests-regles.html`, `js/tests-regles.js` | 70 essais des règles sur le vrai serveur (compte de test en `@example.com` uniquement, décision 40 ; environ une minute) | 3, 4a, 4b, dépôt public |
 | `tests-nombres.html`, `js/tests-nombres.js` | 98 essais de conversion, sans connexion | 4a |
 | `vendor/` | SDK Firebase 13.4.0 (import corrigé), SheetJS 0.20.3, `LISEZMOI.md` | 2 |
 | `demarrer.bat`, `outils/serveur-local.ps1` | Serveur local sur `http://localhost:8080/` | 2 |
 | `.gitignore`, `.gitattributes` | Fichiers exclus de Git ; `vendor/*.js` jamais modifiés par Git | 0, 2 |
+| `.nojekyll` | Fichier vide : GitHub Pages publie tout tel quel (décision 41) | dépôt public |
 | `CLAUDE.md`, `DEMARRAGE.md` | Cahier des charges et méthode de travail | 1 |
-| `PLAN.md`, `DECISIONS.md`, `README.md` | Suivi, décisions 1 à 39, documentation | Toutes |
+| `PLAN.md`, `DECISIONS.md`, `README.md` | Suivi, décisions 1 à 41, documentation | Toutes |
 
-**Hors Git :** `.env.test` contient l'adresse et le mot de passe du compte de test. Il est ignoré par Git et n'apparaît dans aucun commit (vérifié le 2026-11-18).
+**Hors Git :** `.env.test` contient l'adresse et le mot de passe des deux comptes de test. Il est ignoré par Git et n'apparaît dans aucun commit (vérifié le 2026-11-18).
 
-**État du compte de test dans Firebase :** entrepôt « Entrepôt de test » (HTG) ; produits actifs « Riz 25 kg (Tchako) » à 7 sac et « Ciment » à -2,5 sac ; produits archivés « Huile » et deux « Produit d'essai (règles) » ; 65 mouvements, plus 3 à chaque passage de `tests-regles.html`. Les mouvements ne peuvent pas être supprimés.
+**État du compte de test dans Firebase :** entrepôt « Entrepôt de test » (HTG) ; produits actifs « Riz 25 kg (Tchako) » à 7 sac et « Ciment » à -2,5 sac ; produits archivés « Huile » et deux « Produit d'essai (règles) » ; 68 mouvements au 2026-11-18, plus 3 à chaque passage de `tests-regles.html`. Les mouvements ne peuvent pas être supprimés. Second compte de test `test-isolation@example.org` (créé le 2026-11-18) : entrepôt « Entrepôt isolation (test) » (HTG), aucun produit.
 
 ### 8.5 Erreurs rencontrées
 
@@ -441,7 +466,7 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 
 ### 8.6 Décisions prises
 
-Toutes sont dans `DECISIONS.md` (39 décisions, aucune effacée) :
+Toutes sont dans `DECISIONS.md` (41 décisions, aucune effacée) :
 
 - **1 à 7 (choix initiaux) :** Firestore en plan Spark ; connexion Google et e-mail ; quantités et prix en entiers ; `dernierMouvementId` ; GitHub Pages ; publication du code par le propriétaire.
 - **8 à 15 (audit) :** page `tests-regles.html` à la place du simulateur ; règles tolérantes au hors-ligne et suivi local des opérations ; dépôt public dès la fin de la phase 4b ; SDK local corrigé et serveur local ; règles produit-mouvement complétées ; suppression du compte avec reconnexion d'abord ; phase 4 coupée en deux ; dossier de travail.
@@ -449,6 +474,7 @@ Toutes sont dans `DECISIONS.md` (39 décisions, aucune effacée) :
 - **18 à 21 (phase 3) :** devises HTG, USD, EUR, DOP, CAD ; pas de vérification de l'adresse e-mail ; premier lancement seulement si le serveur confirme qu'aucun entrepôt n'existe ; mot de passe de 8 caractères au moins.
 - **22 à 31 (phase 4a) :** écoute des seuls produits non archivés ; archivage définitif ; produits archivés hors de la valeur du stock ; archivage possible avec du stock ; noms de produits uniques dans le formulaire ; unité obligatoire ; règles de saisie des nombres ; limites des nombres ; calcul de la valeur en grands entiers ; `updatedAt` à l'heure du serveur exigé.
 - **32 à 39 (phase 4b) :** historique trié par heure du serveur ; types Entrée, Sortie, Ajustement ; stock négatif autorisé et signalé ; signe cohérent avec le type ; mouvements acceptés sur un produit archivé ; suivi des mouvements et des créations de produit ; stock de départ par un mouvement ; identifiants contrôlés.
+- **40 et 41 (étape « dépôt public ») :** page `tests-regles.html` réservée aux comptes en `@example.com` ; fichier `.nojekyll` pour GitHub Pages.
 
 Les règles de conception de la section 7 restent à respecter dans toute la suite.
 
@@ -458,6 +484,7 @@ Les règles de conception de la section 7 restent à respecter dans toute la sui
 2. **Assistant, dans une nouvelle session ouverte dans `C:\GitHub\Inventory Management\inventorymanagement` :** lire `CLAUDE.md`, `PLAN.md` et `DECISIONS.md`, puis proposer l'étape « dépôt public » et attendre l'accord du propriétaire :
    - *(Fait le 2026-11-18, avant « Publish branch », avec l'accord du propriétaire : aucun secret. Voir le compte rendu partiel de l'étape « dépôt public », section 2.)* rechercher des secrets dans tous les fichiers suivis et dans tout l'historique Git (`.env.test` doit rester absent ; `js/firebase-config.js` est normal) ;
    - *(Fait le 2026-11-18 : uniquement l'adresse `noreply`.)* vérifier que les commits n'exposent que l'adresse `noreply` ;
+   - *(Fait le 2026-11-18 : décisions 40 et 41.)* page de test réservée aux comptes de test ; fichier `.nojekyll` ;
    - guider le propriétaire clic par clic : dépôt en public, GitHub Pages (branche `main`, dossier racine), ajout de `saintfranckinder.github.io` aux domaines autorisés de Firebase Authentication ;
    - premier test sur smartphone à l'adresse `https://saintfranckinder.github.io/minstock/` : connexion, mouvement de stock, affichage à 360 pixels.
 3. **Ensuite :** phase 5, tableau de bord (recherche, valeur du stock « indicative », boutons `+1` / `-1`, alertes `Stock bas` et `Rupture`).

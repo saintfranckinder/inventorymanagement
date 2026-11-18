@@ -58,3 +58,8 @@ Chaque décision : date, choix, raison. Ne pas modifier une décision sans l'acc
 37. **Le suivi des opérations non confirmées couvre les mouvements et les créations de produit. Il est gardé dans `localStorage`, par compte.** Les modifications de fiche et l'archivage ne sont pas suivis. Raison : ce sont les opérations dont la perte fausserait le stock.
 38. **Le stock de départ d'un produit est un mouvement d'entrée de motif « Stock initial », créé dans le même lot que le produit. Un stock de départ de 0 ne crée aucun mouvement.**
 39. **Les identifiants de produit et de mouvement acceptés par les règles ne contiennent que des lettres, des chiffres, le tiret et le tiret bas.** Raison : ils servent à construire des chemins dans les règles.
+
+## 2026-11-18 — étape « dépôt public »
+
+40. **La page `tests-regles.html` ne se lance qu'avec un compte de test, dont l'adresse se termine par `@example.com`.** Le contrôle est fait à l'ouverture (bouton bloqué, message en français) et de nouveau au lancement, avant toute écriture. Raison : la page est publiée avec le site ; lancée avec un vrai compte, elle ajouterait dans ce vrai entrepôt des données d'essai impossibles à supprimer. Les données des autres comptes étaient déjà protégées par les règles. Limite acceptée : le contrôle est fait dans le navigateur ; quelqu'un qui modifie volontairement la page ne peut toucher qu'à son propre compte.
+41. **Un fichier vide `.nojekyll` est placé à la racine du dépôt.** Raison : par défaut, GitHub Pages fait passer les fichiers par Jekyll, un outil prévu pour les blogs, qui peut ignorer certains fichiers ou dossiers ; ce fichier lui demande de tout publier tel quel, dont `vendor/`. Sans effet chez un autre hébergeur.
