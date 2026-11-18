@@ -17,7 +17,7 @@ Dépôt GitHub : `saintfranckinder/minstock`, renommé par le propriétaire le 2
 | 4a | Produits et conversion des nombres | **Terminée le 2026-11-16** |
 | 4b | Mouvements, règles complètes, historique | **Terminée le 2026-11-16** (tests hors ligne et à deux appareils non faits) |
 | — | Vérification des secrets, dépôt public, GitHub Pages activé | **Terminée le 2026-11-18** (site en ligne ; premier test sur smartphone réussi selon le propriétaire) |
-| 5 | Tableau de bord | **Faite le 2026-11-18** ; test sur smartphone du propriétaire à faire |
+| 5 | Tableau de bord | **Terminée le 2026-11-18** (test sur smartphone réussi le même jour, selon le propriétaire) |
 | 6 | Formulaires, historique lisible (avec « Annuler cette opération »), paramètres | **Prochaine étape** (voir section 8.7) |
 | 6b | Carnet de fournisseurs (décision 42) | À faire |
 | 7 | Suppression du compte | À faire |
@@ -334,7 +334,7 @@ Tests exécutés par l'assistant, dans le navigateur intégré, sur `http://loca
 
 Tests non exécutés :
 
-- Smartphone : à faire par le propriétaire après un **Push origin** (recherche, boutons au doigt, lisibilité des alertes en extérieur).
+- *(Fait le 2026-11-18 par le propriétaire : voir plus bas.)* Smartphone.
 - Appuis hors ligne réels (mode avion) : phase 8.
 - Deux appareils qui appuient sur le même produit : phase 8 ou 12.
 - Lecteur d'écran réel : l'annonce « Entrée +1 sac — … Quantité mise à jour sur cet appareil. » est bien écrite dans la zone prévue, mais n'a pas été écoutée avec un lecteur d'écran.
@@ -344,6 +344,21 @@ Constats :
 - Le compte de test contient deux nouveaux produits, « Essai phase 5 (stock bas) » (5 pièces) et « Essai phase 5 (zéro) » (0 pièce), et 20 mouvements de plus (essais et 3 de `tests-regles.html`).
 - Le mouvement « Test smartphone » du propriétaire est présent sur le serveur : son test de l'étape « dépôt public » est confirmé.
 - La liste est reconstruite à chaque changement ; elle reste rapide avec quelques produits. À revoir si un entrepôt approche la taille à annoncer (question ouverte de la section 4).
+
+**Test sur smartphone (2026-11-18), fait par le propriétaire**
+
+Sur `https://saintfranckinder.github.io/minstock/`, version 0.6.0 affichée, avec le compte de test (captures d'écran envoyées à l'assistant) :
+
+- `+1` au doigt : « Ciment » de -2,5 à -1,5 sac, toujours « Rupture » avec bordure rouge, « Stock négatif : à vérifier » et valeur -1 425,00 HTG ; « Essai phase 5 (stock bas) » de 5 à 7 pièces, sans étiquette au-dessus du seuil de 5, valeur 70,00 HTG ; « Essai phase 5 (zéro) » de 0 à 1 pièce.
+- `−1` : « Essai phase 5 (zéro) » de 1 à 0 pièce, puis un second `−1` ouvre le formulaire prérempli (Sortie, 1, stock après l'opération -1 pièce, « Attention : le stock deviendra négatif. »).
+- Recherche : seul « Ciment » reste affiché.
+- « En attente de synchronisation » s'affiche brièvement après chaque appui, puis disparaît : comportement normal, le message disparaît quand le serveur a confirmé.
+
+Défaut constaté à cette occasion, sans danger : la ligne « En attente de synchronisation » s'ajoute dans la fiche du produit ; pendant un instant, les boutons « Mouvement de stock » et « Modifier » et les produits placés en dessous descendent, puis remontent. Les boutons `−1` et `+1` du produit touché ne bougent pas ; au pire, un appui tombe sur « Modifier », qui s'annule. Correction prévue en phase 8, avec l'indicateur de synchronisation (section 5, point 7).
+
+Non précisé : lisibilité des étiquettes en extérieur ; modèle du téléphone et navigateur.
+
+**Phase terminée le 2026-11-18.**
 
 ### Phase 6 : formulaires, historique, paramètres
 - **Résultat :** formulaire d'ajout et de modification ; historique lisible (les deux dates distinguées) ; bouton « Annuler cette opération » sur chaque ligne (décision 43) ; nom de l'entrepôt modifiable ; devise modifiable seulement sans produit.
@@ -362,7 +377,7 @@ Constats :
   - tentative hors ligne : refusée avec un message clair.
 
 ### Phase 8 : hors ligne et indicateur
-- **Résultat :** indicateur à quatre états, présenté comme approximatif ; messages pour les opérations refusées et « déjà enregistrées » ; avertissement avant déconnexion s'il reste des écritures en attente ; demande de stockage persistant au navigateur.
+- **Résultat :** indicateur à quatre états, présenté comme approximatif ; messages pour les opérations refusées et « déjà enregistrées » ; avertissement avant déconnexion s'il reste des écritures en attente ; demande de stockage persistant au navigateur ; mention « En attente de synchronisation » qui ne fait plus bouger les boutons placés en dessous (défaut constaté au test sur smartphone de la phase 5).
 - **Tests :** étapes 1 à 7 et 9 à 11 de `DEMARRAGE.md` section 9 (application restée ouverte). L'étape 8 (rouvrir en mode avion) est testée en phase 10.
 
 ### Phase 9 : export Excel
@@ -415,6 +430,7 @@ Ces points viennent de l'analyse et n'ont pas été testés.
 4. **Une ancienne copie des fichiers existe dans `C:\Inventory Management`.** Elle n'est plus utilisée et ne contient ni ce plan ni les nouvelles décisions. Le propriétaire peut la supprimer.
 5. **Le dépôt sur GitHub était vide au moment du premier commit local (phase 0).** La première publication se fait dans GitHub Desktop avec le bouton **Publish branch** ; les suivantes avec **Push origin**.
 6. **Le fichier facultatif `.claude/settings.json`** proposé dans `DEMARRAGE.md` (phase 0) n'a pas été créé : le propriétaire ne l'a pas demandé.
+7. **La ligne « En attente de synchronisation » fait bouger un instant les boutons placés en dessous** (constaté le 2026-11-18 sur smartphone, après un appui sur `+1` ou `−1`). Sans danger : au pire, un appui tombe sur « Modifier », qui s'annule. Correction prévue en phase 8.
 
 ## 6. Écarts corrigés entre les décisions validées et les autres fichiers
 
@@ -455,10 +471,10 @@ Règles de conception retenues pour le code :
 
 ### 8.1 Phase actuelle
 
-- **Phase 5 (tableau de bord) faite le 2026-11-18**, test sur smartphone du propriétaire à faire. Prochaine étape : **phase 6** (formulaires, historique lisible avec « Annuler cette opération », paramètres). Rien n'est commencé.
+- **Phase 5 (tableau de bord) terminée le 2026-11-18**, test sur smartphone réussi le même jour. Prochaine étape : **phase 6** (formulaires, historique lisible avec « Annuler cette opération », paramètres). Plan présenté au propriétaire le 2026-11-18 ; rien n'est codé avant son accord.
 - Version de l'application : `0.6.0`. Règles Firestore : **version 5**, publiée dans la console, vérifiée active le 2026-11-16 (70 essais sur 70) et le 2026-11-18 (67 sur 67, produits d'essai déjà créés).
 - Dépôt GitHub : `saintfranckinder/minstock`, **public**. Site : `https://saintfranckinder.github.io/minstock/` (GitHub Pages, branche `main`, dossier racine).
-- Dépôt Git, branche `main` : `cecf8d3` (phases 0 et 1), `48d55b3` (phase 2), `f09bf30` (phase 3), `96f2a3d` (phase 4a), `d8f1b5b` (phase 4b), `2f53da4` (note de passation), `b26abb6` (dépôt renommé), `e166a30` (recherche de secrets), `d5a7808` (décisions 40 et 41), `86d4eb4` (mise en ligne), `e1a5c70` (fin de l'étape « dépôt public »), `e202b2a` (décisions 42 et 43), puis le commit de la phase 5. Le propriétaire envoie chaque commit avec **Push origin** dans GitHub Desktop ; le site se met à jour quelques minutes après.
+- Dépôt Git, branche `main` : `cecf8d3` (phases 0 et 1), `48d55b3` (phase 2), `f09bf30` (phase 3), `96f2a3d` (phase 4a), `d8f1b5b` (phase 4b), `2f53da4` (note de passation), `b26abb6` (dépôt renommé), `e166a30` (recherche de secrets), `d5a7808` (décisions 40 et 41), `86d4eb4` (mise en ligne), `e1a5c70` (fin de l'étape « dépôt public »), `e202b2a` (décisions 42 et 43), `7e156a3` (phase 5), puis la note du test sur smartphone de la phase 5. Le propriétaire envoie chaque commit avec **Push origin** dans GitHub Desktop ; le site se met à jour quelques minutes après.
 
 ### 8.2 Travail terminé
 
@@ -473,7 +489,7 @@ Règles de conception retenues pour le code :
 | Dépôt public | Recherche de secrets, dépôt renommé `minstock`, page de test réservée aux comptes de test, `.nojekyll`, dépôt public, GitHub Pages | comptes rendus de l'étape « dépôt public » (section 2) |
 | 5 | Tableau de bord : valeur du stock indicative et total, recherche, alertes « Stock bas » / « Rupture », boutons `−1` / `+1` | `tests-nombres.html` : 104 sur 104 ; `tests-regles.html` : 67 sur 67 ; compte rendu de la phase 5 |
 
-Les tests des phases 2 à 5 ont été exécutés par l'assistant dans le navigateur intégré, sur `http://localhost:8080/`, avec le compte de test. Premier test sur smartphone fait par le propriétaire le 2026-11-18, sur le site en ligne.
+Les tests des phases 2 à 5 ont été exécutés par l'assistant dans le navigateur intégré, sur `http://localhost:8080/`, avec le compte de test. Tests sur smartphone faits par le propriétaire le 2026-11-18, sur le site en ligne (étape « dépôt public », puis phase 5).
 
 ### 8.3 Travail restant
 
@@ -488,7 +504,7 @@ Les tests des phases 2 à 5 ont été exécutés par l'assistant dans le navigat
 | Test | Phase |
 |---|---|
 | *(Premier test fait le 2026-11-18 par le propriétaire.)* Affichage sur smartphone, à refaire pour chaque nouvel écran | Phases 5, 6, 6b, 9, 10 |
-| Tableau de bord sur smartphone : recherche, boutons `−1` / `+1` au doigt, alertes lisibles en extérieur | Phase 5 (propriétaire) |
+| *(Fait le 2026-11-18 par le propriétaire ; lisibilité en extérieur non précisée.)* Tableau de bord sur smartphone : recherche, boutons `−1` / `+1` au doigt, alertes | Phase 5 (propriétaire) |
 | *(Fait le 2026-11-18 avec le second compte de test.)* Second compte réel qui ne voit pas les données du premier | Étape « dépôt public » |
 | Avertissement d'archivage quand le stock n'est pas à 0 ; affichage des deux heures quand l'écart dépasse 5 minutes | Phase 6 |
 | Hors ligne réel (mode avion) : ajout de produit, mouvement, retour en ligne ; coupure entre l'envoi et la réponse ; « Voir plus » sans Internet ; premier chargement sans Internet sur un nouvel appareil | Phase 8 |
@@ -535,7 +551,7 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 
 **Hors Git :** `.env.test` contient l'adresse et le mot de passe des deux comptes de test. Il est ignoré par Git et n'apparaît dans aucun commit (vérifié le 2026-11-18).
 
-**État du compte de test dans Firebase :** entrepôt « Entrepôt de test » (HTG) ; produits actifs « Riz 25 kg (Tchako) » à 8 sac, « Ciment » à -2,5 sac, « Essai phase 5 (stock bas) » à 5 pièces (seuil 5) et « Essai phase 5 (zéro) » à 0 pièce (seuil 0) ; produits archivés « Huile » et deux « Produit d'essai (règles) » ; environ 89 mouvements au 2026-11-18 après la phase 5, plus 3 à chaque passage de `tests-regles.html`. Les mouvements ne peuvent pas être supprimés. Second compte de test `test-isolation@example.org` (créé le 2026-11-18) : entrepôt « Entrepôt isolation (test) » (HTG), aucun produit.
+**État du compte de test dans Firebase :** entrepôt « Entrepôt de test » (HTG) ; produits actifs « Riz 25 kg (Tchako) » à 8 sac (dernier contrôle de l'assistant), puis, d'après les captures du test sur smartphone, « Ciment » à -1,5 sac, « Essai phase 5 (stock bas) » à 7 pièces (seuil 5) et « Essai phase 5 (zéro) » à 0 pièce (seuil 0) ; produits archivés « Huile » et deux « Produit d'essai (règles) » ; environ 94 mouvements au 2026-11-18 après le test sur smartphone, plus 3 à chaque passage de `tests-regles.html`. Les mouvements ne peuvent pas être supprimés. Second compte de test `test-isolation@example.org` (créé le 2026-11-18) : entrepôt « Entrepôt isolation (test) » (HTG), aucun produit.
 
 ### 8.5 Erreurs rencontrées
 
@@ -544,7 +560,7 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 3. **Git for Windows demandé à tort.** Le Git de GitHub Desktop suffit (section 5, point 2).
 4. **Port 8080 déjà occupé.** Quand le propriétaire a lancé `demarrer.bat`, un second serveur ne démarre pas (« Impossible de demarrer le serveur sur le port 8080 ») : sans gravité, il suffit d'utiliser celui qui tourne. Arrêter le serveur lancé par l'assistant fait apparaître une tâche « échouée » : sans gravité.
 5. **Outils du navigateur intégré.** Un passage de `tests-regles.html` dure environ une minute, plus que le délai d'un appel de script (45 secondes) : lancer les essais, puis lire le bilan dans un second appel. Un onglet qui affiche un fichier local ne peut pas changer d'adresse : un nouvel onglet s'ouvre, sans conséquence.
-6. **Aucun défaut connu dans le code.** Deux retouches mineures ont été faites pendant les tests : le message « adresse déjà utilisée » (phase 3) et l'effacement du message d'erreur du formulaire de produit pendant la saisie (phase 4a).
+6. **Un seul défaut connu dans le code, sans danger :** la ligne « En attente de synchronisation » fait bouger un instant les boutons placés en dessous (section 5, point 7 ; correction en phase 8). Deux retouches mineures ont été faites pendant les tests : le message « adresse déjà utilisée » (phase 3) et l'effacement du message d'erreur du formulaire de produit pendant la saisie (phase 4a).
 
 ### 8.6 Décisions prises
 
@@ -564,8 +580,8 @@ Les règles de conception de la section 7 restent à respecter dans toute la sui
 
 ### 8.7 Prochaine action précise
 
-*(La phase 5 est faite : détail dans son compte rendu, section 2.)*
+*(La phase 5 est terminée, test sur smartphone compris : détail dans son compte rendu, section 2.)*
 
-1. **Propriétaire :** cliquer sur **Push origin** dans GitHub Desktop, attendre quelques minutes, puis tester le tableau de bord sur le smartphone (recherche, `−1` / `+1` au doigt, alertes). Quand il le souhaite : les deux tests restants de la phase 3 et le message d'aide quand la fenêtre Google est bloquée.
-2. **Assistant, au début de la prochaine session (ouverte dans `C:\GitHub\Inventory Management\inventorymanagement`) :** lire `CLAUDE.md`, `PLAN.md` et `DECISIONS.md`, noter le résultat du test sur smartphone de la phase 5, puis présenter le plan de la phase 6 (objectif, fichiers, risques, tests) et attendre l'accord du propriétaire avant de coder.
+1. **Propriétaire :** lire le plan de la phase 6 présenté par l'assistant le 2026-11-18, répondre à ses questions et donner son accord. Quand il le souhaite : **Push origin** dans GitHub Desktop (note du test sur smartphone), les deux tests restants de la phase 3 et le message d'aide quand la fenêtre Google est bloquée.
+2. **Assistant :** coder la phase 6 seulement après l'accord du propriétaire, par petites étapes. Au début d'une nouvelle session (ouverte dans `C:\GitHub\Inventory Management\inventorymanagement`) : lire `CLAUDE.md`, `PLAN.md` et `DECISIONS.md` ; si l'accord sur la phase 6 n'est pas noté ici, présenter de nouveau son plan (objectif, fichiers, risques, tests) et attendre.
 3. **Phase 6 :** formulaire d'ajout et de modification ; historique lisible (les deux dates) ; bouton « Annuler cette opération » (décision 43, `CLAUDE.md` section 6, règle 12) ; nom de l'entrepôt modifiable ; devise modifiable seulement sans produit. Question ouverte à trancher : filtre par produit dans l'historique (index à créer dans la console).
