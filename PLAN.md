@@ -16,8 +16,8 @@ Dépôt GitHub : `saintfranckinder/minstock`, renommé par le propriétaire le 2
 | 3 | Connexion, premier lancement, confidentialité | **Faite le 2026-11-16** ; trois tests du propriétaire restent à faire (Google, e-mail de réinitialisation, même adresse) |
 | 4a | Produits et conversion des nombres | **Terminée le 2026-11-16** |
 | 4b | Mouvements, règles complètes, historique | **Terminée le 2026-11-16** (tests hors ligne et à deux appareils non faits) |
-| — | Vérification des secrets, dépôt public, GitHub Pages activé | **En cours** : dépôt public et site en ligne le 2026-11-18 ; reste le premier test sur smartphone (voir section 8.7) |
-| 5 | Tableau de bord | À faire |
+| — | Vérification des secrets, dépôt public, GitHub Pages activé | **Terminée le 2026-11-18** (site en ligne ; premier test sur smartphone réussi selon le propriétaire) |
+| 5 | Tableau de bord | **Prochaine étape** (voir section 8.7) |
 | 6 | Formulaires, historique lisible, paramètres | À faire |
 | 7 | Suppression du compte | À faire |
 | 8 | Hors ligne et indicateur de synchronisation | À faire |
@@ -291,7 +291,18 @@ Tests non exécutés par l'assistant :
 
 Constat : juste après la mise en ligne, GitHub Pages a répondu 503 au lieu de 404 pour des fichiers inexistants ; quelques secondes plus tard, `.env.test` répondait bien 404. Défaut passager de GitHub Pages, sans conséquence.
 
-Reste à faire : premier test sur smartphone (connexion e-mail et Google, un mouvement de stock, affichage).
+**Premier test sur smartphone (2026-11-18), fait par le propriétaire**
+
+Le propriétaire indique que tout fonctionne, sur `https://saintfranckinder.github.io/minstock/` :
+
+- site ouvert sur le téléphone, affichage lisible ;
+- connexion par e-mail avec le compte de test ;
+- entrée de 1 sur « Riz 25 kg (Tchako) » (attendu : de 7 à 8 sac), puis ligne visible dans l'historique ;
+- connexion avec Google : le domaine `saintfranckinder.github.io` est donc bien autorisé dans Firebase.
+
+Non précisé : modèle du téléphone et navigateur ; type de clavier proposé pour la quantité ; création ou non d'un vrai entrepôt avec le compte Google du propriétaire. Non testé : message d'aide quand la fenêtre Google est bloquée.
+
+**Étape terminée le 2026-11-18.**
 
 ### Phase 5 : tableau de bord
 - **Résultat :** liste, recherche, quantité, seuil, prix, valeur « indicative », `+1` / `-1` (48 × 48 px), saisie d'une quantité précise, alertes `Stock bas` et `Rupture`.
@@ -400,9 +411,10 @@ Règles de conception retenues pour le code :
 
 ### 8.1 Phase actuelle
 
-- **Phase 4b terminée.** Prochaine étape : **« dépôt public »**, entre la phase 4b et la phase 5 (décision 10). *(2026-11-18 : recherche de secrets faite, aucun secret ; dépôt public ; site en ligne à `https://saintfranckinder.github.io/minstock/` ; reste le premier test sur smartphone.)*
-- Version de l'application : `0.5.0`. Règles Firestore : **version 5**, publiée dans la console et vérifiée active le 2026-11-16 (`tests-regles.html` : 70 essais sur 70).
-- Dépôt Git, branche `main` : `cecf8d3` (phases 0 et 1), `48d55b3` (phase 2), `f09bf30` (phase 3), `96f2a3d` (phase 4a), `d8f1b5b` (phase 4b), puis le commit de cette note. **Aucun commit n'est publié sur GitHub** (vérifié le 2026-11-18) : la première publication se fait avec **Publish branch** dans GitHub Desktop.
+- **Étape « dépôt public » terminée le 2026-11-18.** Prochaine étape : **phase 5, tableau de bord**. Rien n'est commencé.
+- Version de l'application : `0.5.0`. Règles Firestore : **version 5**, publiée dans la console, vérifiée active le 2026-11-16 (70 essais sur 70) et le 2026-11-18 (67 sur 67, produits d'essai déjà créés).
+- Dépôt GitHub : `saintfranckinder/minstock`, **public**. Site : `https://saintfranckinder.github.io/minstock/` (GitHub Pages, branche `main`, dossier racine).
+- Dépôt Git, branche `main` : `cecf8d3` (phases 0 et 1), `48d55b3` (phase 2), `f09bf30` (phase 3), `96f2a3d` (phase 4a), `d8f1b5b` (phase 4b), `2f53da4` (note de passation), `b26abb6` (dépôt renommé), `e166a30` (recherche de secrets), `d5a7808` (décisions 40 et 41), `86d4eb4` (mise en ligne), puis le commit de cette note. Le propriétaire envoie chaque commit avec **Push origin** dans GitHub Desktop ; le site se met à jour quelques minutes après.
 
 ### 8.2 Travail terminé
 
@@ -414,14 +426,15 @@ Règles de conception retenues pour le code :
 | 3 | Connexion Google et e-mail, inscription, mot de passe oublié, premier lancement, confidentialité, règles version 3 | `tests-regles.html` : 14 sur 14 |
 | 4a | Conversion des nombres, produits (ajout, modification, archivage), règles version 4 | `tests-nombres.html` : 98 sur 98 ; `tests-regles.html` : 39 sur 39 |
 | 4b | Mouvements (entrée, sortie, ajustement), stock de départ, historique (50 derniers puis « Voir plus »), suivi local des opérations refusées, règles version 5 | `tests-regles.html` : 70 sur 70 ; essais dans l'application (compte rendu de la phase 4b) |
+| Dépôt public | Recherche de secrets, dépôt renommé `minstock`, page de test réservée aux comptes de test, `.nojekyll`, dépôt public, GitHub Pages | comptes rendus de l'étape « dépôt public » (section 2) |
 
-Tous ces tests ont été exécutés par l'assistant dans le navigateur intégré, sur `http://localhost:8080/`, avec le compte de test. Aucun test n'a encore été fait sur smartphone.
+Les tests des phases 2 à 4b ont été exécutés par l'assistant dans le navigateur intégré, sur `http://localhost:8080/`, avec le compte de test. Premier test sur smartphone fait par le propriétaire le 2026-11-18, sur le site en ligne.
 
 ### 8.3 Travail restant
 
 **Tests du propriétaire en attente (phase 3) :**
 
-1. Connexion avec Google (fenêtre popup), et message d'aide si la popup est bloquée.
+1. *(Connexion Google réussie sur smartphone le 2026-11-18, selon le propriétaire.)* Reste : message d'aide si la fenêtre Google (popup) est bloquée.
 2. Réception de l'e-mail « Mot de passe oublié », en français.
 3. Même adresse e-mail par les deux méthodes, dans les deux ordres.
 
@@ -429,7 +442,7 @@ Tous ces tests ont été exécutés par l'assistant dans le navigateur intégré
 
 | Test | Phase |
 |---|---|
-| Tout l'affichage et la connexion Google sur smartphone | Étape « dépôt public » |
+| *(Premier test fait le 2026-11-18 par le propriétaire.)* Affichage sur smartphone, à refaire pour chaque nouvel écran | Phases 5, 6, 9, 10 |
 | *(Fait le 2026-11-18 avec le second compte de test.)* Second compte réel qui ne voit pas les données du premier | Étape « dépôt public » |
 | Avertissement d'archivage quand le stock n'est pas à 0 ; affichage des deux heures quand l'écart dépasse 5 minutes | Phase 6 |
 | Hors ligne réel (mode avion) : ajout de produit, mouvement, retour en ligne ; coupure entre l'envoi et la réponse ; « Voir plus » sans Internet ; premier chargement sans Internet sur un nouvel appareil | Phase 8 |
@@ -438,7 +451,7 @@ Tous ces tests ont été exécutés par l'assistant dans le navigateur intégré
 
 Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé par le propriétaire pendant la phase 3, et le test « Serveur injoignable » n'a plus d'objet (la page de vérification a été remplacée en phase 3 ; le comportement hors ligne se teste en phases 8 et 10).
 
-**Étapes du plan :** étape « dépôt public », puis phases 5 à 13 (section 2).
+**Étapes du plan :** phases 5 à 13 (section 2).
 
 **Questions encore ouvertes (section 4) :** filtre par produit dans l'historique (phase 6 ; exige un index à créer dans la console) ; taille d'entrepôt raisonnable à annoncer (environ 500 produits) ; produits archivés dans l'export Excel (phase 9) ; options facultatives.
 
@@ -476,7 +489,7 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 
 **Hors Git :** `.env.test` contient l'adresse et le mot de passe des deux comptes de test. Il est ignoré par Git et n'apparaît dans aucun commit (vérifié le 2026-11-18).
 
-**État du compte de test dans Firebase :** entrepôt « Entrepôt de test » (HTG) ; produits actifs « Riz 25 kg (Tchako) » à 7 sac et « Ciment » à -2,5 sac ; produits archivés « Huile » et deux « Produit d'essai (règles) » ; 68 mouvements au 2026-11-18, plus 3 à chaque passage de `tests-regles.html`. Les mouvements ne peuvent pas être supprimés. Second compte de test `test-isolation@example.org` (créé le 2026-11-18) : entrepôt « Entrepôt isolation (test) » (HTG), aucun produit.
+**État du compte de test dans Firebase :** entrepôt « Entrepôt de test » (HTG) ; produits actifs « Riz 25 kg (Tchako) » à 8 sac (après le test sur smartphone ; non revérifié par l'assistant) et « Ciment » à -2,5 sac ; produits archivés « Huile » et deux « Produit d'essai (règles) » ; 69 mouvements attendus au 2026-11-18, plus 3 à chaque passage de `tests-regles.html`. Les mouvements ne peuvent pas être supprimés. Second compte de test `test-isolation@example.org` (créé le 2026-11-18) : entrepôt « Entrepôt isolation (test) » (HTG), aucun produit.
 
 ### 8.5 Erreurs rencontrées
 
@@ -503,11 +516,8 @@ Les règles de conception de la section 7 restent à respecter dans toute la sui
 
 ### 8.7 Prochaine action précise
 
-1. **Propriétaire :** faire les trois tests de la phase 3 (section 8.3), puis vérifier les commits dans GitHub Desktop (onglet **History**) et cliquer sur **Publish branch**.
-2. **Assistant, dans une nouvelle session ouverte dans `C:\GitHub\Inventory Management\inventorymanagement` :** lire `CLAUDE.md`, `PLAN.md` et `DECISIONS.md`, puis proposer l'étape « dépôt public » et attendre l'accord du propriétaire :
-   - *(Fait le 2026-11-18, avant « Publish branch », avec l'accord du propriétaire : aucun secret. Voir le compte rendu partiel de l'étape « dépôt public », section 2.)* rechercher des secrets dans tous les fichiers suivis et dans tout l'historique Git (`.env.test` doit rester absent ; `js/firebase-config.js` est normal) ;
-   - *(Fait le 2026-11-18 : uniquement l'adresse `noreply`.)* vérifier que les commits n'exposent que l'adresse `noreply` ;
-   - *(Fait le 2026-11-18 : décisions 40 et 41.)* page de test réservée aux comptes de test ; fichier `.nojekyll` ;
-   - *(Fait le 2026-11-18.)* guider le propriétaire clic par clic : dépôt en public, GitHub Pages (branche `main`, dossier racine), ajout de `saintfranckinder.github.io` aux domaines autorisés de Firebase Authentication ;
-   - premier test sur smartphone à l'adresse `https://saintfranckinder.github.io/minstock/` : connexion, mouvement de stock, affichage à 360 pixels.
-3. **Ensuite :** phase 5, tableau de bord (recherche, valeur du stock « indicative », boutons `+1` / `-1`, alertes `Stock bas` et `Rupture`).
+*(L'étape « dépôt public » est terminée : détail dans ses comptes rendus, section 2.)*
+
+1. **Propriétaire :** cliquer sur **Push origin** dans GitHub Desktop pour envoyer les derniers commits. Quand il le souhaite : les deux tests restants de la phase 3 (e-mail « Mot de passe oublié » ; même adresse par les deux méthodes) et le message d'aide quand la fenêtre Google est bloquée.
+2. **Assistant, au début de la prochaine session (ouverte dans `C:\GitHub\Inventory Management\inventorymanagement`) :** lire `CLAUDE.md`, `PLAN.md` et `DECISIONS.md`, puis présenter le plan de la phase 5 (objectif, fichiers, risques, tests) et attendre l'accord du propriétaire avant de coder.
+3. **Phase 5, tableau de bord :** recherche par nom ; valeur du stock « indicative » ; boutons `+1` / `-1` d'au moins 48 × 48 pixels, par le même lot que les autres mouvements ; saisie d'une quantité précise ; alertes `Stock bas` (orange) et `Rupture` (rouge) avec leur texte. Tests à 360 pixels sur `localhost`, puis sur le smartphone du propriétaire après un **Push origin**.
