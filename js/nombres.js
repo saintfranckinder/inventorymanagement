@@ -145,6 +145,19 @@ export function calculerValeurCentimes(quantiteMilliemes, prixAchatCentimes) {
   return quotient;
 }
 
+// Valeur totale du stock, en centimes (BigInt) : somme exacte des valeurs de
+// chaque ligne, chacune arrondie comme ci-dessus. Le total est donc toujours
+// égal à la somme des lignes affichées. Un stock négatif compte avec sa
+// valeur négative (décision 45).
+// `lignes` : tableau d'objets { quantiteMilliemes, prixAchatCentimes }.
+export function calculerValeurTotaleCentimes(lignes) {
+  let total = 0n;
+  for (const ligne of lignes) {
+    total += calculerValeurCentimes(ligne.quantiteMilliemes, ligne.prixAchatCentimes);
+  }
+  return total;
+}
+
 // Message d'erreur en français pour un résultat d'analyse refusé.
 // `sujet` complète la phrase, par exemple « Le seuil d'alerte ».
 export function messageNombreRefuse(resultat, sujet, nombreDecimales) {

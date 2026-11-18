@@ -5,6 +5,7 @@ import {
   analyserPrix,
   analyserQuantite,
   calculerValeurCentimes,
+  calculerValeurTotaleCentimes,
   formaterMontant,
   formaterQuantite,
   prixPourSaisie,
@@ -137,7 +138,49 @@ const ESSAIS = [
       () => calculerValeurCentimes(quantite, prix),
       BigInt(Math.round(quantite * prix / 1000))
     ]
-  )
+  ),
+
+  // ----- Valeur totale du stock : somme exacte des lignes (décision 45) -----
+  ['Total d’un entrepôt vide', () => calculerValeurTotaleCentimes([]), 0n],
+  [
+    'Total 2,5 × 125,50 + 1 × 125,50',
+    () => calculerValeurTotaleCentimes([
+      { quantiteMilliemes: 2500, prixAchatCentimes: 12550 },
+      { quantiteMilliemes: 1000, prixAchatCentimes: 12550 }
+    ]),
+    43925n
+  ],
+  [
+    'Total avec un stock négatif (-2,5 × 125,50 compte en négatif)',
+    () => calculerValeurTotaleCentimes([
+      { quantiteMilliemes: 7000, prixAchatCentimes: 100000 },
+      { quantiteMilliemes: -2500, prixAchatCentimes: 12550 }
+    ]),
+    668625n
+  ],
+  [
+    'Total = somme des lignes arrondies (0,5 + 0,5 donne 1 + 1)',
+    () => calculerValeurTotaleCentimes([
+      { quantiteMilliemes: 1, prixAchatCentimes: 500 },
+      { quantiteMilliemes: 1, prixAchatCentimes: 500 }
+    ]),
+    2n
+  ],
+  [
+    'Total de deux lignes maximales, exact',
+    () => calculerValeurTotaleCentimes([
+      { quantiteMilliemes: 1000000000000, prixAchatCentimes: 1000000000000 },
+      { quantiteMilliemes: 1000000000000, prixAchatCentimes: 1000000000000 }
+    ]),
+    2000000000000000000000n
+  ],
+  [
+    'Affichage d’un total négatif',
+    () => formaterMontant(calculerValeurTotaleCentimes([
+      { quantiteMilliemes: -2500, prixAchatCentimes: 95000 }
+    ]), 'HTG'),
+    '-2 375,00 HTG'
+  ]
 ];
 
 function lancer() {

@@ -11,6 +11,7 @@
   --principal-fonce: #084a8c;
   --ok: #0b6b3a;
   --alerte: #8a4b00;
+  --alerte-vif: #b54708;
   --erreur: #a4161a;
   --fond-alerte: #fff4e0;
   --fond-erreur: #fdecec;
@@ -99,6 +100,7 @@ label {
 
 input[type="email"],
 input[type="password"],
+input[type="search"],
 input[type="text"],
 select {
   display: block;
@@ -302,6 +304,129 @@ select {
   margin: 0.25rem 0 0;
   color: var(--erreur);
   font-weight: 600;
+}
+
+/* ---------- Tableau de bord (phase 5) ---------- */
+
+/* Texte réservé aux lecteurs d'écran. */
+.lecteur-ecran {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.valeur-stock {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--carte);
+  border: 1px solid var(--bordure-legere);
+  border-radius: 0.5rem;
+}
+
+.valeur-stock-titre {
+  margin: 0;
+  color: var(--texte-discret);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.valeur-stock-montant {
+  margin: 0 0 0.25rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.valeur-stock-aide {
+  margin: 0;
+  color: var(--texte-discret);
+  font-size: 0.875rem;
+}
+
+/* Alertes : une bordure de couleur ET une étiquette écrite. */
+.produit-bas {
+  border-left: 6px solid var(--alerte-vif);
+}
+
+.produit-rupture {
+  border-left: 6px solid var(--erreur);
+}
+
+.etiquette {
+  display: inline-block;
+  margin: 0 0 0.5rem;
+  padding: 0.125rem 0.625rem;
+  border-radius: 999px;
+  color: #ffffff;
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.etiquette-bas {
+  background: var(--alerte-vif);
+}
+
+.etiquette-rupture {
+  background: var(--erreur);
+}
+
+/* Quantité entre les boutons « −1 » et « +1 ». */
+.ligne-quantite {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.25rem 0 0.75rem;
+}
+
+.quantite {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  text-align: center;
+}
+
+.quantite-libelle {
+  display: block;
+  color: var(--texte-discret);
+  font-size: 0.875rem;
+}
+
+.quantite-valeur {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.bouton-rapide {
+  flex: none;
+  min-width: 3.5rem;
+  min-height: 48px;
+  padding: 0 0.75rem;
+  background: var(--carte);
+  color: var(--principal);
+  border: 2px solid var(--principal);
+  border-radius: 0.5rem;
+  font: inherit;
+  font-size: 1.25rem;
+  font-weight: 700;
+  cursor: pointer;
+  /* Pas de zoom au double appui : les appuis rapides restent des appuis. */
+  touch-action: manipulation;
+}
+
+.bouton-rapide:hover {
+  background: #eef1f4;
+}
+
+.bouton-rapide:active {
+  background: #dde6f0;
 }
 
 /* ---------- Mouvements ---------- */

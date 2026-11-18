@@ -182,15 +182,19 @@ function afficherProduitDuFormulaire() {
 }
 
 // Ouvre le formulaire pour un produit de la liste.
-export function ouvrirFormulaireMouvement(produit) {
+// `preremplissage` (facultatif) : { type, quantite }, par exemple
+// { type: 'sortie', quantite: '1' } quand un « −1 » rendrait le stock négatif
+// (décision 44) : l'avertissement s'affiche alors avant tout envoi.
+export function ouvrirFormulaireMouvement(produit, preremplissage = null) {
   produitDuFormulaire = {
     id: produit.id,
     nom: produit.nom,
     unite: produit.unite,
     quantiteMilliemes: produit.quantiteMilliemes
   };
-  element('mouvement-type-entree').checked = true;
-  element('mouvement-quantite').value = '';
+  const type = preremplissage ? preremplissage.type : 'entree';
+  element(`mouvement-type-${type}`).checked = true;
+  element('mouvement-quantite').value = preremplissage ? preremplissage.quantite : '';
   element('mouvement-motif').value = '';
   afficherVue('vue-mouvement');
   effacerMessages();
@@ -219,6 +223,48 @@ function fermerFormulaireMouvement() {
   afficherVue('vue-accueil');
 }
 
+// Envoie un mouvement déjà contrôlé. Seul chemin d'envoi d'un mouvement : le
+// formulaire et les boutons « +1 » / « −1 » du tableau de bord l'utilisent.
+//   - l'identifiant et l'heure sont fixés une seule fois, avant l'envoi ;
+//   - un seul lot : quantité (increment), dernierMouvementId et mouvement ;
+//   - l'opération est suivie jusqu'à la réponse du serveur (décision 37) ;
+//   - pas d'attente : le stock et l'historique se mettent à jour dès
+//     l'enregistrement local, même sans Internet.
+// `produit` : { id, nom, unite }. Renvoie le libellé de l'opération, ou null
+// si aucun compte n'est ouvert.
+export function envoyerMouvement(produit, type, deltaMilliemes, motif) {
+  if (!contexte) {
+    return null;
+  }
+  const mouvement = {
+    idMouvement: nouvelIdMouvement(contexte.db, contexte.uid),
+    idProduit: produit.id,
+    nomProduit: produit.nom,
+    unite: produit.unite,
+    deltaMilliemes,
+    type,
+    motif,
+    dateAppareil: new Date()
+  };
+  const libelle = libelleMouvement(
+    mouvement.type, mouvement.deltaMilliemes, mouvement.unite, mouvement.nomProduit
+  );
+
+  suivreOperation(
+    contexte.db,
+    contexte.uid,
+    {
+      id: mouvement.idMouvement,
+      chemin: ['users', contexte.uid, 'movements', mouvement.idMouvement],
+      libelle,
+      dateAppareil: mouvement.dateAppareil
+    },
+    enregistrerMouvement(contexte.db, contexte.uid, mouvement),
+    (resultat) => signalerResultatOperation(resultat, libelle)
+  );
+  return libelle;
+}
+
 function enregistrerLeMouvement() {
   effacerMessages();
   const variation = lireVariation();
@@ -232,35 +278,7 @@ function enregistrerLeMouvement() {
     return;
   }
 
-  // L'identifiant et l'heure sont fixés une seule fois, avant l'envoi.
-  const mouvement = {
-    idMouvement: nouvelIdMouvement(contexte.db, contexte.uid),
-    idProduit: produitDuFormulaire.id,
-    nomProduit: produitDuFormulaire.nom,
-    unite: produitDuFormulaire.unite,
-    deltaMilliemes: variation.deltaMilliemes,
-    type: variation.type,
-    motif,
-    dateAppareil: new Date()
-  };
-  const libelle = libelleMouvement(
-    mouvement.type, mouvement.deltaMilliemes, mouvement.unite, mouvement.nomProduit
-  );
-
-  // Pas d'attente : le stock et l'historique se mettent à jour dès
-  // l'enregistrement local, même sans Internet.
-  suivreOperation(
-    contexte.db,
-    contexte.uid,
-    {
-      id: mouvement.idMouvement,
-      chemin: ['users', contexte.uid, 'movements', mouvement.idMouvement],
-      libelle,
-      dateAppareil: mouvement.dateAppareil
-    },
-    enregistrerMouvement(contexte.db, contexte.uid, mouvement),
-    (resultat) => signalerResultatOperation(resultat, libelle)
-  );
+  envoyerMouvement(produitDuFormulaire, variation.type, variation.deltaMilliemes, motif);
   fermerFormulaireMouvement();
 }
 

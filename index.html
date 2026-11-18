@@ -172,7 +172,7 @@
       </nav>
     </section>
 
-    <!-- Produits (liste simple : le tableau de bord complet arrive en phase 5) -->
+    <!-- Tableau de bord : valeur du stock, recherche, produits (phase 5) -->
     <section id="vue-accueil" data-vue hidden>
       <h2 id="accueil-entrepot"></h2>
       <p class="aide">
@@ -193,12 +193,30 @@
         <ul id="liste-operations-refusees" class="liste-produits"></ul>
       </section>
 
+      <!-- Valeur de tout l'entrepôt (décision 45) -->
+      <div id="bloc-valeur" class="valeur-stock" hidden>
+        <p class="valeur-stock-titre">Valeur du stock (indicative)</p>
+        <p id="valeur-stock-total" class="valeur-stock-montant"></p>
+        <p class="valeur-stock-aide">
+          Calculée avec le prix d'achat actuel de chaque produit : modifier un
+          prix change la valeur de tout le stock de ce produit. Un stock
+          négatif compte en négatif. Les produits archivés ne comptent pas.
+        </p>
+      </div>
+
       <button type="button" id="bouton-ajouter-produit" class="bouton bouton-principal">Ajouter un produit</button>
       <button type="button" id="bouton-historique" class="bouton bouton-secondaire">Historique des mouvements</button>
 
       <h3>Produits</h3>
+      <div id="bloc-recherche" hidden>
+        <label for="recherche-produit">Rechercher un produit</label>
+        <input id="recherche-produit" type="search" autocomplete="off" enterkeyhint="search" placeholder="Nom du produit">
+      </div>
       <p id="produits-vide" class="aide" hidden>Aucun produit pour l'instant.</p>
+      <p id="recherche-aucun" class="aide" role="status" hidden></p>
       <ul id="liste-produits" class="liste-produits"></ul>
+      <!-- Annonces des boutons « +1 » / « −1 » pour les lecteurs d'écran -->
+      <p id="annonce-produits" class="lecteur-ecran" role="status" aria-live="polite"></p>
 
       <button type="button" class="bouton bouton-secondaire" data-deconnexion>Se déconnecter</button>
     </section>

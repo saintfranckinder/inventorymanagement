@@ -14,6 +14,16 @@ Le projet est en cours de construction. L'avancement est suivi dans `PLAN.md`.
 - Enregistrer des mouvements de stock : entrée, sortie, ajustement, avec un motif facultatif.
 - Consulter l'historique : les 50 derniers mouvements, puis « Voir plus ».
 - Signaler les opérations que le serveur a refusées, même après fermeture de l'application.
+- Tableau de bord : valeur du stock (indicative), recherche par nom, alertes « Stock bas » et « Rupture », boutons rapides `−1` et `+1`.
+
+## Tableau de bord
+
+- **Valeur du stock (indicative)** : pour chaque produit, quantité × prix d'achat **actuel** ; en haut de l'écran, le total de l'entrepôt, égal à la somme des lignes. Modifier un prix d'achat change la valeur de tout le stock de ce produit. Un stock négatif compte en négatif. Les produits archivés ne comptent pas.
+- **Recherche** : par nom de produit, sans tenir compte des majuscules ni des accents (`cimént` trouve « Ciment »). Elle ne porte que sur les produits de la liste et ne consomme aucune lecture du quota gratuit. Le total reste celui de tout l'entrepôt.
+- **Alertes**, toujours écrites et pas seulement colorées :
+  - « Stock bas » (orange) quand la quantité est inférieure ou égale au seuil d'alerte ;
+  - « Rupture » (rouge) quand la quantité est à 0 ou en dessous.
+- **Boutons `+1` et `−1`** : chaque appui enregistre aussitôt une entrée ou une sortie d'une unité du produit (un sac, un kg…), sans motif, exactement comme un mouvement saisi dans le formulaire. Chaque appui laisse une ligne dans l'historique et coûte deux écritures du quota gratuit : pour une grande quantité, utiliser « Mouvement de stock ». Si un `−1` rendait le stock négatif, le formulaire s'ouvre déjà rempli, avec l'avertissement : rien n'est envoyé sans confirmation.
 
 ## Mouvements de stock
 
@@ -129,5 +139,7 @@ Sur GitHub Pages, le fichier vide `.nojekyll` doit rester à la racine : sans lu
 - **Noms en double :** le formulaire refuse deux produits actifs du même nom, mais deux appareils hors ligne peuvent chacun créer le même nom avant de se synchroniser.
 - **Produit modifié sur deux appareils :** pour le nom, l'unité, le seuil et le prix, la dernière modification arrivée au serveur l'emporte.
 - **Suivi des opérations refusées :** la liste des opérations en attente est gardée sur l'appareil. Si le stockage du navigateur est effacé ou bloqué, un refus du serveur peut passer inaperçu.
+- **Valeur du stock indicative :** elle utilise le prix d'achat actuel de chaque produit, pas les prix auxquels le stock a réellement été acheté.
+- **Appuis par erreur sur `+1` / `−1` :** chaque appui est un mouvement définitif. Il se corrige par un ajustement (en attendant le bouton « Annuler cette opération », prévu en phase 6).
 - **Ajustement d'inventaire :** la correction est saisie à la main. Si un autre appareil a modifié le stock entre-temps, le chiffre affiché au moment de la saisie n'était peut-être plus à jour.
 - **Quota gratuit :** chaque mouvement coûte deux écritures et quelques lectures de contrôle. La limite gratuite est de 20 000 écritures et 50 000 lectures par jour pour tous les comptes réunis ; si elle est atteinte, l'application se bloque jusqu'au lendemain, sans perte de données.
