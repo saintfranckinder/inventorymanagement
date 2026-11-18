@@ -18,7 +18,7 @@ Dépôt GitHub : `saintfranckinder/minstock`, renommé par le propriétaire le 2
 | 4b | Mouvements, règles complètes, historique | **Terminée le 2026-11-16** (tests hors ligne et à deux appareils non faits) |
 | — | Vérification des secrets, dépôt public, GitHub Pages activé | **Terminée le 2026-11-18** (site en ligne ; premier test sur smartphone réussi selon le propriétaire) |
 | 5 | Tableau de bord | **Terminée le 2026-11-18** (test sur smartphone réussi le même jour, selon le propriétaire) |
-| 6 | Formulaires, historique lisible (avec « Annuler cette opération »), paramètres | **Faite le 2026-11-18** ; test sur smartphone du propriétaire à faire |
+| 6 | Formulaires, historique lisible (avec « Annuler cette opération »), paramètres | **Terminée le 2026-11-18** (test sur smartphone réussi le même jour, selon le propriétaire) |
 | 6b | Carnet de fournisseurs (décision 42) | **Prochaine étape** (voir section 8.7) |
 | 7 | Suppression du compte | À faire |
 | 8 | Hors ligne et indicateur de synchronisation | À faire |
@@ -398,7 +398,7 @@ Tests exécutés par l'assistant, dans le navigateur intégré, sur `http://loca
 
 Tests non exécutés :
 
-- Smartphone : à faire par le propriétaire après un **Push origin**.
+- *(Fait le 2026-11-18 par le propriétaire : voir plus bas.)* Smartphone.
 - Coupure réelle d'Internet (mode avion) pendant la vérification de la devise : la vérification s'arrête au plus tard après 15 secondes ; phase 8.
 - Deux vrais appareils qui annulent la même opération : remplacé par l'envoi direct de la même annulation (même chemin que l'application) et par `tests-regles.html`.
 - Affichage des deux heures quand l'écart dépasse 5 minutes : aucun mouvement de ce type dans le compte de test ; phase 8 (essais hors ligne).
@@ -408,6 +408,12 @@ Constats :
 
 - Le compte de test contient 4 mouvements de plus dans l'application (deux annulations, un ajustement de -2,5 sur « Ciment » et son annulation), plus 5 à chaque passage de `tests-regles.html`.
 - L'historique affiché au démarrage peut contenir plus de 50 lignes (les mouvements gardés en mémoire de l'appareil d'une session précédente, plus les 50 derniers du serveur). Comportement de la phase 4b, sans conséquence ; noté pour mémoire.
+
+**Test sur smartphone (2026-11-18), fait par le propriétaire**
+
+Sur le site en ligne, version 0.7.0, avec le compte de test : le propriétaire indique que tout fonctionne (annulation d'une opération dans l'historique, écran « Paramètres » : renommer l'entrepôt puis remettre son nom, devise bloquée). Non précisé : quelle opération a été annulée ; modèle du téléphone et navigateur.
+
+**Phase terminée le 2026-11-18.**
 
 ### Phase 6b : carnet de fournisseurs
 - **Résultat :** liste des fournisseurs, recherche simple, formulaire d'ajout et de modification (nom obligatoire ; téléphone, WhatsApp, e-mail, adresse, produits fournis, notes), archivage ; règles Firestore version 6 pour `users/{uid}/suppliers` ; texte de confidentialité complété (décision 42).
@@ -516,10 +522,10 @@ Règles de conception retenues pour le code :
 
 ### 8.1 Phase actuelle
 
-- **Phase 6 (historique avec « Annuler cette opération », paramètres) faite le 2026-11-18**, test sur smartphone du propriétaire à faire. Phase 5 terminée le même jour (test sur smartphone réussi). Prochaine étape : **phase 6b** (carnet de fournisseurs). Rien n'est commencé.
+- **Phase 6 (historique avec « Annuler cette opération », paramètres) terminée le 2026-11-18**, test sur smartphone réussi le même jour. Prochaine étape : **phase 6b** (carnet de fournisseurs). Plan présenté au propriétaire le 2026-11-18 ; rien n'est codé avant son accord.
 - Version de l'application : `0.7.0`. Règles Firestore : **version 5**, publiée dans la console, vérifiée active le 2026-11-16 (70 essais sur 70) et le 2026-11-18 (72 sur 72 après la phase 6, produits d'essai déjà créés).
 - Dépôt GitHub : `saintfranckinder/minstock`, **public**. Site : `https://saintfranckinder.github.io/minstock/` (GitHub Pages, branche `main`, dossier racine).
-- Dépôt Git, branche `main` : `cecf8d3` (phases 0 et 1), `48d55b3` (phase 2), `f09bf30` (phase 3), `96f2a3d` (phase 4a), `d8f1b5b` (phase 4b), `2f53da4` (note de passation), `b26abb6` (dépôt renommé), `e166a30` (recherche de secrets), `d5a7808` (décisions 40 et 41), `86d4eb4` (mise en ligne), `e1a5c70` (fin de l'étape « dépôt public »), `e202b2a` (décisions 42 et 43), `7e156a3` (phase 5), `eb40c59` (test sur smartphone de la phase 5), puis le commit de la phase 6. Le propriétaire envoie chaque commit avec **Push origin** dans GitHub Desktop ; le site se met à jour quelques minutes après.
+- Dépôt Git, branche `main` : `cecf8d3` (phases 0 et 1), `48d55b3` (phase 2), `f09bf30` (phase 3), `96f2a3d` (phase 4a), `d8f1b5b` (phase 4b), `2f53da4` (note de passation), `b26abb6` (dépôt renommé), `e166a30` (recherche de secrets), `d5a7808` (décisions 40 et 41), `86d4eb4` (mise en ligne), `e1a5c70` (fin de l'étape « dépôt public »), `e202b2a` (décisions 42 et 43), `7e156a3` (phase 5), `eb40c59` (test sur smartphone de la phase 5), `456dff6` (phase 6), puis la note du test sur smartphone de la phase 6. Le propriétaire envoie chaque commit avec **Push origin** dans GitHub Desktop ; le site se met à jour quelques minutes après.
 
 ### 8.2 Travail terminé
 
@@ -533,7 +539,7 @@ Règles de conception retenues pour le code :
 | 4b | Mouvements (entrée, sortie, ajustement), stock de départ, historique (50 derniers puis « Voir plus »), suivi local des opérations refusées, règles version 5 | `tests-regles.html` : 70 sur 70 ; essais dans l'application (compte rendu de la phase 4b) |
 | Dépôt public | Recherche de secrets, dépôt renommé `minstock`, page de test réservée aux comptes de test, `.nojekyll`, dépôt public, GitHub Pages | comptes rendus de l'étape « dépôt public » (section 2) |
 | 5 | Tableau de bord : valeur du stock indicative et total, recherche, alertes « Stock bas » / « Rupture », boutons `−1` / `+1` | `tests-nombres.html` : 104 sur 104 ; `tests-regles.html` : 67 sur 67 ; compte rendu de la phase 5 ; test sur smartphone réussi |
-| 6 | « Annuler cette opération » dans l'historique, écran « Paramètres » (nom de l'entrepôt, devise tant qu'aucun produit n'existe) | `tests-regles.html` : 72 sur 72 ; compte rendu de la phase 6 |
+| 6 | « Annuler cette opération » dans l'historique, écran « Paramètres » (nom de l'entrepôt, devise tant qu'aucun produit n'existe) | `tests-regles.html` : 72 sur 72 ; compte rendu de la phase 6 ; test sur smartphone réussi |
 
 Les tests des phases 2 à 6 ont été exécutés par l'assistant dans le navigateur intégré, sur `http://localhost:8080/`, avec le compte de test. Tests sur smartphone faits par le propriétaire le 2026-11-18, sur le site en ligne (étape « dépôt public », puis phase 5).
 
@@ -553,7 +559,7 @@ Les tests des phases 2 à 6 ont été exécutés par l'assistant dans le navigat
 | *(Fait le 2026-11-18 par le propriétaire ; lisibilité en extérieur non précisée.)* Tableau de bord sur smartphone : recherche, boutons `−1` / `+1` au doigt, alertes | Phase 5 (propriétaire) |
 | *(Fait le 2026-11-18 avec le second compte de test.)* Second compte réel qui ne voit pas les données du premier | Étape « dépôt public » |
 | *(Avertissement d'archivage fait le 2026-11-18.)* Affichage des deux heures quand l'écart dépasse 5 minutes | Phase 8 |
-| Historique et Paramètres sur smartphone : annuler une opération au doigt, renommer l'entrepôt, devise bloquée | Phase 6 (propriétaire) |
+| *(Fait le 2026-11-18 par le propriétaire.)* Historique et Paramètres sur smartphone : annuler une opération au doigt, renommer l'entrepôt, devise bloquée | Phase 6 (propriétaire) |
 | Hors ligne réel (mode avion) : ajout de produit, mouvement, retour en ligne ; coupure entre l'envoi et la réponse ; « Voir plus » sans Internet ; premier chargement sans Internet sur un nouvel appareil | Phase 8 |
 | Deux appareils qui modifient le même produit | Phase 8 ou 12 |
 | Réouverture de l'application en mode avion | Phase 10 |
@@ -629,8 +635,8 @@ Les règles de conception de la section 7 restent à respecter dans toute la sui
 
 ### 8.7 Prochaine action précise
 
-*(La phase 6 est faite : détail dans son compte rendu, section 2.)*
+*(La phase 6 est terminée, test sur smartphone compris : détail dans son compte rendu, section 2.)*
 
-1. **Propriétaire :** cliquer sur **Push origin** dans GitHub Desktop, attendre quelques minutes, vérifier « Version 0.7.0 » en bas de l'écran, puis tester sur le smartphone avec le compte de test : annuler une opération dans l'historique, ouvrir « Paramètres », renommer l'entrepôt puis remettre « Entrepôt de test », constater que la devise est bloquée. Aucune action dans la console Firebase (règles inchangées). Quand il le souhaite : les deux tests restants de la phase 3 et le message d'aide quand la fenêtre Google est bloquée.
-2. **Assistant, au début de la prochaine session (ouverte dans `C:\GitHub\Inventory Management\inventorymanagement`) :** lire `CLAUDE.md`, `PLAN.md` et `DECISIONS.md`, noter le résultat du test sur smartphone de la phase 6, puis présenter le plan de la phase 6b (objectif, fichiers, risques, tests) et attendre l'accord du propriétaire avant de coder.
+1. **Propriétaire :** lire le plan de la phase 6b présenté par l'assistant le 2026-11-18, répondre à ses questions et donner son accord. Quand il le souhaite : **Push origin** dans GitHub Desktop (note du test sur smartphone), les deux tests restants de la phase 3 et le message d'aide quand la fenêtre Google est bloquée.
+2. **Assistant :** coder la phase 6b seulement après l'accord du propriétaire, par petites étapes. Au début d'une nouvelle session (ouverte dans `C:\GitHub\Inventory Management\inventorymanagement`) : lire `CLAUDE.md`, `PLAN.md` et `DECISIONS.md` ; si l'accord sur la phase 6b n'est pas noté ici, présenter de nouveau son plan (objectif, fichiers, risques, tests) et attendre.
 3. **Phase 6b (carnet de fournisseurs, décision 42) :** avant de coder, proposer les longueurs maximales des champs ; trancher les questions de la section 4 (suppression ou archivage, noms en double, fournisseurs archivés dans l'export) ; expliquer comment les fournisseurs sont lus au regard du quota. Règles Firestore version 6 à publier par le propriétaire.
