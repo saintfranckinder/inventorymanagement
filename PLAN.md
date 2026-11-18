@@ -19,7 +19,7 @@ Dépôt GitHub : `saintfranckinder/minstock`, renommé par le propriétaire le 2
 | — | Vérification des secrets, dépôt public, GitHub Pages activé | **Terminée le 2026-11-18** (site en ligne ; premier test sur smartphone réussi selon le propriétaire) |
 | 5 | Tableau de bord | **Terminée le 2026-11-18** (test sur smartphone réussi le même jour, selon le propriétaire) |
 | 6 | Formulaires, historique lisible (avec « Annuler cette opération »), paramètres | **Terminée le 2026-11-18** (test sur smartphone réussi le même jour, selon le propriétaire) |
-| 6b | Carnet de fournisseurs (décisions 42 et 50 à 54) | **Faite le 2026-11-18** (règles version 6 publiées par le propriétaire) ; test sur smartphone du propriétaire à faire |
+| 6b | Carnet de fournisseurs (décisions 42 et 50 à 54) | **Terminée le 2026-11-18** (règles version 6 publiées par le propriétaire ; test sur smartphone réussi le même jour) |
 | 7 | Suppression du compte | **Prochaine étape** (voir section 8.7) |
 | 8 | Hors ligne et indicateur de synchronisation | À faire |
 | 9 | Export Excel | À faire |
@@ -455,7 +455,7 @@ Tests exécutés par l'assistant, dans le navigateur intégré, sur `http://loca
 
 Tests non exécutés :
 
-- Smartphone : à faire par le propriétaire après un **Push origin** (dont un vrai appel ou message WhatsApp avec son propre numéro).
+- *(Fait le 2026-11-18 par le propriétaire : voir plus bas.)* Smartphone.
 - Liste des fournisseurs sans Internet (mode avion) : phase 8.
 - Deux vrais appareils qui modifient le même fournisseur : non testé (dernière modification gagnante, comme les produits).
 - Lecteur d'écran réel et vraie navigation au clavier (touche Tab).
@@ -464,6 +464,14 @@ Constats :
 
 - Les fournisseurs d'essai ont tous été supprimés à la fin des essais : les comptes de test n'en contiennent aucun.
 - L'entrepôt du compte de test s'appelle maintenant « NzuriDeal » (renommé par le propriétaire pendant son test de la phase 6). Laissé tel quel.
+
+**Test sur smartphone (2026-11-18), fait par le propriétaire**
+
+Sur le site en ligne, version 0.8.0, avec le compte de test : le propriétaire indique que tout fonctionne (ajout d'un fournisseur avec son propre numéro, « Appeler », « WhatsApp », recherche, modification, suppression). Non précisé : modèle du téléphone et navigateur.
+
+Question du propriétaire à cette occasion : risque d'exposition des données des fournisseurs. Réponse donnée : données protégées par les règles (seul le compte propriétaire les lit ; vérifié par `tests-regles.html` et le second compte de test), aucune donnée dans le dépôt public, échanges chiffrés, affichage toujours en texte. Risques restants notés dans le README (« Appareil partagé », « Sécurité du compte ») et proposition en section 4 (effacer les données de l'appareil à la déconnexion).
+
+**Phase terminée le 2026-11-18.**
 
 ### Phase 7 : suppression du compte
 - **Résultat :** double confirmation, rappel d'exporter, reconnexion demandée en premier, suppression en ligne uniquement, reprise automatique si `suppressionDemandee` est vrai. Les fournisseurs sont supprimés avec le reste (décision 42).
@@ -515,6 +523,7 @@ Ces points viennent de l'analyse et n'ont pas été testés.
 - Facultatif : numéro de version affiché ; regroupement des appuis rapides sur `+1` ; vérification dans les règles que le compte n'est pas en cours de suppression.
 - *(Tranché : décisions 23 et 24.)* Peut-on désarchiver un produit ? Un produit archivé compte-t-il dans la valeur du stock ?
 - Les produits archivés doivent-ils figurer dans l'export Excel (feuille `Stock`) ? À trancher en phase 9.
+- Appareil partagé (question du propriétaire, 2026-11-18) : la mémoire hors ligne du navigateur garde les données après « Se déconnecter » (vérifié : 68 documents encore présents après la déconnexion du compte de test). Proposition à étudier en phase 8 ou 12 : un bouton « Se déconnecter et effacer les données de cet appareil », qui refuserait d'effacer tant que des modifications attendent d'être envoyées (`CLAUDE.md` section 9 : ne jamais supprimer en silence des écritures en attente). Limite notée dans le README en attendant.
 - *(Tranché : décision 18.)* Liste des devises proposées au premier lancement.
 - *(Tranché : décisions 50 et 51.)* Fournisseurs (phase 6b) : suppression définitive plutôt qu'archivage, puisque ce sont des données personnelles de tiers et que rien ne s'y rattache ? Deux fournisseurs du même nom autorisés ? Fournisseurs archivés dans l'export Excel (question devenue sans objet) ?
 
@@ -568,7 +577,7 @@ Règles de conception retenues pour le code :
 
 ### 8.1 Phase actuelle
 
-- **Phase 6b (carnet de fournisseurs) faite le 2026-11-18**, test sur smartphone du propriétaire à faire. Phases 5 et 6 terminées le même jour (tests sur smartphone réussis). Prochaine étape : **phase 7** (suppression du compte). Rien n'est commencé.
+- **Phase 6b (carnet de fournisseurs) terminée le 2026-11-18**, test sur smartphone réussi le même jour. Phases 5 et 6 terminées le même jour. Prochaine étape : **phase 7** (suppression du compte). Rien n'est commencé.
 - Version de l'application : `0.8.0`. Règles Firestore : **version 6**, publiée dans la console par le propriétaire le 2026-11-18, vérifiée active le même jour (90 essais sur 90, produits d'essai déjà créés).
 - Dépôt GitHub : `saintfranckinder/minstock`, **public**. Site : `https://saintfranckinder.github.io/minstock/` (GitHub Pages, branche `main`, dossier racine).
 - Dépôt Git, branche `main` : `cecf8d3` (phases 0 et 1), `48d55b3` (phase 2), `f09bf30` (phase 3), `96f2a3d` (phase 4a), `d8f1b5b` (phase 4b), `2f53da4` (note de passation), `b26abb6` (dépôt renommé), `e166a30` (recherche de secrets), `d5a7808` (décisions 40 et 41), `86d4eb4` (mise en ligne), `e1a5c70` (fin de l'étape « dépôt public »), `e202b2a` (décisions 42 et 43), `7e156a3` (phase 5), `eb40c59` (test sur smartphone de la phase 5), `456dff6` (phase 6), `de2ef92` (test sur smartphone de la phase 6), puis le commit de la phase 6b. Le propriétaire envoie chaque commit avec **Push origin** dans GitHub Desktop ; le site se met à jour quelques minutes après.
@@ -586,7 +595,7 @@ Règles de conception retenues pour le code :
 | Dépôt public | Recherche de secrets, dépôt renommé `minstock`, page de test réservée aux comptes de test, `.nojekyll`, dépôt public, GitHub Pages | comptes rendus de l'étape « dépôt public » (section 2) |
 | 5 | Tableau de bord : valeur du stock indicative et total, recherche, alertes « Stock bas » / « Rupture », boutons `−1` / `+1` | `tests-nombres.html` : 104 sur 104 ; `tests-regles.html` : 67 sur 67 ; compte rendu de la phase 5 ; test sur smartphone réussi |
 | 6 | « Annuler cette opération » dans l'historique, écran « Paramètres » (nom de l'entrepôt, devise tant qu'aucun produit n'existe) | `tests-regles.html` : 72 sur 72 ; compte rendu de la phase 6 ; test sur smartphone réussi |
-| 6b | Carnet de fournisseurs : liste, recherche, « Appeler » / « WhatsApp » / « E-mail », ajout, modification, suppression ; règles version 6 | `tests-regles.html` : 90 sur 90 ; compte rendu de la phase 6b |
+| 6b | Carnet de fournisseurs : liste, recherche, « Appeler » / « WhatsApp » / « E-mail », ajout, modification, suppression ; règles version 6 | `tests-regles.html` : 90 sur 90 ; compte rendu de la phase 6b ; test sur smartphone réussi |
 
 Les tests des phases 2 à 6b ont été exécutés par l'assistant dans le navigateur intégré, sur `http://localhost:8080/`, avec le compte de test. Tests sur smartphone faits par le propriétaire le 2026-11-18, sur le site en ligne (étape « dépôt public », puis phase 5).
 
@@ -607,7 +616,7 @@ Les tests des phases 2 à 6b ont été exécutés par l'assistant dans le naviga
 | *(Fait le 2026-11-18 avec le second compte de test.)* Second compte réel qui ne voit pas les données du premier | Étape « dépôt public » |
 | *(Avertissement d'archivage fait le 2026-11-18.)* Affichage des deux heures quand l'écart dépasse 5 minutes | Phase 8 |
 | *(Fait le 2026-11-18 par le propriétaire.)* Historique et Paramètres sur smartphone : annuler une opération au doigt, renommer l'entrepôt, devise bloquée | Phase 6 (propriétaire) |
-| Fournisseurs sur smartphone : ajouter, rechercher, « Appeler » et « WhatsApp » avec son propre numéro, modifier, supprimer | Phase 6b (propriétaire) |
+| *(Fait le 2026-11-18 par le propriétaire.)* Fournisseurs sur smartphone : ajouter, rechercher, « Appeler » et « WhatsApp » avec son propre numéro, modifier, supprimer | Phase 6b (propriétaire) |
 | Liste des fournisseurs sans Internet (mode avion) | Phase 8 |
 | Hors ligne réel (mode avion) : ajout de produit, mouvement, retour en ligne ; coupure entre l'envoi et la réponse ; « Voir plus » sans Internet ; premier chargement sans Internet sur un nouvel appareil | Phase 8 |
 | Deux appareils qui modifient le même produit | Phase 8 ou 12 |
@@ -687,8 +696,8 @@ Les règles de conception de la section 7 restent à respecter dans toute la sui
 
 ### 8.7 Prochaine action précise
 
-*(La phase 6b est faite, règles version 6 publiées et actives : détail dans son compte rendu, section 2.)*
+*(La phase 6b est terminée, test sur smartphone compris : détail dans son compte rendu, section 2.)*
 
-1. **Propriétaire :** cliquer sur **Push origin** dans GitHub Desktop (les règles version 6 sont déjà publiées, l'ordre est respecté), attendre quelques minutes, vérifier « Version 0.8.0 » en bas de l'écran, puis tester sur le smartphone avec le compte de test : ajouter un fournisseur avec **son propre numéro** (+509…), essayer « Appeler » et « WhatsApp », rechercher, modifier, puis supprimer ce fournisseur. Quand il le souhaite : les deux tests restants de la phase 3 et le message d'aide quand la fenêtre Google est bloquée.
-2. **Assistant, au début de la prochaine session (ouverte dans `C:\GitHub\Inventory Management\inventorymanagement`) :** lire `CLAUDE.md`, `PLAN.md` et `DECISIONS.md`, noter le résultat du test sur smartphone de la phase 6b, puis présenter le plan de la phase 7 (objectif, fichiers, risques, tests) et attendre l'accord du propriétaire avant de coder.
+1. **Propriétaire :** quand il le souhaite, **Push origin** dans GitHub Desktop (documentation seulement), les deux tests restants de la phase 3 et le message d'aide quand la fenêtre Google est bloquée. Conseillé : activer la validation en deux étapes du compte Google qui gère la console Firebase.
+2. **Assistant, au début de la prochaine session (ouverte dans `C:\GitHub\Inventory Management\inventorymanagement`) :** lire `CLAUDE.md`, `PLAN.md` et `DECISIONS.md`, puis présenter le plan de la phase 7 (objectif, fichiers, risques, tests) et attendre l'accord du propriétaire avant de coder.
 3. **Phase 7 (suppression du compte, `CLAUDE.md` section 8, décision 13) :** double confirmation, rappel d'exporter, reconnexion d'abord, en ligne seulement, reprise automatique si `suppressionDemandee` est vrai ; suppression des mouvements, produits, **fournisseurs**, puis du document `users/{uid}` et du compte. Point à vérifier avant de coder : taille de lot sûre (section 3, n° 3). Les règles changeront (suppression autorisée quand `suppressionDemandee` est vrai) : version 7 à publier par le propriétaire. Tests avec un compte de test uniquement (le second compte ou un compte créé pour l'occasion).
