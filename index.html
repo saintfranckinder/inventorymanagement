@@ -209,11 +209,24 @@
       <div id="bloc-valeur" class="valeur-stock" hidden>
         <p class="valeur-stock-titre">Valeur du stock (indicative)</p>
         <p id="valeur-stock-total" class="valeur-stock-montant"></p>
-        <!-- Compteurs calculés sur l'appareil, sans lecture de plus (décision 58) -->
-        <ul class="compteurs" aria-label="Résumé des produits">
-          <li id="compteur-produits" class="compteur"><span class="compteur-nombre"></span> <span class="compteur-libelle"></span></li>
-          <li id="compteur-bas" class="compteur compteur-bas"><span class="compteur-nombre"></span> <span class="compteur-libelle"></span></li>
-          <li id="compteur-rupture" class="compteur compteur-rupture"><span class="compteur-nombre"></span> <span class="compteur-libelle"></span></li>
+        <!-- Compteurs calculés sur l'appareil, sans lecture de plus (décision 58).
+             Ce sont aussi des filtres de la liste des produits (décision 59). -->
+        <ul class="compteurs" aria-label="Résumé et filtres des produits">
+          <li>
+            <button type="button" id="compteur-produits" class="compteur" data-filtre="tous">
+              <span class="lecteur-ecran">Afficher tous les produits : </span><span class="compteur-nombre"></span> <span class="compteur-libelle"></span>
+            </button>
+          </li>
+          <li>
+            <button type="button" id="compteur-bas" class="compteur compteur-bas" data-filtre="bas" aria-pressed="false">
+              <span class="lecteur-ecran">Afficher seulement : </span><span class="compteur-nombre"></span> <span class="compteur-libelle"></span>
+            </button>
+          </li>
+          <li>
+            <button type="button" id="compteur-rupture" class="compteur compteur-rupture" data-filtre="rupture" aria-pressed="false">
+              <span class="lecteur-ecran">Afficher seulement : </span><span class="compteur-nombre"></span> <span class="compteur-libelle"></span>
+            </button>
+          </li>
         </ul>
         <p class="valeur-stock-aide">
           Calculée avec le prix d'achat actuel de chaque produit : modifier un
@@ -226,7 +239,12 @@
       <button type="button" id="bouton-historique" class="bouton bouton-secondaire">Historique des mouvements</button>
       <button type="button" id="bouton-fournisseurs" class="bouton bouton-secondaire">Fournisseurs</button>
 
-      <h3>Produits</h3>
+      <h3 id="titre-produits" tabindex="-1">Produits</h3>
+      <!-- Filtre choisi avec les compteurs (décision 59) -->
+      <div id="bloc-filtre" class="filtre-actif" hidden>
+        <p id="filtre-texte" class="filtre-texte" tabindex="-1"></p>
+        <button type="button" id="bouton-tout-afficher" class="bouton bouton-secondaire">Tout afficher</button>
+      </div>
       <div id="bloc-recherche" hidden>
         <label for="recherche-produit">Rechercher un produit</label>
         <input id="recherche-produit" type="search" autocomplete="off" enterkeyhint="search" placeholder="Nom du produit">

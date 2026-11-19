@@ -29,7 +29,8 @@ Le projet est en cours de construction. L'avancement est suivi dans `PLAN.md`.
 
 ## Tableau de bord
 
-- **Valeur du stock (indicative)** : pour chaque produit, quantité × prix d'achat **actuel** ; en haut de l'écran, le total de l'entrepôt, égal à la somme des lignes, avec trois compteurs (nombre de produits, « Stock bas », « Ruptures ») calculés sur l'appareil. Modifier un prix d'achat change la valeur de tout le stock de ce produit. Un stock négatif compte en négatif. Les produits archivés ne comptent pas.
+- **Valeur du stock (indicative)** : pour chaque produit, quantité × prix d'achat **actuel** ; en haut de l'écran, le total de l'entrepôt, égal à la somme des lignes, avec trois compteurs (nombre de produits, « Stock bas », « Ruptures ») calculés sur l'appareil.
+- **Compteurs cliquables** : toucher « Stock bas » ou « Ruptures » n'affiche que les produits concernés (l'écran descend jusqu'à la liste) ; « Produits » ou « Tout afficher » montrent de nouveau tout. Un produit qui sort de l'alerte pendant que vous travaillez reste affiché jusqu'au prochain choix de filtre, pour que la liste ne bouge pas sous le doigt. Choisir un filtre vide la recherche ; le filtre s'enlève en ajoutant un produit et à la déconnexion. Modifier un prix d'achat change la valeur de tout le stock de ce produit. Un stock négatif compte en négatif. Les produits archivés ne comptent pas.
 - **Recherche** : par nom de produit, sans tenir compte des majuscules ni des accents (`cimént` trouve « Ciment »). Elle ne porte que sur les produits de la liste et ne consomme aucune lecture du quota gratuit. Le total reste celui de tout l'entrepôt.
 - **Alertes**, toujours écrites et pas seulement colorées :
   - « Stock bas » (orange) quand la quantité est inférieure ou égale au seuil d'alerte ;

@@ -56,6 +56,18 @@ let produits = [];            // produits non archivés, triés par nom
 let arreterEcoute = null;
 let idProduitEnCours = null;  // produit en cours de modification, ou null pour un ajout
 
+// Filtre choisi avec les compteurs (décision 59) : 'tous', 'bas' ou 'rupture'.
+// `idsDuFiltre` garde les produits retenus au moment du choix : un produit
+// qui sort de l'alerte reste affiché, pour que la liste ne bouge pas sous le
+// doigt pendant des appuis rapides.
+let filtre = 'tous';
+let idsDuFiltre = null;
+
+const TEXTES_FILTRE = {
+  bas: { nom: 'Stock bas', aucun: 'Aucun produit en stock bas pour l’instant.' },
+  rupture: { nom: 'Ruptures', aucun: 'Aucun produit en rupture pour l’instant.' }
+};
+
 // ---------- Tableau de bord ----------
 
 // Une unité, en millièmes : la valeur des boutons « +1 » et « −1 ».
@@ -237,6 +249,61 @@ function afficherCompteur(id, nombre, singulier, pluriel) {
   compteur.querySelector('.compteur-libelle').textContent = nombre >= 2 ? pluriel : singulier;
 }
 
+// ---------- Filtre des compteurs (décision 59) ----------
+
+// Ligne au-dessus de la liste et état des boutons « Stock bas » / « Ruptures ».
+// `nombreAffiches` : produits retenus par le filtre (avant la recherche).
+function afficherFiltre(nombreAffiches) {
+  element('compteur-bas').setAttribute('aria-pressed', String(filtre === 'bas'));
+  element('compteur-rupture').setAttribute('aria-pressed', String(filtre === 'rupture'));
+
+  const bloc = element('bloc-filtre');
+  bloc.hidden = filtre === 'tous';
+  if (filtre === 'tous') {
+    element('filtre-texte').textContent = '';
+    return;
+  }
+  const textes = TEXTES_FILTRE[filtre];
+  let texte = nombreAffiches === 0
+    ? textes.aucun
+    : `Filtre « ${textes.nom} » : ${FORMAT_ENTIER.format(nombreAffiches)} ` +
+      (nombreAffiches >= 2 ? 'produits affichés.' : 'produit affiché.');
+  // Un produit sorti de l'alerte depuis le choix du filtre reste affiché.
+  const encore = produits.filter((produit) => etatDuStock(produit) === filtre).length;
+  if (nombreAffiches > 0 && encore !== nombreAffiches) {
+    texte += ` Touchez de nouveau « ${textes.nom} » pour mettre la liste à jour.`;
+  }
+  element('filtre-texte').textContent = texte;
+}
+
+// Choix d'un compteur : 'tous', 'bas' ou 'rupture'. La recherche est vidée,
+// l'écran descend jusqu'à la liste et le focus clavier suit.
+function choisirFiltre(nouveau) {
+  if (!contexte) {
+    return;
+  }
+  filtre = nouveau;
+  idsDuFiltre = nouveau === 'tous'
+    ? null
+    : new Set(produits.filter((produit) => etatDuStock(produit) === nouveau).map((produit) => produit.id));
+  element('recherche-produit').value = '';
+  afficherListe();
+
+  const titre = element('titre-produits');
+  titre.scrollIntoView({ block: 'start' });
+  if (nouveau === 'tous') {
+    titre.focus({ preventScroll: true });
+    annoncer(`Tous les produits sont affichés : ${FORMAT_ENTIER.format(produits.length)}.`);
+  } else {
+    element('filtre-texte').focus({ preventScroll: true });
+  }
+}
+
+function enleverFiltre() {
+  filtre = 'tous';
+  idsDuFiltre = null;
+}
+
 function afficherListe() {
   // La liste est reconstruite à chaque changement : le bouton « +1 » / « −1 »
   // qui avait le focus clavier le retrouve ensuite.
@@ -251,15 +318,24 @@ function afficherListe() {
   element('bloc-recherche').hidden = produits.length === 0;
   afficherValeurTotale();
 
-  // Recherche dans les produits déjà chargés : aucune lecture de plus.
+  // Filtre des compteurs, puis recherche, dans les produits déjà chargés :
+  // aucune lecture de plus. Sans aucun produit, il n'y a rien à filtrer.
+  if (produits.length === 0) {
+    enleverFiltre();
+  }
+  const filtres = filtre === 'tous'
+    ? produits
+    : produits.filter((produit) => idsDuFiltre.has(produit.id));
+  afficherFiltre(filtres.length);
+
   const saisie = element('recherche-produit').value;
   const recherche = normaliserPourRecherche(saisie);
   const visibles = recherche
-    ? produits.filter((produit) => normaliserPourRecherche(produit.nom).includes(recherche))
-    : produits;
+    ? filtres.filter((produit) => normaliserPourRecherche(produit.nom).includes(recherche))
+    : filtres;
 
   const aucun = element('recherche-aucun');
-  aucun.hidden = produits.length === 0 || visibles.length > 0;
+  aucun.hidden = produits.length === 0 || visibles.length > 0 || !recherche;
   aucun.textContent = aucun.hidden ? '' : `Aucun produit ne correspond à « ${saisie.trim()} ».`;
 
   for (const produit of visibles) {
@@ -520,7 +596,19 @@ export function brancherEcranProduits() {
       afficherListe();
     }
   });
-  element('bouton-ajouter-produit').addEventListener('click', () => ouvrirFormulaire(null));
+  element('bouton-ajouter-produit').addEventListener('click', () => {
+    // Le nouveau produit doit être visible au retour : le filtre s'enlève.
+    if (filtre !== 'tous') {
+      enleverFiltre();
+      afficherListe();
+    }
+    ouvrirFormulaire(null);
+  });
+  // Compteurs de la carte de valeur et « Tout afficher » (décision 59).
+  for (const bouton of document.querySelectorAll('.compteur[data-filtre]')) {
+    bouton.addEventListener('click', () => choisirFiltre(bouton.dataset.filtre));
+  }
+  element('bouton-tout-afficher').addEventListener('click', () => choisirFiltre('tous'));
   element('bouton-annuler-produit').addEventListener('click', fermerFormulaire);
   element('bouton-archiver-produit').addEventListener('click', archiver);
   element('formulaire-produit').addEventListener('submit', (evenement) => {
@@ -568,4 +656,9 @@ export function arreterEcranProduits() {
   element('bloc-valeur').hidden = true;
   element('valeur-stock-total').textContent = '';
   element('annonce-produits').textContent = '';
+  enleverFiltre();
+  element('bloc-filtre').hidden = true;
+  element('filtre-texte').textContent = '';
+  element('compteur-bas').setAttribute('aria-pressed', 'false');
+  element('compteur-rupture').setAttribute('aria-pressed', 'false');
 }
