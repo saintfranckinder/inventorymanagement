@@ -647,7 +647,7 @@ Constats :
 - `disableNetwork` a suffi pour ces essais (aucune transaction en jeu) ; il ne remplace pas le vrai mode avion.
 
 ### Phase 8b : code SKU, type de stock, quantité à commander, prix de vente
-- **Demandée par le propriétaire le 2026-11-19** (décision 69). Fonctions écartées de la première version : décision 70.
+- **Demandée par le propriétaire le 2026-11-19** (décision 69). Fonctions écartées de la première version : décision 70. Prix d'achat inchangé, toujours saisi à la main, sans coût moyen (décision 71) : le prix de vente ne sert jamais à la valeur du stock.
 - **Résultat :** quatre champs facultatifs dans la fiche produit, affichés sur la carte ; recherche par code SKU ; filtre par type de stock (sans lecture de plus) ; règles Firestore version 8 qui contrôlent ces champs et acceptent aussi les produits qui ne les ont pas ; `CLAUDE.md` mis à jour (sections 4 et 5).
 - **Avant de coder :** trancher avec le propriétaire : code SKU obligatoire ou non ; liste exacte des types ; affichage de la marge par unité ; avertissement si le prix de vente est plus bas que le prix d'achat ; valeur du stock au prix de vente (indicative).
 - **Tests :** `tests-regles.html` complété (types, longueurs, liste des types, produit sans les nouveaux champs accepté, modification d'un produit ancien) ; `tests-nombres.html` si un calcul est ajouté (marge, valeur au prix de vente) ; code SKU en double signalé ; produits existants affichés sans erreur ; ordre de publication : règles d'abord, code ensuite ; smartphone.
@@ -843,7 +843,7 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 | `.gitignore`, `.gitattributes` | Fichiers exclus de Git ; `vendor/*.js` jamais modifiés par Git ; `*.woff2` en binaire | 0, 2, identité |
 | `.nojekyll` | Fichier vide : GitHub Pages publie tout tel quel (décision 41) | dépôt public |
 | `CLAUDE.md`, `DEMARRAGE.md` | Cahier des charges et méthode de travail ; modifiés avec l'accord du propriétaire (fournisseurs, annulation, suppression au lieu d'archivage des fournisseurs : section 6 de ce fichier) | 1, évolutions 42 et 43, 6b |
-| `PLAN.md`, `DECISIONS.md`, `README.md` | Suivi, décisions 1 à 70, documentation | Toutes |
+| `PLAN.md`, `DECISIONS.md`, `README.md` | Suivi, décisions 1 à 71, documentation | Toutes |
 
 **Hors Git :** `.env.test` contient l'adresse et le mot de passe des deux comptes de test et des comptes jetables `test-suppression-1` à `-3@example.com` (2 et 3 supprimés par les essais de la phase 7 ; 1 actif, entrepôt d'essai vide, réservé à la série « suppression » de `tests-regles.html`). Il est ignoré par Git et n'apparaît dans aucun commit (vérifié le 2026-11-18).
 
@@ -868,7 +868,7 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 
 ### 8.6 Décisions prises
 
-Toutes sont dans `DECISIONS.md` (70 décisions, aucune effacée) :
+Toutes sont dans `DECISIONS.md` (71 décisions, aucune effacée) :
 
 - **1 à 7 (choix initiaux) :** Firestore en plan Spark ; connexion Google et e-mail ; quantités et prix en entiers ; `dernierMouvementId` ; GitHub Pages ; publication du code par le propriétaire.
 - **8 à 15 (audit) :** page `tests-regles.html` à la place du simulateur ; règles tolérantes au hors-ligne et suivi local des opérations ; dépôt public dès la fin de la phase 4b ; SDK local corrigé et serveur local ; règles produit-mouvement complétées ; suppression du compte avec reconnexion d'abord ; phase 4 coupée en deux ; dossier de travail.
@@ -885,7 +885,7 @@ Toutes sont dans `DECISIONS.md` (70 décisions, aucune effacée) :
 - **59 (demande du propriétaire) :** compteurs cliquables qui filtrent la liste des produits ; la liste filtrée ne bouge pas sous le doigt.
 - **60 à 63 (phase 7) :** double confirmation et reconnexion avant la suppression ; règles version 7 (demande sans retour, effacements seulement après la demande, ajouts bloqués pendant la suppression) ; déroulement par paquets de 100 (produits avant mouvements), reprise automatique, effacement de la copie locale ; essais avec des comptes jetables.
 - **64 à 68 (phase 8) :** indicateur de synchronisation à quatre états dans l'en-tête, approximatif ; « En attente » à la place de « Quantité » ; avertissement avant « Se déconnecter » ; « Effacer les données de cet appareil et me déconnecter » ; stockage durable demandé au navigateur.
-- **69 et 70 (demandes du propriétaire du 2026-11-19) :** phase 8b (code SKU, type de stock, quantité à commander, prix de vente, tous facultatifs ; règles version 8) ; PEPS par lots, rotation, EOQ et notifications écartés de la première version.
+- **69 à 71 (demandes du propriétaire du 2026-11-19) :** phase 8b (code SKU, type de stock, quantité à commander, prix de vente, tous facultatifs ; règles version 8) ; PEPS par lots, rotation, EOQ et notifications écartés de la première version ; prix d'achat saisi à la main conservé, sans coût moyen pondéré (option A ; prix de l'arrivage noté dans le motif).
 
 Les règles de conception de la section 7 restent à respecter dans toute la suite.
 
@@ -893,6 +893,6 @@ Les règles de conception de la section 7 restent à respecter dans toute la sui
 
 *(Phase 8 faite le 2026-11-19, tests sur l'ordinateur réussis, commit local fait. Guide de l'essai en mode avion donné au propriétaire le même jour.)*
 
-1. **Propriétaire :** **Push origin** dans GitHub Desktop (commits `b2cc014`, `84b6e87` et celui de la phase 8), attendre quelques minutes, vérifier « Version 0.11.0 » en bas du site sur le téléphone ; puis l'essai en mode avion (guide donné, `DEMARRAGE.md` section 9, étapes 1 à 7 et 9 à 11) avec le compte de test, et dire le résultat de chaque étape. Toujours en attente : les deux tests de la phase 3 et le message d'aide quand la fenêtre Google est bloquée. Conseillé : activer la validation en deux étapes du compte Google qui gère la console Firebase.
-2. **Assistant, au début de la prochaine session :** lire `CLAUDE.md`, `PLAN.md` et `DECISIONS.md`. Noter le résultat de l'essai en mode avion dans le compte rendu de la phase 8 (corriger d'abord ce qui échoue). Puis phase 8b : poser au propriétaire les cinq questions de détail (section 2, phase 8b), attendre ses réponses, mettre à jour `CLAUDE.md` (sections 4 et 5) avec son accord, noter les décisions 71 et suivantes, écrire les règles version 8 (nouveaux champs facultatifs : un produit qui ne les a pas reste accepté), compléter `tests-regles.html`, faire publier les règles par le propriétaire **avant** d'envoyer le code.
+1. **Propriétaire :** **Push origin** dans GitHub Desktop (commits `b2cc014`, `84b6e87`, `e6e178b` pour la phase 8, et celui de la décision 71), attendre quelques minutes, vérifier « Version 0.11.0 » en bas du site sur le téléphone ; puis l'essai en mode avion (guide donné, `DEMARRAGE.md` section 9, étapes 1 à 7 et 9 à 11) avec le compte de test, et dire le résultat de chaque étape. Toujours en attente : les deux tests de la phase 3 et le message d'aide quand la fenêtre Google est bloquée. Conseillé : activer la validation en deux étapes du compte Google qui gère la console Firebase.
+2. **Assistant, au début de la prochaine session :** lire `CLAUDE.md`, `PLAN.md` et `DECISIONS.md`. Noter le résultat de l'essai en mode avion dans le compte rendu de la phase 8 (corriger d'abord ce qui échoue). Puis phase 8b : poser au propriétaire les cinq questions de détail (section 2, phase 8b), attendre ses réponses, mettre à jour `CLAUDE.md` (sections 4 et 5) avec son accord, noter les décisions 72 et suivantes, écrire les règles version 8 (nouveaux champs facultatifs : un produit qui ne les a pas reste accepté), compléter `tests-regles.html`, faire publier les règles par le propriétaire **avant** d'envoyer le code.
 3. **Rappels pour la suite :** ne jamais faire de `git push` ; ne jamais essayer la suppression du compte avec un vrai compte ; ne jamais ajouter d'essai touchant à `suppressionDemandee` dans la série habituelle de `tests-regles.html` ; après la mise en service, ne publier que des règles compatibles avec les versions de l'application déjà ouvertes sur les téléphones (section 7).

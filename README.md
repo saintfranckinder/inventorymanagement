@@ -45,6 +45,7 @@ Le projet est en cours de construction. L'avancement est suivi dans `PLAN.md`.
 - Un mouvement enregistré ne peut être ni modifié ni supprimé. Une erreur se corrige avec « Annuler cette opération » dans l'historique (voir plus bas), ou par un mouvement d'ajustement.
 - Un stock peut devenir négatif. L'application avertit avant l'enregistrement et affiche ensuite « Stock négatif : à vérifier ». Avec plusieurs appareils hors ligne, elle ne peut pas l'empêcher.
 - Un mouvement apparaît tout de suite. Tant que le serveur ne l'a pas confirmé, la fiche du produit affiche « En attente » à la place du mot « Quantité » (sur la même ligne : rien ne bouge en dessous), et l'historique affiche « En attente de synchronisation ».
+- **Arrivage à un nouveau prix :** noter le prix dans le motif de l'entrée (par exemple « Arrivage à 1 200 HTG le sac »), puis corriger le prix d'achat dans la fiche du produit avec « Modifier ». L'application ne calcule pas de coût moyen : la valeur du stock utilise le dernier prix d'achat saisi (décision 71).
 - L'historique est rangé selon l'heure de réception par le serveur. L'heure indiquée « Fait le » est celle de l'appareil au moment de l'opération ; si l'écart dépasse 5 minutes, les deux sont affichées.
 
 ### Annuler une opération faite par erreur
