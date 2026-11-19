@@ -1,12 +1,16 @@
 rules_version = '2';
 
 // Regles de securite de la base Firestore.
-// Version des regles : 6 (phase 6b).
+// Version des regles : 7 (phase 7).
 //
 // Phase 4b : chaque utilisateur accede a son document users/{uid}, a ses
 // produits et a ses mouvements de stock.
 // Phase 6b : ajout du carnet de fournisseurs (users/{uid}/suppliers),
-// independant du stock. Le reste est inchange depuis la version 5.
+// independant du stock.
+// Phase 7 : suppression du compte (decisions 13, 61 et 62). La demande
+// (suppressionDemandee = true) ne s'annule pas ; ensuite seulement, les
+// produits, les mouvements et l'entrepot peuvent etre supprimes, et plus
+// aucun produit ni fournisseur ne peut etre cree.
 //
 // Principe du lien produit-mouvement :
 //   - la quantite d'un produit ne change QUE dans un lot qui cree aussi un
@@ -120,6 +124,18 @@ service cloud.firestore {
         && m.dateServeur is timestamp;
     }
 
+    // Vrai si l'entrepot existe et que sa suppression n'est pas demandee.
+    function compteActif(uid) {
+      return exists(/databases/$(database)/documents/users/$(uid))
+        && get(/databases/$(database)/documents/users/$(uid)).data.suppressionDemandee == false;
+    }
+
+    // Vrai si la suppression du compte est demandee (phase 7).
+    function suppressionDemandee(uid) {
+      return exists(/databases/$(database)/documents/users/$(uid))
+        && get(/databases/$(database)/documents/users/$(uid)).data.suppressionDemandee == true;
+    }
+
     // Un texte facultatif : une chaine de 0 a `longueurMax` caracteres.
     function texteFacultatif(t, longueurMax) {
       return t is string && t.size() <= longueurMax;
@@ -195,15 +211,26 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time
         && request.resource.data.suppressionDemandee == false;
 
-      // Modification : le nom et la devise peuvent changer. La date de
-      // creation et la demande de suppression ne changent pas ici
-      // (la suppression du compte sera ouverte en phase 7).
+      // Modification, seulement tant que la suppression n'est pas demandee :
+      //   - soit le nom et la devise, sans toucher a la demande de suppression ;
+      //   - soit la demande de suppression (false -> true), seule.
+      // La date de creation ne change jamais. Une demande ne s'annule pas.
       allow update: if estProprietaire(uid)
         && entrepotValide(request.resource.data)
         && request.resource.data.createdAt == resource.data.createdAt
-        && request.resource.data.suppressionDemandee == resource.data.suppressionDemandee;
+        && resource.data.suppressionDemandee == false
+        && (
+          request.resource.data.suppressionDemandee == false
+          ||
+          (request.resource.data.suppressionDemandee == true
+            && request.resource.data.nomEntrepot == resource.data.nomEntrepot
+            && request.resource.data.devise == resource.data.devise)
+        );
 
-      // Suppression : refusee pour l'instant (phase 7).
+      // Suppression : seulement apres la demande (derniere etape avant la
+      // suppression du compte de connexion).
+      allow delete: if estProprietaire(uid)
+        && resource.data.suppressionDemandee == true;
 
       match /products/{productId} {
         // Lecture de ses propres produits (un par un, ou en liste).
@@ -214,6 +241,7 @@ service cloud.firestore {
         //   - soit un stock de depart positif, justifie par un mouvement
         //     d'entree cree dans le meme lot.
         allow create: if estProprietaire(uid)
+          && compteActif(uid)
           && produitValide(request.resource.data)
           && request.resource.data.archive == false
           && request.resource.data.createdAt == request.time
@@ -250,7 +278,8 @@ service cloud.firestore {
                    request.resource.data.quantiteMilliemes - resource.data.quantiteMilliemes))
           );
 
-        // Suppression : toujours refusee (sauf suppression du compte, phase 7).
+        // Suppression : seulement apres la demande de suppression du compte.
+        allow delete: if estProprietaire(uid) && suppressionDemandee(uid);
       }
 
       match /movements/{movementId} {
@@ -267,15 +296,17 @@ service cloud.firestore {
           && produitRefleteLeMouvement(uid, movementId, request.resource.data);
 
         // Modification : toujours refusee (un mouvement est definitif).
-        // Suppression : toujours refusee (sauf suppression du compte, phase 7).
+        // Suppression : seulement apres la demande de suppression du compte.
+        allow delete: if estProprietaire(uid) && suppressionDemandee(uid);
       }
 
       match /suppliers/{supplierId} {
         // Lecture de ses propres fournisseurs (un par un, ou en liste).
         allow read: if estProprietaire(uid);
 
-        // Creation : champs valides, dates du serveur.
+        // Creation : champs valides, dates du serveur, compte actif.
         allow create: if estProprietaire(uid)
+          && compteActif(uid)
           && identifiantValide(supplierId)
           && fournisseurValide(request.resource.data)
           && request.resource.data.createdAt == request.time

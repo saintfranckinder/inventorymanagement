@@ -21,8 +21,8 @@ Dépôt GitHub : `saintfranckinder/minstock`, renommé par le propriétaire le 2
 | 6 | Formulaires, historique lisible (avec « Annuler cette opération »), paramètres | **Terminée le 2026-11-18** (test sur smartphone réussi le même jour, selon le propriétaire) |
 | 6b | Carnet de fournisseurs (décisions 42 et 50 à 54) | **Terminée le 2026-11-18** (règles version 6 publiées par le propriétaire ; test sur smartphone réussi le même jour) |
 | — | Identité visuelle MinStock (décisions 55 à 58) et compteurs cliquables (décision 59) | **Terminée le 2026-11-18** (validées sur smartphone par le propriétaire) |
-| 7 | Suppression du compte | **Prochaine étape** (voir section 8.7) |
-| 8 | Hors ligne et indicateur de synchronisation | À faire |
+| 7 | Suppression du compte (décisions 60 à 63) | **Faite le 2026-11-18** (règles version 7 publiées par le propriétaire) ; test sur smartphone du propriétaire à faire, avec un compte jetable |
+| 8 | Hors ligne et indicateur de synchronisation | **Prochaine étape** (voir section 8.7) |
 | 9 | Export Excel | À faire |
 | 10 | Application installable (PWA) | À faire |
 | 11 | Données de démonstration | À faire |
@@ -541,6 +541,40 @@ Question du propriétaire à cette occasion : pourquoi « Ciment » affiche des 
   - suppression interrompue (fermer l'application au milieu), puis reprise à la connexion suivante ;
   - tentative hors ligne : refusée avec un message clair.
 
+**Compte rendu de la phase 7 (2026-11-18)**
+
+Choix validés par le propriétaire avant de coder : décisions 60 (double confirmation et reconnexion), 61 (règles version 7, dont le blocage des ajouts pendant une suppression), 62 (déroulement, effacement de la copie locale à la fin) et 63 (comptes jetables). Changement signalé au propriétaire après coup : les produits sont effacés **avant** les mouvements (et non après, comme dans le plan présenté), pour qu'un mouvement envoyé en retard par un autre appareil soit refusé sans ajouter de lecture à chaque mouvement (décision 62).
+
+Ce qui a été fait :
+
+- Règles Firestore **version 7** (publiées par le propriétaire le 2026-11-18) : demande de suppression `false → true` seule et sans retour ; entrepôt figé puis supprimable après la demande ; produits et mouvements supprimables seulement après la demande ; création de produit ou de fournisseur refusée si l'entrepôt n'existe pas ou si sa suppression est demandée.
+- **Danger évité :** l'ancien essai « Demander la suppression du compte » de `tests-regles.html`, qui attendait un refus, aurait été accepté par la version 7 et aurait lancé la suppression du compte de test principal. Il a été retiré de la série habituelle avec « Supprimer son entrepôt » ; les deux sont refaits dans une série réservée aux comptes jetables. La série habituelle refuse en plus de tourner sur un compte en cours de suppression.
+- `tests-regles.html` : série « suppression du compte » de 20 essais, lancée seulement avec un compte `test-suppression…@example.com` ; la série habituelle compte désormais 88 essais (91 si les produits d'essai sont à créer).
+- Nouveaux fichiers `js/suppression-compte.js` (demande par transaction, effacement par paquets de 100, effacement de la copie locale) et `js/ecran-suppression.js` (écrans de confirmation et d'avancement, reprise, reconnexion pour la dernière étape) ; `js/auth.js` (reconnexion par mot de passe ou Google, suppression du compte de connexion) ; `js/app.js` (reprise automatique dès que `suppressionDemandee` est vrai, message après le rechargement) ; trois messages d'erreur ajoutés ; bloc « Supprimer mon compte » dans Paramètres et message sur l'écran de connexion.
+- Version `0.10.0`.
+
+Tests exécutés par l'assistant, sur `http://localhost:8080/`, avec le compte de test principal et trois comptes jetables créés pour l'occasion (accord du propriétaire) :
+
+| Test | Résultat |
+|---|---|
+| Série habituelle de `tests-regles.html` avec les règles version 7 (compte principal) : 88 sur 88 | Réussi |
+| Série « suppression du compte » (compte jetable 1) : 20 sur 20 — effacements refusés sans demande, demande accompagnée d'un autre changement refusée, demande acceptée, retour en arrière refusé, renommage refusé pendant la suppression, création de produit et de fournisseur refusée, effacement chez un autre compte refusé, lot de 4 effacements accepté, entrepôt supprimé après la demande, plus aucune création possible sans entrepôt | Réussi |
+| Taille sûre des paquets (section 3, n° 3) : 120 produits créés, demande de suppression, **un lot de 100 suppressions accepté en une seconde** (la lecture de l'entrepôt faite par les règles n'est comptée qu'une fois par lot) ; paquets de 100 retenus | Réussi |
+| Formulaire (compte jetable 2) : case non cochée, mot mal tapé, mot de passe vide, mauvais mot de passe : refusés avec « Rien n'a été supprimé », curseur sur le champ ; sur le serveur, aucune demande enregistrée ; « Annuler » ramène aux Paramètres | Réussi |
+| Suppression complète (compte jetable 2, mot `supprimer` en minuscules accepté) : avancement Produits → Historique → Fournisseurs → Entrepôt → compte de connexion, 10 éléments (3 produits, 5 mouvements, 1 fournisseur, l'entrepôt) ; rechargement ; « Votre compte et toutes vos données ont été supprimés. » ; copie locale Firestore et marques locales effacées ; nouvelle connexion avec ce compte refusée | Réussi |
+| Suppression interrompue (compte jetable 3) : arrêt dès le début, message « La suppression s'est arrêtée… » et bouton « Réessayer » ; page rechargée comme après une fermeture : l'application revient d'elle-même sur l'écran de suppression, termine (9 éléments et l'entrepôt), affiche le message final ; nouvelle connexion refusée | Réussi |
+| Sans Internet (compte jetable 1) : navigateur hors ligne → « Pas de connexion Internet… Rien n'a été supprimé » ; réseau en panne pendant la reconnexion → même refus ; sur le serveur, aucune demande enregistrée | Réussi |
+| 360 pixels : aucun défilement horizontal (Paramètres, confirmation, avancement) ; bouton « Supprimer définitivement » et champs de 48 pixels de haut | Réussi |
+| Compte de test principal intact (« NzuriDeal », 4 produits, aucune demande de suppression) | Réussi |
+
+Tests non exécutés :
+
+- Smartphone du propriétaire, **avec un compte jetable uniquement**.
+- Reconnexion par la fenêtre Google : aucun compte Google de test.
+- Reconnexion demandée par Firebase pour la dernière étape (`auth/requires-recent-login`) : ne se produit qu'après plusieurs minutes ; écran prévu mais non déclenché.
+- Coupure d'Internet réelle (mode avion) pendant la suppression ; deux appareils connectés au même compte pendant la suppression ; reprise « Terminer la suppression » quand seul le compte de connexion reste.
+- Constat d'essai : couper le réseau de Firestore depuis la page n'empêche pas les transactions ; le premier essai « sans réseau » a donc réellement envoyé la demande du compte jetable 3, ce qui a servi d'essai de suppression interrompue. Le refus sans Internet a ensuite été vérifié autrement (voir le tableau).
+
 ### Phase 8 : hors ligne et indicateur
 - **Résultat :** indicateur à quatre états, présenté comme approximatif ; messages pour les opérations refusées et « déjà enregistrées » ; avertissement avant déconnexion s'il reste des écritures en attente ; demande de stockage persistant au navigateur ; mention « En attente de synchronisation » qui ne fait plus bouger les boutons placés en dessous (défaut constaté au test sur smartphone de la phase 5).
 - **Tests :** étapes 1 à 7 et 9 à 11 de `DEMARRAGE.md` section 9 (application restée ouverte). L'étape 8 (rouvrir en mode avion) est testée en phase 10.
@@ -571,7 +605,7 @@ Ces points viennent de l'analyse et n'ont pas été testés.
 
 1. *(Vérifié le 2026-11-16.)* Avec la méthode moderne de persistance, un échec n'est pas signalé à l'application. Solution en place : test du stockage local au démarrage (voir le compte rendu de la phase 2).
 2. *(Vérifié en partie le 2026-11-16.)* Avec la protection contre l'énumération : l'inscription avec une adresse existante est refusée avec un message précis ; une mauvaise connexion donne un message générique ; « Mot de passe oublié » ne signale jamais d'adresse inconnue. Reste à tester par le propriétaire : le passage d'un compte par mot de passe à Google avec la même adresse.
-3. **Phases 7 et 11 :** nombre maximal d'écritures par lot quand les règles font des vérifications (`get`, `getAfter`). Déterminer la taille de lot sûre.
+3. *(Vérifié le 2026-11-18 pour les suppressions : un lot de 100 suppressions dont chaque règle lit l'entrepôt est accepté ; paquets de 100 retenus en phase 7.)* **Phase 11 :** taille de lot sûre pour les créations (produit et mouvement d'entrée, avec `getAfter`) à vérifier au moment voulu.
 
 ## 4. Propositions de l'analyse pas encore validées
 
@@ -638,10 +672,10 @@ Règles de conception retenues pour le code :
 
 ### 8.1 Phase actuelle
 
-- **Étape « identité visuelle MinStock » et compteurs cliquables terminés le 2026-11-18** (validés sur smartphone par le propriétaire). Phases 5, 6 et 6b terminées le même jour. Prochaine étape : **phase 7** (suppression du compte). Plan présenté au propriétaire le 2026-11-18 ; rien n'est codé avant son accord.
-- Version de l'application : `0.9.1`. Règles Firestore : **version 6**, publiée dans la console par le propriétaire le 2026-11-18, vérifiée active le même jour (90 essais sur 90, produits d'essai déjà créés).
+- **Phase 7 (suppression du compte) faite le 2026-11-18**, test sur smartphone du propriétaire à faire avec un compte jetable. Phases 5, 6, 6b et l'étape « identité visuelle » terminées le même jour. Prochaine étape : **phase 8** (hors ligne et indicateur de synchronisation). Rien n'est commencé.
+- Version de l'application : `0.10.0`. Règles Firestore : **version 7**, publiée dans la console par le propriétaire le 2026-11-18, vérifiée active le même jour (série habituelle 88 sur 88 ; série « suppression » 20 sur 20).
 - Dépôt GitHub : `saintfranckinder/minstock`, **public**. Site : `https://saintfranckinder.github.io/minstock/` (GitHub Pages, branche `main`, dossier racine).
-- Dépôt Git, branche `main` : `cecf8d3` (phases 0 et 1), `48d55b3` (phase 2), `f09bf30` (phase 3), `96f2a3d` (phase 4a), `d8f1b5b` (phase 4b), `2f53da4` (note de passation), `b26abb6` (dépôt renommé), `e166a30` (recherche de secrets), `d5a7808` (décisions 40 et 41), `86d4eb4` (mise en ligne), `e1a5c70` (fin de l'étape « dépôt public »), `e202b2a` (décisions 42 et 43), `7e156a3` (phase 5), `eb40c59` (test sur smartphone de la phase 5), `456dff6` (phase 6), `de2ef92` (test sur smartphone de la phase 6), `14e00c9` (phase 6b), `36f5d20` (test sur smartphone de la phase 6b), `6eeb438` (identité visuelle), puis le commit des compteurs cliquables. Le propriétaire envoie chaque commit avec **Push origin** dans GitHub Desktop ; le site se met à jour quelques minutes après.
+- Dépôt Git, branche `main` : `cecf8d3` (phases 0 et 1), `48d55b3` (phase 2), `f09bf30` (phase 3), `96f2a3d` (phase 4a), `d8f1b5b` (phase 4b), `2f53da4` (note de passation), `b26abb6` (dépôt renommé), `e166a30` (recherche de secrets), `d5a7808` (décisions 40 et 41), `86d4eb4` (mise en ligne), `e1a5c70` (fin de l'étape « dépôt public »), `e202b2a` (décisions 42 et 43), `7e156a3` (phase 5), `eb40c59` (test sur smartphone de la phase 5), `456dff6` (phase 6), `de2ef92` (test sur smartphone de la phase 6), `14e00c9` (phase 6b), `36f5d20` (test sur smartphone de la phase 6b), `6eeb438` (identité visuelle), `c95d942` (compteurs cliquables), `f60525d` (test sur smartphone des compteurs), puis le commit de la phase 7. Le propriétaire envoie chaque commit avec **Push origin** dans GitHub Desktop ; le site se met à jour quelques minutes après.
 
 ### 8.2 Travail terminé
 
@@ -657,7 +691,8 @@ Règles de conception retenues pour le code :
 | 5 | Tableau de bord : valeur du stock indicative et total, recherche, alertes « Stock bas » / « Rupture », boutons `−1` / `+1` | `tests-nombres.html` : 104 sur 104 ; `tests-regles.html` : 67 sur 67 ; compte rendu de la phase 5 ; test sur smartphone réussi |
 | 6 | « Annuler cette opération » dans l'historique, écran « Paramètres » (nom de l'entrepôt, devise tant qu'aucun produit n'existe) | `tests-regles.html` : 72 sur 72 ; compte rendu de la phase 6 ; test sur smartphone réussi |
 | 6b | Carnet de fournisseurs : liste, recherche, « Appeler » / « WhatsApp » / « E-mail », ajout, modification, suppression ; règles version 6 | `tests-regles.html` : 90 sur 90 ; compte rendu de la phase 6b ; test sur smartphone réussi |
-| Identité | Nom MinStock, symbole SVG, police Montserrat, couleurs et style de la maquette, compteurs de la carte de valeur | compte rendu de l'étape « identité visuelle » |
+| Identité | Nom MinStock, symbole SVG, police Montserrat, couleurs et style de la maquette, compteurs de la carte de valeur (cliquables) | compte rendu de l'étape « identité visuelle » ; tests sur smartphone réussis |
+| 7 | Suppression du compte et de toutes ses données : double confirmation, reconnexion, effacement par paquets, reprise automatique, effacement de la copie locale ; règles version 7 | `tests-regles.html` : 88 sur 88 et 20 sur 20 (compte jetable) ; suppressions complète et interrompue réussies ; compte rendu de la phase 7 |
 
 Les tests des phases 2 à 6b ont été exécutés par l'assistant dans le navigateur intégré, sur `http://localhost:8080/`, avec le compte de test. Tests sur smartphone faits par le propriétaire le 2026-11-18, sur le site en ligne (étape « dépôt public », puis phase 5).
 
@@ -680,19 +715,21 @@ Les tests des phases 2 à 6b ont été exécutés par l'assistant dans le naviga
 | *(Fait le 2026-11-18 par le propriétaire.)* Historique et Paramètres sur smartphone : annuler une opération au doigt, renommer l'entrepôt, devise bloquée | Phase 6 (propriétaire) |
 | *(Fait le 2026-11-18 par le propriétaire.)* Fournisseurs sur smartphone : ajouter, rechercher, « Appeler » et « WhatsApp » avec son propre numéro, modifier, supprimer | Phase 6b (propriétaire) |
 | Liste des fournisseurs sans Internet (mode avion) | Phase 8 |
+| Suppression du compte sur smartphone, **avec un compte jetable** (par exemple `test-suppression-4@example.com`, créé sur le téléphone) | Phase 7 (propriétaire) |
+| Suppression d'un compte Google (reconnexion par la fenêtre Google) ; reconnexion exigée par Firebase pour la dernière étape ; coupure réelle pendant la suppression ; deux appareils pendant la suppression | Phases 8 et 12 |
 | Hors ligne réel (mode avion) : ajout de produit, mouvement, retour en ligne ; coupure entre l'envoi et la réponse ; « Voir plus » sans Internet ; premier chargement sans Internet sur un nouvel appareil | Phase 8 |
 | Deux appareils qui modifient le même produit | Phase 8 ou 12 |
 | Réouverture de l'application en mode avion | Phase 10 |
 
 Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé par le propriétaire pendant la phase 3, et le test « Serveur injoignable » n'a plus d'objet (la page de vérification a été remplacée en phase 3 ; le comportement hors ligne se teste en phases 8 et 10).
 
-**Étapes du plan :** phases 7 à 13 (section 2).
+**Étapes du plan :** phases 8 à 13 (section 2).
 
 **Questions encore ouvertes (section 4) :** taille d'entrepôt raisonnable à annoncer (environ 500 produits) ; produits archivés dans l'export Excel (phase 9) ; options facultatives.
 
-**Point à vérifier (section 3, n° 3) :** taille de lot sûre pour la suppression du compte (phase 7) et les données de démonstration (phase 11).
+**Point à vérifier (section 3, n° 3) :** taille de lot sûre pour les données de démonstration (phase 11). Pour les suppressions, vérifié en phase 7 (paquets de 100).
 
-**À nettoyer en fin de projet (phases 12 et 13) :** supprimer les comptes de test `test-phase3@example.com` et `test-isolation@example.org` dans la console Firebase (Authentication) et leurs données, ou par le parcours de suppression de la phase 7 ; supprimer `.env.test`. Le propriétaire peut supprimer dès maintenant l'ancienne copie `C:\Inventory Management`, inutilisée.
+**À nettoyer en fin de projet (phases 12 et 13) :** supprimer les comptes de test `test-phase3@example.com`, `test-isolation@example.org` et `test-suppression-1@example.com` (et tout autre compte jetable restant) par le parcours de suppression de la phase 7, ou dans la console Firebase (Authentication) avec leurs données ; supprimer `.env.test`. Le propriétaire peut supprimer dès maintenant l'ancienne copie `C:\Inventory Management`, inutilisée.
 
 ### 8.4 Fichiers du projet
 
@@ -705,8 +742,10 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 | `js/ecran-fournisseurs.js` | Carnet de fournisseurs : liste, recherche, liens de contact, formulaire, suppression | 6b |
 | `js/firebase-config.js` | Configuration web Firebase (ce n'est pas un secret) | 2 |
 | `js/firebase-init.js` | Démarrage de Firebase, mémoire hors ligne, test du stockage local | 2, 3 |
-| `js/auth.js` | Connexion, inscription, mot de passe oublié, déconnexion | 3 |
-| `js/messages-erreur.js` | Erreurs Firebase traduites en français | 3 |
+| `js/auth.js` | Connexion, inscription, mot de passe oublié, déconnexion ; reconnexion et suppression du compte de connexion | 3, 7 |
+| `js/messages-erreur.js` | Erreurs Firebase traduites en français | 3, 7 |
+| `js/suppression-compte.js` | Suppression du compte : demande (transaction), effacement par paquets de 100, effacement de la copie locale | 7 |
+| `js/ecran-suppression.js` | Écrans « Supprimer mon compte » et « Suppression en cours », reprise automatique | 7 |
 | `js/entrepot.js` | Document `users/{uid}`, liste des devises ; changement du nom et de la devise | 3, 6 |
 | `js/ecran-parametres.js` | Écran « Paramètres » : nom de l'entrepôt, devise tant qu'aucun produit n'existe (décision 49) | 6 |
 | `js/interface.js` | Fonctions d'affichage partagées ; texte comparable pour les recherches | 4a, 6b |
@@ -716,17 +755,17 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 | `js/mouvements.js` | Lot d'une opération de stock ; lecture de l'historique ; identifiant `annulation-…` | 4b, 6 |
 | `js/operations-en-attente.js` | Suivi local des opérations non confirmées (`localStorage`, clé `operations-en-attente:{uid}`) | 4b |
 | `js/ecran-mouvements.js` | Formulaire de mouvement, `envoyerMouvement` (seul chemin d'envoi d'un mouvement), historique avec « Annuler cette opération », opérations refusées | 4b, 5, 6 |
-| `firestore.rules` | Règles de sécurité, version 6 | 2, 3, 4a, 4b, 6b |
-| `tests-regles.html`, `js/tests-regles.js` | 93 essais des règles sur le vrai serveur, 90 quand les produits d'essai existent déjà (compte de test en `@example.com` uniquement, décision 40 ; environ une minute) | 3, 4a, 4b, dépôt public, 6, 6b |
+| `firestore.rules` | Règles de sécurité, version 7 | 2, 3, 4a, 4b, 6b, 7 |
+| `tests-regles.html`, `js/tests-regles.js` | Série habituelle : 91 essais des règles sur le vrai serveur, 88 quand les produits d'essai existent déjà (compte de test en `@example.com` uniquement, décision 40 ; environ une minute). Série « suppression du compte » : 20 essais, seulement avec un compte jetable `test-suppression…@example.com` (décision 63) | 3, 4a, 4b, dépôt public, 6, 6b, 7 |
 | `tests-nombres.html`, `js/tests-nombres.js` | 104 essais de conversion et de calcul, sans connexion | 4a, 5 |
 | `vendor/` | SDK Firebase 13.4.0 (import corrigé), SheetJS 0.20.3, police Montserrat et sa licence (`polices/`), `LISEZMOI.md` | 2, identité |
 | `demarrer.bat`, `outils/serveur-local.ps1` | Serveur local sur `http://localhost:8080/` | 2 |
 | `.gitignore`, `.gitattributes` | Fichiers exclus de Git ; `vendor/*.js` jamais modifiés par Git | 0, 2 |
 | `.nojekyll` | Fichier vide : GitHub Pages publie tout tel quel (décision 41) | dépôt public |
 | `CLAUDE.md`, `DEMARRAGE.md` | Cahier des charges et méthode de travail | 1 |
-| `PLAN.md`, `DECISIONS.md`, `README.md` | Suivi, décisions 1 à 59, documentation | Toutes |
+| `PLAN.md`, `DECISIONS.md`, `README.md` | Suivi, décisions 1 à 63, documentation | Toutes |
 
-**Hors Git :** `.env.test` contient l'adresse et le mot de passe des deux comptes de test. Il est ignoré par Git et n'apparaît dans aucun commit (vérifié le 2026-11-18).
+**Hors Git :** `.env.test` contient l'adresse et le mot de passe des deux comptes de test et des comptes jetables `test-suppression-1` à `-3@example.com` (2 et 3 supprimés par les essais de la phase 7 ; 1 actif, entrepôt d'essai vide, réservé à la série « suppression » de `tests-regles.html`). Il est ignoré par Git et n'apparaît dans aucun commit (vérifié le 2026-11-18).
 
 **État du compte de test dans Firebase :** entrepôt « NzuriDeal » (HTG ; ancien nom « Entrepôt de test », renommé par le propriétaire pendant son test de la phase 6) ; aucun fournisseur (tous supprimés après les essais de la phase 6b) ; produits actifs, vérifiés sur le serveur après la phase 6 : « Riz 25 kg (Tchako) » à 8 sac, « Ciment » à -1,5 sac, « Essai phase 5 (stock bas) » à 6 pièces (seuil 5) et « Essai phase 5 (zéro) » à 1 pièce (seuil 0) ; produits archivés « Huile » et deux « Produit d'essai (règles) » ; environ 108 mouvements au 2026-11-18 après la phase 6b (plus les opérations faites par le propriétaire sur son téléphone), plus 5 à chaque passage de `tests-regles.html`. Les mouvements ne peuvent pas être supprimés. Second compte de test `test-isolation@example.org` (créé le 2026-11-18) : entrepôt « Entrepôt isolation (test) » (HTG), aucun produit ; sa devise a été passée à USD puis remise à HTG pendant les essais de la phase 6. Il doit rester sans produit pour pouvoir refaire l'essai du changement de devise.
 
@@ -741,7 +780,7 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 
 ### 8.6 Décisions prises
 
-Toutes sont dans `DECISIONS.md` (59 décisions, aucune effacée) :
+Toutes sont dans `DECISIONS.md` (63 décisions, aucune effacée) :
 
 - **1 à 7 (choix initiaux) :** Firestore en plan Spark ; connexion Google et e-mail ; quantités et prix en entiers ; `dernierMouvementId` ; GitHub Pages ; publication du code par le propriétaire.
 - **8 à 15 (audit) :** page `tests-regles.html` à la place du simulateur ; règles tolérantes au hors-ligne et suivi local des opérations ; dépôt public dès la fin de la phase 4b ; SDK local corrigé et serveur local ; règles produit-mouvement complétées ; suppression du compte avec reconnexion d'abord ; phase 4 coupée en deux ; dossier de travail.
@@ -756,13 +795,14 @@ Toutes sont dans `DECISIONS.md` (59 décisions, aucune effacée) :
 - **50 à 54 (phase 6b) :** fournisseur supprimé définitivement (plus d'archivage, décision 42 modifiée) ; noms en double autorisés avec avertissement ; liste écoutée seulement pendant que l'écran est ouvert ; boutons « Appeler », « WhatsApp », « E-mail » ; limites des champs.
 - **55 à 58 (identité visuelle) :** nom « MinStock » ; identité appliquée sans ajouter ni retirer de fonction (couleurs vérifiées, éléments de la maquette hors périmètre non repris) ; police Montserrat locale ; symbole SVG et trois compteurs dans la carte de valeur.
 - **59 (demande du propriétaire) :** compteurs cliquables qui filtrent la liste des produits ; la liste filtrée ne bouge pas sous le doigt.
+- **60 à 63 (phase 7) :** double confirmation et reconnexion avant la suppression ; règles version 7 (demande sans retour, effacements seulement après la demande, ajouts bloqués pendant la suppression) ; déroulement par paquets de 100 (produits avant mouvements), reprise automatique, effacement de la copie locale ; essais avec des comptes jetables.
 
 Les règles de conception de la section 7 restent à respecter dans toute la suite.
 
 ### 8.7 Prochaine action précise
 
-*(L'étape « identité visuelle » est faite et validée ; les compteurs cliquables sont faits : détail dans le compte rendu, section 2.)*
+*(La phase 7 est faite, règles version 7 publiées et actives : détail dans son compte rendu, section 2.)*
 
-1. **Propriétaire :** cliquer sur **Push origin** dans GitHub Desktop, attendre quelques minutes, vérifier « Version 0.9.1 » en bas de l'écran (recharger la page si besoin), puis essayer sur le smartphone les compteurs « Stock bas », « Ruptures » et « Produits », le bouton « Tout afficher », et un `+1` sur un produit filtré. Quand il le souhaite : les deux tests restants de la phase 3 et le message d'aide quand la fenêtre Google est bloquée. Conseillé : activer la validation en deux étapes du compte Google qui gère la console Firebase.
-2. **Assistant, au début de la prochaine session (ouverte dans `C:\GitHub\Inventory Management\inventorymanagement`) :** lire `CLAUDE.md`, `PLAN.md` et `DECISIONS.md`, noter le résultat du test sur smartphone des compteurs cliquables, puis présenter le plan de la phase 7 (objectif, fichiers, risques, tests) et attendre l'accord du propriétaire avant de coder.
-3. **Phase 7 (suppression du compte, `CLAUDE.md` section 8, décision 13) :** double confirmation, rappel d'exporter, reconnexion d'abord, en ligne seulement, reprise automatique si `suppressionDemandee` est vrai ; suppression des mouvements, produits, **fournisseurs**, puis du document `users/{uid}` et du compte. Point à vérifier avant de coder : taille de lot sûre (section 3, n° 3). Les règles changeront (suppression autorisée quand `suppressionDemandee` est vrai) : version 7 à publier par le propriétaire. Tests avec un compte de test uniquement (le second compte ou un compte créé pour l'occasion).
+1. **Propriétaire :** cliquer sur **Push origin** dans GitHub Desktop (les règles version 7 sont déjà publiées, l'ordre est respecté), attendre quelques minutes, vérifier « Version 0.10.0 » en bas de l'écran, puis tester la suppression sur le smartphone **avec un compte jetable seulement** : « Créer un compte » avec `test-suppression-4@example.com` et un mot de passe au choix, créer l'entrepôt, ajouter un produit, puis Paramètres → « Supprimer mon compte et mes données ». Ne jamais essayer avec son vrai compte. Quand il le souhaite : les deux tests restants de la phase 3 et le message d'aide quand la fenêtre Google est bloquée. Conseillé : activer la validation en deux étapes du compte Google qui gère la console Firebase.
+2. **Assistant, au début de la prochaine session (ouverte dans `C:\GitHub\Inventory Management\inventorymanagement`) :** lire `CLAUDE.md`, `PLAN.md` et `DECISIONS.md`, noter le résultat du test sur smartphone de la phase 7, puis présenter le plan de la phase 8 (objectif, fichiers, risques, tests) et attendre l'accord du propriétaire avant de coder.
+3. **Phase 8 (hors ligne et indicateur de synchronisation) :** indicateur à quatre états présenté comme approximatif (`CLAUDE.md` section 7, sans nombre exact d'opérations) ; messages pour les opérations refusées et « déjà enregistrées » ; avertissement avant déconnexion s'il reste des écritures en attente ; demande de stockage persistant ; correction du petit saut causé par « En attente de synchronisation » (section 5, point 7) ; idée à trancher : « Se déconnecter et effacer les données de cet appareil » (section 4). Essais hors ligne réels (mode avion), dont la liste des fournisseurs et l'affichage des deux heures.

@@ -8,6 +8,11 @@
 // Phase 6 : annulation d'une opération (identifiant « annulation-… »).
 // Phase 6b : carnet de fournisseurs (règles version 6). Le fournisseur
 // d'essai est créé puis supprimé à chaque passage : il ne reste rien.
+// Phase 7 : suppression du compte (règles version 7, décision 63). Ces essais
+// ne se lancent QU'AVEC un compte jetable test-suppression…@example.com : ils
+// créent leurs propres données, demandent la suppression, vérifient les
+// règles, puis effacent tout sauf le compte de connexion. Avec un autre
+// compte de test, ils ne sont jamais lancés.
 //
 // Le compte de test garde deux produits d'essai, archivés à la fin de chaque
 // passage : ils n'apparaissent donc pas dans la liste. Chaque passage ajoute
@@ -63,6 +68,15 @@ function estUnCompteDeTest(utilisateur) {
     : '';
   return adresse.length > FIN_ADRESSE_COMPTE_DE_TEST.length &&
     adresse.endsWith(FIN_ADRESSE_COMPTE_DE_TEST);
+}
+
+// Vrai seulement pour un compte jetable réservé aux essais de suppression
+// (décision 63) : test-suppression@example.com ou test-suppression-…@example.com.
+function estUnCompteJetable(utilisateur) {
+  const adresse = utilisateur && typeof utilisateur.email === 'string'
+    ? utilisateur.email.trim().toLowerCase()
+    : '';
+  return /^test-suppression(-[a-z0-9]+)*@example\.com$/.test(adresse);
 }
 
 function afficherMessage(texte) {
@@ -201,16 +215,10 @@ function essaisEntrepot(db, uid, entrepot) {
       attendu: 'refuse',
       operation: () => updateDoc(monEntrepot, { nomEntrepot: 12345 })
     },
-    {
-      nom: 'Demander la suppression du compte (fermé jusqu’à la phase 7)',
-      attendu: 'refuse',
-      operation: () => updateDoc(monEntrepot, { suppressionDemandee: true })
-    },
-    {
-      nom: 'Supprimer son entrepôt (fermé jusqu’à la phase 7)',
-      attendu: 'refuse',
-      operation: () => deleteDoc(monEntrepot)
-    }
+    // Les essais qui touchent à la demande de suppression ou suppriment
+    // l'entrepôt ne sont faits qu'avec un compte jetable (essaisSuppression) :
+    // une erreur dans les règles ne doit jamais pouvoir lancer la suppression
+    // du compte de test principal.
   ];
 }
 
@@ -370,7 +378,7 @@ function essaisProduits(db, uid, produitEssaiExiste) {
       operation: () => setDoc(nouveau(), produitValide({ unite: '' }))
     },
     {
-      nom: 'Supprimer un produit',
+      nom: 'Supprimer un produit (suppression du compte non demandée)',
       attendu: 'refuse',
       operation: () => deleteDoc(produitEssai)
     },
@@ -646,7 +654,7 @@ function essaisMouvements(db, uid, produitAvecStockExiste) {
       operation: () => updateDoc(doc(mesMouvements, idEntree), { motif: 'Modifié après coup' })
     },
     {
-      nom: 'Supprimer un mouvement enregistré',
+      nom: 'Supprimer un mouvement enregistré (suppression du compte non demandée)',
       attendu: 'refuse',
       operation: () => deleteDoc(doc(mesMouvements, idEntree))
     },
@@ -840,6 +848,203 @@ function essaisFournisseurs(db, uid) {
   ];
 }
 
+// Efface les données d'essai d'un compte jetable (passage précédent
+// interrompu), en suivant le parcours permis par les règles : demande de
+// suppression, puis effacement des données, puis de l'entrepôt.
+async function remettreAZero(db, uid) {
+  const entrepot = doc(db, 'users', uid);
+  const instantane = await getDocFromServer(entrepot);
+  if (!instantane.exists()) {
+    return;
+  }
+  if (instantane.data().suppressionDemandee !== true) {
+    await updateDoc(entrepot, { suppressionDemandee: true });
+  }
+  for (const nom of ['products', 'movements', 'suppliers']) {
+    const documents = await getDocsFromServer(collection(db, 'users', uid, nom));
+    for (const document_ of documents.docs) {
+      await deleteDoc(document_.ref);
+    }
+  }
+  await deleteDoc(entrepot);
+}
+
+// Suppression du compte (règles version 7, décisions 61 et 63). Uniquement
+// avec un compte jetable : voir lancerLesTests.
+function essaisSuppression(db, uid) {
+  const entrepot = doc(db, 'users', uid);
+  const mesProduits = collection(db, 'users', uid, 'products');
+  const mesMouvements = collection(db, 'users', uid, 'movements');
+  const mesFournisseurs = collection(db, 'users', uid, 'suppliers');
+  const produitSansStock = doc(mesProduits, 'essai-suppression-a');
+  const produitAvecStock = doc(mesProduits, 'essai-suppression-b');
+  const mouvement = doc(mesMouvements, 'essai-suppression-mouvement');
+  const fournisseur = doc(mesFournisseurs, 'essai-suppression-fournisseur');
+
+  const fiche = {
+    nom: 'Fournisseur d’essai (suppression)',
+    telephone: '',
+    whatsapp: '',
+    email: '',
+    adresse: '',
+    produitsFournis: '',
+    notes: '',
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  };
+  const toutEstVide = async () => {
+    for (const collection_ of [mesProduits, mesMouvements, mesFournisseurs]) {
+      if (!(await getDocsFromServer(query(collection_, limit(1)))).empty) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  return [
+    {
+      nom: 'Préparer : effacer les restes d’un passage précédent',
+      attendu: 'autorise',
+      operation: () => remettreAZero(db, uid)
+    },
+    {
+      nom: 'Créer l’entrepôt d’essai',
+      attendu: 'autorise',
+      operation: () => setDoc(entrepot, {
+        nomEntrepot: 'Essai suppression',
+        devise: 'HTG',
+        createdAt: serverTimestamp(),
+        suppressionDemandee: false
+      })
+    },
+    {
+      nom: 'Créer un produit (stock 0)',
+      attendu: 'autorise',
+      operation: () => setDoc(produitSansStock, produitValide())
+    },
+    {
+      nom: 'Créer un produit avec un stock de départ et son mouvement',
+      attendu: 'autorise',
+      operation: () => {
+        const lot = writeBatch(db);
+        lot.set(produitAvecStock, produitValide({ quantiteMilliemes: 2000, dernierMouvementId: mouvement.id }));
+        lot.set(mouvement, {
+          productId: produitAvecStock.id,
+          nomProduit: 'Produit d’essai (règles)',
+          unite: 'sac',
+          deltaMilliemes: 2000,
+          type: 'entree',
+          motif: 'Stock initial',
+          auteurUid: uid,
+          dateAppareil: Timestamp.now(),
+          dateServeur: serverTimestamp()
+        });
+        return lot.commit();
+      }
+    },
+    {
+      nom: 'Créer un fournisseur',
+      attendu: 'autorise',
+      operation: () => setDoc(fournisseur, fiche)
+    },
+    {
+      nom: 'Supprimer un produit sans demande de suppression',
+      attendu: 'refuse',
+      operation: () => deleteDoc(produitSansStock)
+    },
+    {
+      nom: 'Supprimer un mouvement sans demande de suppression',
+      attendu: 'refuse',
+      operation: () => deleteDoc(mouvement)
+    },
+    {
+      nom: 'Supprimer l’entrepôt sans demande de suppression',
+      attendu: 'refuse',
+      operation: () => deleteDoc(entrepot)
+    },
+    {
+      nom: 'Demander la suppression en changeant aussi le nom',
+      attendu: 'refuse',
+      operation: () => updateDoc(entrepot, { suppressionDemandee: true, nomEntrepot: 'Autre nom' })
+    },
+    {
+      nom: 'Demander la suppression du compte',
+      attendu: 'autorise',
+      operation: () => updateDoc(entrepot, { suppressionDemandee: true })
+    },
+    {
+      nom: 'Annuler la demande de suppression',
+      attendu: 'refuse',
+      operation: () => updateDoc(entrepot, { suppressionDemandee: false })
+    },
+    {
+      nom: 'Changer le nom de l’entrepôt pendant la suppression',
+      attendu: 'refuse',
+      operation: () => updateDoc(entrepot, { nomEntrepot: 'Autre nom' })
+    },
+    {
+      nom: 'Créer un produit pendant la suppression',
+      attendu: 'refuse',
+      operation: () => setDoc(doc(mesProduits), produitValide())
+    },
+    {
+      nom: 'Créer un fournisseur pendant la suppression',
+      attendu: 'refuse',
+      operation: () => setDoc(doc(mesFournisseurs), fiche)
+    },
+    {
+      nom: 'Supprimer un produit d’un autre compte',
+      attendu: 'refuse',
+      operation: () => deleteDoc(doc(db, 'users', AUTRE_COMPTE, 'products', 'essai'))
+    },
+    {
+      nom: 'Supprimer en un seul lot les produits, le mouvement et le fournisseur',
+      attendu: 'autorise',
+      operation: () => {
+        const lot = writeBatch(db);
+        lot.delete(produitSansStock);
+        lot.delete(produitAvecStock);
+        lot.delete(mouvement);
+        lot.delete(fournisseur);
+        return lot.commit();
+      }
+    },
+    {
+      nom: 'Il ne reste plus aucun produit, mouvement ni fournisseur',
+      attendu: 'vrai',
+      operation: toutEstVide
+    },
+    {
+      nom: 'Supprimer l’entrepôt, après la demande',
+      attendu: 'autorise',
+      operation: () => deleteDoc(entrepot)
+    },
+    {
+      nom: 'L’entrepôt n’existe plus',
+      attendu: 'vrai',
+      operation: async () => !(await getDocFromServer(entrepot)).exists()
+    },
+    {
+      nom: 'Créer un produit sans entrepôt',
+      attendu: 'refuse',
+      operation: () => setDoc(doc(mesProduits), produitValide())
+    }
+  ];
+}
+
+// Essais de la suppression du compte, avec un compte jetable seulement.
+async function lancerLesEssaisDeSuppression(db, utilisateur) {
+  const essais = essaisSuppression(db, utilisateur.uid);
+  let reussis = 0;
+  for (const essai of essais) {
+    const obtenu = await essayer(essai.operation);
+    if (ajouterLigne(essai.nom, essai.attendu, obtenu)) {
+      reussis += 1;
+    }
+  }
+  return { reussis, total: essais.length };
+}
+
 async function lancerLesTests(db, utilisateur) {
   const bouton = element('bouton-lancer');
   // Second contrôle, avant toute lecture ou écriture (décision 40).
@@ -853,6 +1058,19 @@ async function lancerLesTests(db, utilisateur) {
   element('message').hidden = true;
   element('bilan').hidden = true;
 
+  // Compte jetable : seulement les essais de la suppression du compte, qui
+  // créent eux-mêmes leurs données (décision 63).
+  if (estUnCompteJetable(utilisateur)) {
+    const resultat = await lancerLesEssaisDeSuppression(db, utilisateur);
+    const bilan = element('bilan');
+    bilan.textContent = `${resultat.reussis} essais réussis sur ${resultat.total} ` +
+      '(suppression du compte, compte jetable).';
+    bilan.className = resultat.reussis === resultat.total ? 'message-info' : 'message-erreur';
+    bilan.hidden = false;
+    bouton.disabled = false;
+    return;
+  }
+
   // Les essais portent sur l'entrepôt du compte : il doit déjà exister.
   let entrepot;
   let produitEssaiExiste;
@@ -865,6 +1083,11 @@ async function lancerLesTests(db, utilisateur) {
       return;
     }
     entrepot = instantane.data();
+    if (entrepot.suppressionDemandee === true) {
+      afficherMessage('La suppression de ce compte est en cours : les essais ne sont pas lancés.');
+      bouton.disabled = false;
+      return;
+    }
   } catch (erreur) {
     afficherMessage(
       'Impossible de lire l’entrepôt de ce compte (' + (erreur.code || 'erreur') + '). ' +

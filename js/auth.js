@@ -2,9 +2,13 @@
 // déconnexion. Deux méthodes : Google, ou adresse e-mail et mot de passe.
 
 import {
+  EmailAuthProvider,
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
+  deleteUser,
   onAuthStateChanged,
+  reauthenticateWithCredential,
+  reauthenticateWithPopup,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signInWithPopup,
@@ -40,6 +44,32 @@ export function envoyerReinitialisation(auth, email) {
 
 export function seDeconnecter(auth) {
   return signOut(auth);
+}
+
+// ---------- Suppression du compte (phase 7, décision 60) ----------
+
+// Méthode à utiliser pour se reconnecter : 'motDePasse' si le compte en a un,
+// sinon 'google'.
+export function methodeDeReconnexion(utilisateur) {
+  const methodes = (utilisateur && utilisateur.providerData) || [];
+  return methodes.some((methode) => methode.providerId === 'password') ? 'motDePasse' : 'google';
+}
+
+export function reconnecterAvecMotDePasse(utilisateur, motDePasse) {
+  const preuve = EmailAuthProvider.credential(utilisateur.email, motDePasse);
+  return reauthenticateWithCredential(utilisateur, preuve);
+}
+
+// À appeler directement depuis le clic, sans attente avant (fenêtre popup).
+export function reconnecterAvecGoogle(utilisateur) {
+  const fournisseur = new GoogleAuthProvider();
+  fournisseur.setCustomParameters({ prompt: 'select_account' });
+  return reauthenticateWithPopup(utilisateur, fournisseur);
+}
+
+// Supprime le compte de connexion lui-même (dernière étape).
+export function supprimerCompteDeConnexion(utilisateur) {
+  return deleteUser(utilisateur);
 }
 
 // Appelle `rappel` avec l'utilisateur connecté, ou null. Le premier appel

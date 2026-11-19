@@ -844,6 +844,33 @@ select:disabled {
   margin: 1rem 0 0.75rem;
 }
 
+/* ---------- Suppression du compte (phase 7) ---------- */
+
+/* La case « Je comprends… » : le texte peut tenir sur plusieurs lignes. */
+.case-confirmation {
+  align-items: flex-start;
+  margin: 0 0 1rem;
+  padding: 0.75rem 0.875rem;
+  background: var(--carte);
+  border: 1px solid #cfc9c0;
+  border-radius: var(--rayon);
+  font-weight: 600;
+}
+
+.case-confirmation input {
+  margin-top: 0.125rem;
+  flex: none;
+}
+
+.avancement {
+  padding: 0.875rem 1rem;
+  background: var(--carte);
+  border: 1px solid rgba(33, 53, 71, 0.08);
+  border-radius: var(--rayon-carte);
+  box-shadow: var(--ombre-carte);
+  font-weight: 600;
+}
+
 /* ---------- Pied de page ---------- */
 
 .pied {

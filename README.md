@@ -16,7 +16,7 @@ Le projet est en cours de construction. L'avancement est suivi dans `PLAN.md`.
 - Annuler une opération faite par erreur, depuis l'historique.
 - Signaler les opérations que le serveur a refusées, même après fermeture de l'application.
 - Tableau de bord : valeur du stock (indicative), recherche par nom, alertes « Stock bas » et « Rupture », boutons rapides `−1` et `+1`.
-- Paramètres : changer le nom de l'entrepôt ; changer la devise tant que l'entrepôt ne contient aucun produit.
+- Paramètres : changer le nom de l'entrepôt ; changer la devise tant que l'entrepôt ne contient aucun produit ; supprimer son compte et toutes ses données.
 - Carnet de fournisseurs : ajouter, modifier, supprimer, rechercher, et appeler ou écrire en un appui.
 
 ## Identité visuelle
@@ -83,6 +83,18 @@ Le bouton « Fournisseurs », sur l'écran des produits, ouvre le carnet. Il est
 
 Ce sont des informations sur d'autres personnes : n'enregistrer que ce qui est utile, et supprimer un fournisseur dont on n'a plus besoin.
 
+## Supprimer son compte
+
+Dans **Paramètres**, le bouton « Supprimer mon compte et mes données » efface **définitivement** l'entrepôt, tous les produits (même archivés), tout l'historique, le carnet de fournisseurs et le compte de connexion.
+
+1. Un écran explique ce qui sera effacé et rappelle d'exporter ses données avant (l'export Excel arrivera en phase 9).
+2. Double confirmation : cocher « Je comprends que tout sera supprimé définitivement » et taper `SUPPRIMER`.
+3. Reconnexion : mot de passe, ou fenêtre Google pour un compte Google. Sans Internet, rien n'est fait.
+4. L'écran « Suppression en cours » montre l'avancement. Si l'application se ferme ou si Internet coupe, la suppression reprend toute seule à la prochaine connexion (une demande de suppression ne s'annule pas).
+5. À la fin, la copie des données gardée par le navigateur est aussi effacée, et l'écran de connexion affiche « Votre compte et toutes vos données ont été supprimés ».
+
+Ne jamais essayer cette fonction avec un vrai compte : pour les essais, utiliser un compte jetable en `@example.com` (voir `PLAN.md`).
+
 ## Saisie des nombres
 
 - La virgule et le point sont tous deux acceptés pour les décimales : `2,5` ou `2.5`.
@@ -128,6 +140,8 @@ Tant que les règles publiées sont en retard sur le fichier, l'application affi
 À refaire après chaque publication des règles.
 
 Ces essais créent dans le compte de test deux produits « Produit d'essai (règles) ». Ils sont archivés à la fin de chaque passage et n'apparaissent donc pas dans la liste. Chaque passage ajoute aussi cinq mouvements à l'historique du compte de test, dont une opération et son annulation (impossibles à supprimer, par conception) ; leur somme est nulle. Un fournisseur d'essai est créé puis supprimé : il ne reste rien. Un passage dure environ une minute.
+
+**Essais de la suppression du compte :** connecté avec un compte jetable `test-suppression-…@example.com`, la même page lance à la place 20 essais des règles de suppression. Ils créent leurs propres données, demandent la suppression, vérifient les refus et les autorisations, puis effacent tout sauf le compte de connexion, qui peut resservir. Ces essais ne se lancent jamais avec un autre compte, et la série habituelle refuse de tourner sur un compte en cours de suppression.
 
 ## Tester les conversions de nombres
 
@@ -178,7 +192,9 @@ Sur GitHub Pages, le fichier vide `.nojekyll` doit rester à la racine : sans lu
 - **Première connexion sur un appareil :** elle demande Internet, pour se connecter et pour charger l'entrepôt une première fois.
 - **Réouverture sans Internet :** pas encore possible. Elle sera ajoutée avec l'installation sur téléphone (phase 10).
 - **Adresse e-mail non vérifiée :** l'inscription ne demande pas de confirmer l'adresse par e-mail. Une faute de frappe dans l'adresse empêche de recevoir l'e-mail de « Mot de passe oublié ».
-- **Suppression du compte :** annoncée dans le texte de confidentialité, elle n'existe pas encore (phase 7).
+- **Suppression du compte et quota :** chaque élément effacé compte comme une écriture (limite gratuite : 20 000 par jour pour toute l'application). Un très gros entrepôt peut finir de s'effacer le lendemain ; la reprise est automatique.
+- **Suppression du compte, cas rare :** si les données sont effacées mais que la toute dernière étape (le compte de connexion) échoue, le même appareil propose de terminer à la connexion suivante ; sur un autre appareil, le compte apparaît vide, avec « Créer votre entrepôt ».
+- **Suppression d'un compte Google :** la reconnexion par la fenêtre Google n'a pas pu être essayée avec un compte de test (seuls des comptes par mot de passe ont servi aux essais).
 - **Archivage définitif :** un produit archivé ne peut pas être remis dans la liste. Il reste dans la base avec son historique.
 - **Noms en double :** le formulaire refuse deux produits actifs du même nom, mais deux appareils hors ligne peuvent chacun créer le même nom avant de se synchroniser.
 - **Produit modifié sur deux appareils :** pour le nom, l'unité, le seuil et le prix, la dernière modification arrivée au serveur l'emporte.

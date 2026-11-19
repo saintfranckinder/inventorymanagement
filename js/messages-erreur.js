@@ -42,6 +42,13 @@ const MESSAGES = {
     'Cette adresse de site n’est pas autorisée pour la connexion (domaines autorisés dans Firebase).',
   'auth/operation-not-allowed': 'Cette méthode de connexion n’est pas activée.',
 
+  // Reconnexion avant la suppression du compte (phase 7)
+  'auth/user-mismatch':
+    'Ce compte Google n’est pas celui qui est connecté à MinStock. ' +
+    'Choisissez le même compte dans la fenêtre Google.',
+  'auth/requires-recent-login': 'Pour des raisons de sécurité, reconnectez-vous puis réessayez.',
+  'delai-depasse': 'Le serveur ne répond pas. Vérifiez la connexion Internet, puis réessayez.',
+
   // Réseau et serveur
   'auth/network-request-failed': 'Pas de connexion Internet. Se connecter à un compte demande Internet.',
   'auth/web-storage-unsupported':

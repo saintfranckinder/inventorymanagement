@@ -31,6 +31,15 @@ import {
   demarrerEcranProduits
 } from './ecran-produits.js';
 import {
+  CLE_COMPTE_SUPPRIME,
+  arreterEcranSuppression,
+  brancherEcranSuppression,
+  demarrerEcranSuppression,
+  reprendreSuppression,
+  suppressionPriseEnMain
+} from './ecran-suppression.js';
+import { suppressionCommenceeIci } from './suppression-compte.js';
+import {
   DEVISES,
   LONGUEUR_MAX_NOM_ENTREPOT,
   creerEntrepot,
@@ -41,7 +50,7 @@ import { demarrerFirebase, VERSION_SDK_FIREBASE } from './firebase-init.js';
 import { afficherMessage, afficherVue, effacerMessages, element, vueActuelle } from './interface.js';
 import { messageErreur } from './messages-erreur.js';
 
-const VERSION_APP = '0.9.1';
+const VERSION_APP = '0.10.0';
 
 // Écrans accessibles sans être connecté.
 const VUES_SANS_COMPTE = ['vue-connexion', 'vue-inscription', 'vue-oubli', 'vue-confidentialite'];
@@ -50,7 +59,7 @@ const VUES_SANS_COMPTE = ['vue-connexion', 'vue-inscription', 'vue-oubli', 'vue-
 // d'eux, une simple mise à jour de l'entrepôt ne doit pas le déplacer.
 const VUES_DE_TRAVAIL = [
   'vue-accueil', 'vue-produit', 'vue-mouvement', 'vue-historique', 'vue-parametres',
-  'vue-fournisseurs', 'vue-fournisseur'
+  'vue-fournisseurs', 'vue-fournisseur', 'vue-suppression'
 ];
 
 const AVERTISSEMENT_STOCKAGE =
@@ -63,6 +72,7 @@ let firebase = null;
 let utilisateur = null;
 let arreterEcouteEntrepot = null;
 let memoireHorsLigneVerifiee = false;
+let premierEtatConnu = false;
 
 // ---------- Affichage ----------
 
@@ -115,8 +125,39 @@ async function verifierMemoireHorsLigneUneFois() {
   }
 }
 
+// Arrête les écoutes des écrans de travail (déconnexion, suppression du compte).
+function arreterEcransDeTravail() {
+  arreterEcranProduits();
+  arreterEcranMouvements();
+  arreterEcranParametres();
+  arreterEcranFournisseurs();
+}
+
 function surEtatEntrepot(etat) {
   verifierMemoireHorsLigneUneFois();
+
+  // Suppression du compte commencée sur cet appareil : l'écran de suppression
+  // garde la main jusqu'au rechargement de la page (décision 62).
+  if (suppressionPriseEnMain()) {
+    arreterEcransDeTravail();
+    return;
+  }
+
+  // Suppression demandée (sur cet appareil ou un autre) : plus d'écoute des
+  // données, la suppression reprend où elle s'était arrêtée.
+  if (etat.existe && etat.donnees.suppressionDemandee === true) {
+    arreterEcransDeTravail();
+    reprendreSuppression();
+    return;
+  }
+
+  // L'entrepôt n'existe plus sur le serveur alors que cet appareil avait
+  // commencé une suppression : il ne reste que le compte de connexion.
+  if (!etat.existe && !etat.depuisCache && suppressionCommenceeIci(utilisateur.uid)) {
+    arreterEcransDeTravail();
+    reprendreSuppression();
+    return;
+  }
 
   if (etat.existe) {
     element('accueil-entrepot').textContent = etat.donnees.nomEntrepot;
@@ -132,10 +173,7 @@ function surEtatEntrepot(etat) {
     return;
   }
 
-  arreterEcranProduits();
-  arreterEcranMouvements();
-  arreterEcranParametres();
-  arreterEcranFournisseurs();
+  arreterEcransDeTravail();
 
   if (!etat.depuisCache) {
     // Le serveur confirme qu'aucun entrepôt n'existe : c'est un nouveau compte.
@@ -152,7 +190,34 @@ function surEtatEntrepot(etat) {
   );
 }
 
+// Après la suppression d'un compte, la page est rechargée : le message
+// s'affiche une fois sur l'écran de connexion (décision 62).
+function afficherMessageCompteSupprime() {
+  let resultat = null;
+  try {
+    resultat = window.sessionStorage.getItem(CLE_COMPTE_SUPPRIME);
+    window.sessionStorage.removeItem(CLE_COMPTE_SUPPRIME);
+  } catch {
+    return;
+  }
+  if (!resultat) {
+    return;
+  }
+  afficherMessage(
+    'info-connexion',
+    'Votre compte et toutes vos données ont été supprimés.' +
+    (resultat === 'complet'
+      ? ''
+      : ' La copie gardée par ce navigateur n’a pas pu être effacée : fermez les autres onglets de MinStock, ' +
+        'puis effacez les données du site dans les réglages du navigateur.')
+  );
+}
+
 function surErreurEntrepot(erreur) {
+  if (suppressionPriseEnMain()) {
+    // Fin de la suppression du compte : l'écran de suppression s'en occupe.
+    return;
+  }
   console.error(erreur);
   afficherProbleme(
     'Impossible de charger vos données',
@@ -166,20 +231,26 @@ function surChangementUtilisateur(nouvelUtilisateur) {
     arreterEcouteEntrepot();
     arreterEcouteEntrepot = null;
   }
-  arreterEcranProduits();
-  arreterEcranMouvements();
-  arreterEcranParametres();
-  arreterEcranFournisseurs();
+  arreterEcransDeTravail();
+  arreterEcranSuppression();
   utilisateur = nouvelUtilisateur;
   viderMotsDePasse();
+  // Le message « compte supprimé » ne se lit qu'au premier état de connexion
+  // après le rechargement de la page.
+  const premierEtat = !premierEtatConnu;
+  premierEtatConnu = true;
 
   if (!utilisateur) {
     if (!VUES_SANS_COMPTE.includes(vueActuelle())) {
       afficherVue('vue-connexion');
     }
+    if (premierEtat) {
+      afficherMessageCompteSupprime();
+    }
     return;
   }
 
+  demarrerEcranSuppression(firebase.db, firebase.auth);
   afficherVue('vue-chargement');
   arreterEcouteEntrepot = surveillerEntrepot(
     firebase.db,
@@ -371,6 +442,7 @@ async function demarrer() {
   brancherEcranMouvements();
   brancherEcranParametres();
   brancherEcranFournisseurs();
+  brancherEcranSuppression();
 
   surveillerConnexion(firebase.auth, surChangementUtilisateur);
 }

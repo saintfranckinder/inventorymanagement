@@ -33,6 +33,9 @@
     <section id="vue-connexion" data-vue hidden>
       <h2>Connexion</h2>
 
+      <!-- Message affiché après la suppression d'un compte (phase 7) -->
+      <p id="info-connexion" class="message-info" role="status" hidden></p>
+
       <button type="button" id="bouton-google" class="bouton bouton-secondaire">
         Continuer avec Google
       </button>
@@ -351,6 +354,86 @@
         <button type="submit" id="bouton-enregistrer-devise" class="bouton bouton-principal" hidden>Changer la devise</button>
         <button type="button" id="bouton-verifier-devise" class="bouton bouton-secondaire" hidden>Vérifier de nouveau</button>
       </form>
+
+      <!-- Suppression du compte (phase 7, décision 60) -->
+      <div class="bloc-parametres">
+        <h3>Supprimer mon compte</h3>
+        <p class="aide">
+          Efface définitivement votre entrepôt, vos produits, tout l'historique,
+          vos fournisseurs et votre compte de connexion.
+        </p>
+        <button type="button" id="bouton-supprimer-compte" class="bouton bouton-danger">Supprimer mon compte et mes données</button>
+      </div>
+    </section>
+
+    <!-- Supprimer mon compte : explication et double confirmation (phase 7) -->
+    <section id="vue-suppression" data-vue hidden>
+      <h2>Supprimer mon compte</h2>
+      <p>Cette action efface <strong>définitivement</strong> :</p>
+      <ul>
+        <li>votre entrepôt et ses paramètres ;</li>
+        <li>tous vos produits, même archivés ;</li>
+        <li>tout l'historique des mouvements ;</li>
+        <li>votre carnet de fournisseurs ;</li>
+        <li>votre compte de connexion.</li>
+      </ul>
+      <p class="avertissement">
+        Rien ne pourra être récupéré. Si vous voulez garder vos données,
+        exportez-les d'abord (l'export Excel sera ajouté dans une prochaine
+        version).
+      </p>
+
+      <form id="formulaire-suppression" novalidate>
+        <label class="case case-confirmation">
+          <input type="checkbox" id="suppression-comprendre">
+          Je comprends que tout sera supprimé définitivement.
+        </label>
+
+        <label for="suppression-mot">Pour confirmer, tapez SUPPRIMER</label>
+        <input id="suppression-mot" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false">
+
+        <div id="suppression-bloc-mdp">
+          <label for="suppression-mdp">Votre mot de passe</label>
+          <input id="suppression-mdp" type="password" autocomplete="current-password" data-mot-de-passe>
+          <label class="case">
+            <input type="checkbox" data-afficher-mdp="suppression-mdp">
+            Afficher le mot de passe
+          </label>
+        </div>
+        <p id="suppression-aide-google" class="aide" hidden>
+          Pour vérifier que c'est bien vous, une fenêtre Google va s'ouvrir :
+          choisissez le compte connecté à MinStock.
+        </p>
+
+        <p id="erreur-suppression" class="message-erreur" role="alert" hidden></p>
+
+        <button type="submit" id="bouton-confirmer-suppression" class="bouton bouton-danger">Supprimer définitivement</button>
+        <button type="button" id="bouton-annuler-suppression" class="bouton bouton-secondaire">Annuler</button>
+      </form>
+    </section>
+
+    <!-- Suppression en cours (phase 7, décision 62) -->
+    <section id="vue-suppression-en-cours" data-vue hidden>
+      <h2>Suppression en cours</h2>
+      <p id="suppression-avancement" class="avancement" role="status" aria-live="polite">Préparation…</p>
+      <p class="aide">
+        Gardez l'application ouverte. Si elle se ferme ou si Internet coupe,
+        la suppression reprendra toute seule à la prochaine connexion.
+      </p>
+
+      <p id="erreur-suppression-en-cours" class="message-erreur" role="alert" hidden></p>
+      <button type="button" id="bouton-reessayer-suppression" class="bouton bouton-principal" hidden>Réessayer</button>
+
+      <form id="formulaire-reconnexion-suppression" novalidate hidden>
+        <p>Pour terminer, Firebase demande de vous reconnecter.</p>
+        <div id="reconnexion-bloc-mdp">
+          <label for="reconnexion-mdp">Votre mot de passe</label>
+          <input id="reconnexion-mdp" type="password" autocomplete="current-password" data-mot-de-passe>
+        </div>
+        <button type="submit" class="bouton bouton-danger">Se reconnecter et terminer</button>
+      </form>
+
+      <button type="button" class="bouton bouton-secondaire" data-deconnexion>Se déconnecter</button>
     </section>
 
     <!-- Ajouter ou modifier un produit -->
