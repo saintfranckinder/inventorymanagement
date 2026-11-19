@@ -22,7 +22,8 @@ Dépôt GitHub : `saintfranckinder/minstock`, renommé par le propriétaire le 2
 | 6b | Carnet de fournisseurs (décisions 42 et 50 à 54) | **Terminée le 2026-11-18** (règles version 6 publiées par le propriétaire ; test sur smartphone réussi le même jour) |
 | — | Identité visuelle MinStock (décisions 55 à 58) et compteurs cliquables (décision 59) | **Terminée le 2026-11-18** (validées sur smartphone par le propriétaire) |
 | 7 | Suppression du compte (décisions 60 à 63) | **Terminée le 2026-11-18** (règles version 7 publiées par le propriétaire ; test sur smartphone réussi avec un compte jetable) |
-| 8 | Hors ligne et indicateur de synchronisation | **Prochaine étape** (voir section 8.7) |
+| 8 | Hors ligne et indicateur de synchronisation (décisions 64 à 68) | **Faite le 2026-11-19** ; essai en mode avion du propriétaire à faire (voir 8.7) |
+| 8b | Code SKU, type de stock, quantité à commander, prix de vente (décision 69) | **Prochaine étape** |
 | 9 | Export Excel | À faire |
 | 10 | Application installable (PWA) | À faire |
 | 11 | Données de démonstration | À faire |
@@ -583,7 +584,7 @@ Tests non exécutés :
 - **Résultat :** indicateur à quatre états, présenté comme approximatif ; messages pour les opérations refusées et « déjà enregistrées » ; avertissement avant déconnexion s'il reste des écritures en attente ; demande de stockage persistant au navigateur ; mention « En attente de synchronisation » qui ne fait plus bouger les boutons placés en dessous (défaut constaté au test sur smartphone de la phase 5).
 - **Tests :** étapes 1 à 7 et 9 à 11 de `DEMARRAGE.md` section 9 (application restée ouverte). L'étape 8 (rouvrir en mode avion) est testée en phase 10.
 
-**Plan présenté au propriétaire le 2026-11-18 (en attente de son accord, rien n'est codé)**
+**Plan présenté au propriétaire le 2026-11-18, accepté le 2026-11-19 (« Oui, commence ») : décisions 64 à 68**
 
 Quatre choix recommandés par l'assistant, à valider :
 
@@ -593,6 +594,63 @@ Quatre choix recommandés par l'assistant, à valider :
 4. **Nouvelle option dans Paramètres : « Effacer les données de cet appareil et me déconnecter »** (appareils partagés, section 4), refusée tant que des modifications attendent ; réutilise l'effacement de la copie locale de la phase 7.
 
 En plus, sans changement visible : demande de stockage persistant au navigateur (`navigator.storage.persist()`). Aucune modification des règles Firestore. Fichiers prévus : nouveau `js/indicateur-synchro.js` ; `index.html`, `css/style.css`, `js/app.js`, `js/ecran-produits.js`, `js/ecran-mouvements.js`, `js/produits.js`, `js/mouvements.js`, `js/ecran-parametres.js` ; version `0.11.0`. Essais : coupures simulées sur l'ordinateur (attention : `disableNetwork` de Firestore ne bloque pas les transactions, voir 8.5) ; vrai essai en mode avion par le propriétaire sur son téléphone, avec un guide pas à pas.
+
+**Compte rendu de la phase 8 (2026-11-19)**
+
+Choix validés par le propriétaire le 2026-11-19 : décisions 64 à 68. Le même jour, il a demandé et accepté la phase 8b (décision 69) et l'écartement du PEPS par lots, de la rotation, de l'EOQ et des notifications (décision 70). Les règles Firestore ne changent pas (version 7).
+
+Ce qui a été fait :
+
+- Nouveau `js/indicateur-synchro.js` : quatre états, délai d'affichage (1,5 s ; 3 s pour un « Hors ligne » déduit de la mémoire de l'appareil), explication au toucher, accès direct au bloc « Opérations refusées » en cas d'erreur. Sources : `navigator.onLine`, métadonnées des écoutes existantes (entrepôt, produits, mouvements, fournisseurs), file d'envoi de Firebase (`waitForPendingWrites`, vérifiée toutes les 3 secondes, opération locale et gratuite : elle couvre aussi un archivage ou une suppression de fournisseur, que les écoutes ne voient plus). Aucune lecture de plus.
+- En-tête : indicateur de hauteur fixe (48 pixels) à droite du logo ; explication sous l'en-tête.
+- Fiche produit : « En attente » à la place de « Quantité » (décision 65) ; la ligne ajoutée est supprimée. L'historique et les fournisseurs gardent leur ligne « En attente de synchronisation » (leurs boutons ne sont pas touchés au même moment).
+- « Se déconnecter » : vérification de la file d'envoi (2 secondes au plus), puis question si des modifications attendent (décision 66).
+- Paramètres, bloc « Appareil partagé » placé avant « Supprimer mon compte » : effacement refusé si des modifications de ce compte attendent, ou si un autre compte a des opérations notées « en attente » sur l'appareil (sa copie serait effacée aussi) ; sinon question, arrêt des écoutes, déconnexion, effacement de la copie (fonction de la phase 7), rechargement et message sur l'écran de connexion (décision 67).
+- Stockage durable demandé une fois l'entrepôt chargé (décision 68) ; résultat noté dans la console.
+- `js/operations-en-attente.js` : plusieurs fonctions peuvent suivre les changements de la liste (bloc des refus et indicateur) ; nouvelle fonction qui repère les opérations en attente des autres comptes.
+- Version `0.11.0`.
+
+Tests exécutés par l'assistant, dans le navigateur intégré, sur `http://localhost:8080/`, avec le compte `test-phase3@example.com`, à 360 pixels de large :
+
+| Test | Résultat |
+|---|---|
+| Connexion : indicateur « Synchronisé » ; caché sur les écrans sans compte | Réussi |
+| En-tête : hauteur fixe de 48 pixels pour les quatre états ; « En attente de synchronisation » sur deux lignes ; aucun défilement horizontal | Réussi |
+| Réseau de Firestore coupé (`disableNetwork`) : « Hors ligne » au bout de 3 secondes | Réussi |
+| `+1` sur « Ciment » sans réseau : « En attente » à la place de « Quantité », de 7,5 à 8,5 sac ; positions des boutons `−1`, `+1`, « Mouvement de stock », « Modifier » et de la carte suivante **identiques au pixel près** ; indicateur « Hors ligne », « Envoi en attente » | Réussi |
+| Toucher l'indicateur : explication avec « Des modifications attendent d'être envoyées » ; second toucher : fermée | Réussi |
+| « Se déconnecter » avec une modification non envoyée : « Vérification… », puis question ; réponse « Annuler » : toujours connecté | Réussi |
+| « Effacer les données de cet appareil » avec une modification non envoyée : refusé avec explication, aucune question posée | Réussi |
+| Réseau rétabli : « Synchronisé » au bout de 3 secondes ; « Quantité » revient ; 8 500 millièmes sur le serveur | Réussi |
+| `navigator.onLine` forcé à faux : « Hors ligne » au bout de 1,5 seconde ; retour à « Synchronisé » après rétablissement | Réussi |
+| Refus simulé (opération sur un document inexistant) : « Erreur de synchronisation » ; toucher depuis l'historique : écran des produits, bloc « Opérations refusées » en haut, focus sur son titre ; « J'ai noté » : retour à « Synchronisé » | Réussi |
+| `−1` avec Internet : l'indicateur reste sur « Synchronisé » (pas de clignotement), la fiche affiche « En attente » un instant ; « Ciment » revenu à 7,5 sac | Réussi |
+| Effacement de l'appareil sans modification en attente : question, déconnexion, rechargement, message « Les données de cet appareil ont été effacées… » ; base locale Firestore supprimée du navigateur | Réussi |
+| Opération « en attente » simulée pour un autre compte : effacement refusé avec explication ; sans elle, la question s'affiche et « Annuler » ne fait rien | Réussi |
+| « Se déconnecter » sans modification en attente : aucune question | Réussi |
+| Paramètres à 360 pixels : bloc « Appareil partagé », bouton de 70 pixels de haut (deux lignes), aucun défilement horizontal | Réussi |
+| Non-régression : `tests-nombres.html` 104 sur 104 ; `tests-regles.html` 88 sur 88 | Réussi |
+| Console : aucune erreur de l'application (seulement l'erreur du refus simulé, provoquée par l'essai) | Réussi |
+
+Tests non exécutés (à faire par le propriétaire, guide donné le 2026-11-19) :
+
+- Vrai mode avion sur le téléphone (`DEMARRAGE.md`, section 9, étapes 1 à 7 et 9 à 11), dont l'affichage des deux heures quand l'écart dépasse 5 minutes, la liste des fournisseurs et « Voir plus » sans Internet.
+- Wi-Fi sans Internet (délai réel avant « Hors ligne »).
+- Deux appareils sur le même compte.
+- Stockage durable : refusé par le navigateur intégré (« non » dans la console) ; résultat sur le téléphone inconnu.
+- Lecteur d'écran réel.
+
+Constats :
+
+- Le compte de test contient 2 mouvements de plus sur « Ciment » (+1 puis −1), plus 5 de `tests-regles.html`. La copie locale du navigateur intégré a été effacée par l'essai, puis rechargée.
+- La liste « en attente » simulée pour un autre compte et l'opération refusée simulée ont été retirées après les essais.
+- `disableNetwork` a suffi pour ces essais (aucune transaction en jeu) ; il ne remplace pas le vrai mode avion.
+
+### Phase 8b : code SKU, type de stock, quantité à commander, prix de vente
+- **Demandée par le propriétaire le 2026-11-19** (décision 69). Fonctions écartées de la première version : décision 70.
+- **Résultat :** quatre champs facultatifs dans la fiche produit, affichés sur la carte ; recherche par code SKU ; filtre par type de stock (sans lecture de plus) ; règles Firestore version 8 qui contrôlent ces champs et acceptent aussi les produits qui ne les ont pas ; `CLAUDE.md` mis à jour (sections 4 et 5).
+- **Avant de coder :** trancher avec le propriétaire : code SKU obligatoire ou non ; liste exacte des types ; affichage de la marge par unité ; avertissement si le prix de vente est plus bas que le prix d'achat ; valeur du stock au prix de vente (indicative).
+- **Tests :** `tests-regles.html` complété (types, longueurs, liste des types, produit sans les nouveaux champs accepté, modification d'un produit ancien) ; `tests-nombres.html` si un calcul est ajouté (marge, valeur au prix de vente) ; code SKU en double signalé ; produits existants affichés sans erreur ; ordre de publication : règles d'abord, code ensuite ; smartphone.
 
 ### Phase 9 : export Excel
 - **Résultat :** `stock_AAAA-MM-JJ.xlsx`, feuilles `Stock`, `Historique` et `Fournisseurs` (décision 42), SheetJS local (pris sur le site officiel de l'éditeur, version fixe), avertissements hors ligne / en attente.
@@ -645,7 +703,7 @@ Ces points viennent de l'analyse et n'ont pas été testés.
 4. **Une ancienne copie des fichiers existe dans `C:\Inventory Management`.** Elle n'est plus utilisée et ne contient ni ce plan ni les nouvelles décisions. Le propriétaire peut la supprimer.
 5. **Le dépôt sur GitHub était vide au moment du premier commit local (phase 0).** La première publication se fait dans GitHub Desktop avec le bouton **Publish branch** ; les suivantes avec **Push origin**.
 6. **Le fichier facultatif `.claude/settings.json`** proposé dans `DEMARRAGE.md` (phase 0) n'a pas été créé : le propriétaire ne l'a pas demandé.
-7. **La ligne « En attente de synchronisation » fait bouger un instant les boutons placés en dessous** (constaté le 2026-11-18 sur smartphone, après un appui sur `+1` ou `−1`). Sans danger : au pire, un appui tombe sur « Modifier », qui s'annule. Correction prévue en phase 8.
+7. *(Corrigé le 2026-11-19, phase 8, décision 65 : « En attente » remplace le mot « Quantité » ; positions des boutons vérifiées identiques.)* La ligne « En attente de synchronisation » faisait bouger un instant les boutons placés en dessous (constaté le 2026-11-18 sur smartphone, après un appui sur `+1` ou `−1`).
 
 ## 6. Écarts corrigés entre les décisions validées et les autres fichiers
 
@@ -687,11 +745,11 @@ Règles de conception retenues pour le code :
 
 ### 8.1 Phase actuelle
 
-- **Phase 7 (suppression du compte) terminée le 2026-11-18**, test sur smartphone réussi avec un compte jetable. Phases 5, 6, 6b et l'étape « identité visuelle » terminées le même jour. Prochaine étape : **phase 8** (hors ligne et indicateur de synchronisation). Plan présenté au propriétaire le 2026-11-18 ; rien n'est codé avant son accord.
-- Version de l'application : `0.10.0`. Règles Firestore : **version 7**, publiée dans la console par le propriétaire le 2026-11-18, vérifiée active le même jour (série habituelle 88 sur 88 ; série « suppression » 20 sur 20).
+- **Phase 8 (hors ligne et indicateur) faite le 2026-11-19**, tests sur l'ordinateur réussis ; reste l'essai en mode avion du propriétaire sur son téléphone. Phase 7 terminée le 2026-11-18. Prochaine étape : **phase 8b** (code SKU, type de stock, quantité à commander, prix de vente : décision 69), à commencer par les questions de détail de la section 2.
+- Version de l'application : `0.11.0`. Règles Firestore : **version 7** (inchangées en phase 8), publiée dans la console par le propriétaire le 2026-11-18 ; `tests-regles.html` 88 sur 88 le 2026-11-19.
 - Dépôt GitHub : `saintfranckinder/minstock`, **public**. Site : `https://saintfranckinder.github.io/minstock/` (GitHub Pages, branche `main`, dossier racine).
-- Dépôt Git, branche `main` : `cecf8d3` (phases 0 et 1), `48d55b3` (phase 2), `f09bf30` (phase 3), `96f2a3d` (phase 4a), `d8f1b5b` (phase 4b), `2f53da4` (note de passation), `b26abb6` (dépôt renommé), `e166a30` (recherche de secrets), `d5a7808` (décisions 40 et 41), `86d4eb4` (mise en ligne), `e1a5c70` (fin de l'étape « dépôt public »), `e202b2a` (décisions 42 et 43), `7e156a3` (phase 5), `eb40c59` (test sur smartphone de la phase 5), `456dff6` (phase 6), `de2ef92` (test sur smartphone de la phase 6), `14e00c9` (phase 6b), `36f5d20` (test sur smartphone de la phase 6b), `6eeb438` (identité visuelle), `c95d942` (compteurs cliquables), `f60525d` (test sur smartphone des compteurs), `d952342` (phase 7), `b2cc014` (test sur smartphone de la phase 7), puis cette note de passation. Le propriétaire envoie chaque commit avec **Push origin** dans GitHub Desktop ; le site se met à jour quelques minutes après.
-- **État de l'envoi sur GitHub (vérifié le 2026-11-18) :** GitHub a reçu jusqu'à `d952342` : le site en ligne est en version `0.10.0`, identique au code. Restent à envoyer : `b2cc014` et cette note (documentation seulement).
+- Dépôt Git, branche `main` : `cecf8d3` (phases 0 et 1), `48d55b3` (phase 2), `f09bf30` (phase 3), `96f2a3d` (phase 4a), `d8f1b5b` (phase 4b), `2f53da4` (note de passation), `b26abb6` (dépôt renommé), `e166a30` (recherche de secrets), `d5a7808` (décisions 40 et 41), `86d4eb4` (mise en ligne), `e1a5c70` (fin de l'étape « dépôt public »), `e202b2a` (décisions 42 et 43), `7e156a3` (phase 5), `eb40c59` (test sur smartphone de la phase 5), `456dff6` (phase 6), `de2ef92` (test sur smartphone de la phase 6), `14e00c9` (phase 6b), `36f5d20` (test sur smartphone de la phase 6b), `6eeb438` (identité visuelle), `c95d942` (compteurs cliquables), `f60525d` (test sur smartphone des compteurs), `d952342` (phase 7), `b2cc014` (test sur smartphone de la phase 7), `84b6e87` (note de passation), puis le commit de la phase 8. Le propriétaire envoie chaque commit avec **Push origin** dans GitHub Desktop ; le site se met à jour quelques minutes après.
+- **État de l'envoi sur GitHub (vu dans la copie locale le 2026-11-19, sans interroger GitHub) :** GitHub a reçu jusqu'à `d952342` (version `0.10.0` en ligne). Restent à envoyer : `b2cc014`, `84b6e87` et le commit de la phase 8 (version `0.11.0`).
 - **Dossier de la session :** l'outil de travail peut s'ouvrir sur le dossier parent `C:\GitHub\Inventory Management` ; le dépôt reste `C:\GitHub\Inventory Management\inventorymanagement` (utiliser des chemins complets, et `git -C <dépôt>`).
 
 ### 8.2 Travail terminé
@@ -710,6 +768,7 @@ Règles de conception retenues pour le code :
 | 6b | Carnet de fournisseurs : liste, recherche, « Appeler » / « WhatsApp » / « E-mail », ajout, modification, suppression ; règles version 6 | `tests-regles.html` : 90 sur 90 ; compte rendu de la phase 6b ; test sur smartphone réussi |
 | Identité | Nom MinStock, symbole SVG, police Montserrat, couleurs et style de la maquette, compteurs de la carte de valeur (cliquables) | compte rendu de l'étape « identité visuelle » ; tests sur smartphone réussis |
 | 7 | Suppression du compte et de toutes ses données : double confirmation, reconnexion, effacement par paquets, reprise automatique, effacement de la copie locale ; règles version 7 | `tests-regles.html` : 88 sur 88 et 20 sur 20 (compte jetable) ; suppressions complète et interrompue réussies ; compte rendu de la phase 7 |
+| 8 | Indicateur de synchronisation, « En attente » à la place de « Quantité », avertissement de déconnexion, « Effacer les données de cet appareil », stockage durable demandé | `tests-nombres.html` : 104 sur 104 ; `tests-regles.html` : 88 sur 88 ; coupures simulées (compte rendu de la phase 8) ; mode avion sur téléphone à faire |
 
 Les tests des phases 2 à 7 ont été exécutés par l'assistant dans le navigateur intégré, sur `http://localhost:8080/`, avec les comptes de test (et des comptes jetables pour la phase 7). Tests sur smartphone faits par le propriétaire le 2026-11-18, sur le site en ligne, tous réussis : étape « dépôt public », phases 5, 6 et 6b, identité visuelle, compteurs cliquables, phase 7 (avec un compte jetable).
 
@@ -728,21 +787,22 @@ Les tests des phases 2 à 7 ont été exécutés par l'assistant dans le navigat
 | *(Fait le 2026-11-18 pour les phases 5, 6, 6b, l'identité et la phase 7.)* Affichage sur smartphone, à refaire pour chaque nouvel écran | Phases 8, 9, 10 |
 | *(Fait le 2026-11-18 par le propriétaire ; lisibilité en extérieur non précisée.)* Tableau de bord sur smartphone : recherche, boutons `−1` / `+1` au doigt, alertes | Phase 5 (propriétaire) |
 | *(Fait le 2026-11-18 avec le second compte de test.)* Second compte réel qui ne voit pas les données du premier | Étape « dépôt public » |
-| *(Avertissement d'archivage fait le 2026-11-18.)* Affichage des deux heures quand l'écart dépasse 5 minutes | Phase 8 |
+| *(Avertissement d'archivage fait le 2026-11-18.)* Affichage des deux heures quand l'écart dépasse 5 minutes | Phase 8 (propriétaire, mode avion) |
+| *(Indicateur, « En attente », déconnexion et effacement de l'appareil vérifiés le 2026-11-19 sur l'ordinateur, coupures simulées.)* Mode avion réel sur le téléphone : `DEMARRAGE.md` section 9, étapes 1 à 7 et 9 à 11 ; Wi-Fi sans Internet | Phase 8 (propriétaire) |
 | *(Fait le 2026-11-18 par le propriétaire.)* Historique et Paramètres sur smartphone : annuler une opération au doigt, renommer l'entrepôt, devise bloquée | Phase 6 (propriétaire) |
 | *(Fait le 2026-11-18 par le propriétaire.)* Fournisseurs sur smartphone : ajouter, rechercher, « Appeler » et « WhatsApp » avec son propre numéro, modifier, supprimer | Phase 6b (propriétaire) |
-| Liste des fournisseurs sans Internet (mode avion) | Phase 8 |
+| Liste des fournisseurs sans Internet (mode avion) | Phase 8 (propriétaire) |
 | *(Fait le 2026-11-18 par le propriétaire.)* Suppression du compte sur smartphone, **avec un compte jetable** | Phase 7 (propriétaire) |
 | Suppression d'un compte Google (reconnexion par la fenêtre Google) ; reconnexion exigée par Firebase pour la dernière étape ; coupure réelle pendant la suppression ; deux appareils pendant la suppression | Phases 8 et 12 |
-| Hors ligne réel (mode avion) : ajout de produit, mouvement, retour en ligne ; coupure entre l'envoi et la réponse ; « Voir plus » sans Internet ; premier chargement sans Internet sur un nouvel appareil | Phase 8 |
+| Hors ligne réel (mode avion) : ajout de produit, mouvement, retour en ligne ; coupure entre l'envoi et la réponse ; « Voir plus » sans Internet ; premier chargement sans Internet sur un nouvel appareil | Phase 8 (propriétaire) ou 12 |
 | Deux appareils qui modifient le même produit | Phase 8 ou 12 |
 | Réouverture de l'application en mode avion | Phase 10 |
 
 Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé par le propriétaire pendant la phase 3, et le test « Serveur injoignable » n'a plus d'objet (la page de vérification a été remplacée en phase 3 ; le comportement hors ligne se teste en phases 8 et 10).
 
-**Étapes du plan :** phases 8 à 13 (section 2). La phase 8 attend l'accord du propriétaire sur son plan (section 2, phase 8 : quatre choix recommandés).
+**Étapes du plan :** phases 8b à 13 (section 2). La phase 8b commence par cinq questions de détail au propriétaire (section 2, phase 8b).
 
-**Questions encore ouvertes (section 4) :** « Effacer les données de cet appareil » (choix 4 du plan de la phase 8) ; taille d'entrepôt raisonnable à annoncer (environ 500 produits) ; produits archivés dans l'export Excel (phase 9) ; options facultatives.
+**Questions encore ouvertes (section 4) :** taille d'entrepôt raisonnable à annoncer (environ 500 produits) ; produits archivés dans l'export Excel (phase 9) ; options facultatives. *(« Effacer les données de cet appareil » : tranché, décision 67.)*
 
 **À ajouter en phase 9 :** un bouton « Exporter » sur l'écran « Supprimer mon compte » (décision 60) et la feuille `Fournisseurs` de l'export (décision 42).
 
@@ -754,9 +814,10 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 
 | Fichier | Rôle | Phases |
 |---|---|---|
-| `index.html`, `css/style.css` | Tous les écrans de l'application ; identité visuelle (couleurs en variables au début de `style.css`) | 2, 3, 4a, 4b, 5, 6, 6b, identité, 7 |
+| `index.html`, `css/style.css` | Tous les écrans de l'application ; identité visuelle (couleurs en variables au début de `style.css`) ; indicateur de synchronisation dans l'en-tête | 2, 3, 4a, 4b, 5, 6, 6b, identité, 7, 8 |
 | `images/logo-minstock.svg` | Symbole du logo MinStock, aussi icône d'onglet | identité |
-| `js/app.js` | Démarrage, enchaînement des écrans, connexion ; reprise de la suppression du compte ; numéro de version (`VERSION_APP`) | 2, 3, 4a, 4b, 5, 6, 6b, identité, 7 |
+| `js/app.js` | Démarrage, enchaînement des écrans, connexion ; reprise de la suppression du compte ; avertissement de déconnexion, « Effacer les données de cet appareil », stockage durable ; numéro de version (`VERSION_APP`) | 2, 3, 4a, 4b, 5, 6, 6b, identité, 7, 8 |
+| `js/indicateur-synchro.js` | Indicateur de synchronisation (quatre états, approximatif) ; « des modifications attendent-elles ? » pour la déconnexion et l'effacement | 8 |
 | `js/fournisseurs.js` | Lecture et écriture des fournisseurs ; limites des champs (décision 54) | 6b |
 | `js/ecran-fournisseurs.js` | Carnet de fournisseurs : liste, recherche, liens de contact, formulaire, suppression | 6b |
 | `js/firebase-config.js` | Configuration web Firebase (ce n'est pas un secret) | 2 |
@@ -770,9 +831,9 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 | `js/interface.js` | Fonctions d'affichage partagées ; texte comparable pour les recherches | 4a, 6b |
 | `js/nombres.js` | **Seule** conversion saisie ↔ entiers ; valeur d'une ligne et total du stock | 4a, 5 |
 | `js/produits.js` | Lecture et écriture des produits ; stock de départ ; « l'entrepôt contient-il un produit ? » | 4a, 4b, 6 |
-| `js/ecran-produits.js` | Tableau de bord (valeurs, recherche, alertes, `−1` / `+1`, compteurs et leurs filtres) et formulaire des produits | 4a, 4b, 5, identité |
+| `js/ecran-produits.js` | Tableau de bord (valeurs, recherche, alertes, `−1` / `+1`, compteurs et leurs filtres, « En attente » à la place de « Quantité ») et formulaire des produits | 4a, 4b, 5, identité, 8 |
 | `js/mouvements.js` | Lot d'une opération de stock ; lecture de l'historique ; identifiant `annulation-…` | 4b, 6 |
-| `js/operations-en-attente.js` | Suivi local des opérations non confirmées (`localStorage`, clé `operations-en-attente:{uid}`) | 4b |
+| `js/operations-en-attente.js` | Suivi local des opérations non confirmées (`localStorage`, clé `operations-en-attente:{uid}`) ; opérations en attente des autres comptes | 4b, 8 |
 | `js/ecran-mouvements.js` | Formulaire de mouvement, `envoyerMouvement` (seul chemin d'envoi d'un mouvement), historique avec « Annuler cette opération », opérations refusées | 4b, 5, 6 |
 | `firestore.rules` | Règles de sécurité, version 7 | 2, 3, 4a, 4b, 6b, 7 |
 | `tests-regles.html`, `js/tests-regles.js` | **Ne jamais y ajouter d'essai qui touche à `suppressionDemandee` ou supprime l'entrepôt dans la série habituelle** (danger évité en phase 7). Série habituelle : 91 essais des règles sur le vrai serveur, 88 quand les produits d'essai existent déjà (compte de test en `@example.com` uniquement, décision 40 ; environ une minute). Série « suppression du compte » : 20 essais, seulement avec un compte jetable `test-suppression…@example.com` (décision 63) | 3, 4a, 4b, dépôt public, 6, 6b, 7 |
@@ -782,7 +843,7 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 | `.gitignore`, `.gitattributes` | Fichiers exclus de Git ; `vendor/*.js` jamais modifiés par Git ; `*.woff2` en binaire | 0, 2, identité |
 | `.nojekyll` | Fichier vide : GitHub Pages publie tout tel quel (décision 41) | dépôt public |
 | `CLAUDE.md`, `DEMARRAGE.md` | Cahier des charges et méthode de travail ; modifiés avec l'accord du propriétaire (fournisseurs, annulation, suppression au lieu d'archivage des fournisseurs : section 6 de ce fichier) | 1, évolutions 42 et 43, 6b |
-| `PLAN.md`, `DECISIONS.md`, `README.md` | Suivi, décisions 1 à 63, documentation | Toutes |
+| `PLAN.md`, `DECISIONS.md`, `README.md` | Suivi, décisions 1 à 70, documentation | Toutes |
 
 **Hors Git :** `.env.test` contient l'adresse et le mot de passe des deux comptes de test et des comptes jetables `test-suppression-1` à `-3@example.com` (2 et 3 supprimés par les essais de la phase 7 ; 1 actif, entrepôt d'essai vide, réservé à la série « suppression » de `tests-regles.html`). Il est ignoré par Git et n'apparaît dans aucun commit (vérifié le 2026-11-18).
 
@@ -795,16 +856,19 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 3. **Git for Windows demandé à tort.** Le Git de GitHub Desktop suffit (section 5, point 2).
 4. **Port 8080 déjà occupé.** Quand le propriétaire a lancé `demarrer.bat`, un second serveur ne démarre pas (« Impossible de demarrer le serveur sur le port 8080 ») : sans gravité, il suffit d'utiliser celui qui tourne. Arrêter le serveur lancé par l'assistant fait apparaître une tâche « échouée » : sans gravité.
 5. **Outils du navigateur intégré.** Un passage de `tests-regles.html` dure environ une minute, plus que le délai d'un appel de script (45 secondes) : lancer les essais, puis lire le bilan dans un second appel. Un onglet qui affiche un fichier local ne peut pas changer d'adresse : un nouvel onglet s'ouvre, sans conséquence.
-6. **Un seul défaut connu dans le code, sans danger :** la ligne « En attente de synchronisation » fait bouger un instant les boutons placés en dessous (section 5, point 7 ; correction prévue en phase 8). Retouches mineures faites pendant les tests : message « adresse déjà utilisée » (phase 3) ; effacement du message d'erreur du formulaire de produit (phase 4a) ; « le stock restera négatif » (phase 6) ; longueurs écrites « 1 000 » et nom du fournisseur existant dans l'avertissement de doublon (phase 6b) ; alignement de l'en-tête (identité) ; tournure du message d'arrêt de la suppression (phase 7).
+6. *(Le défaut de la ligne « En attente de synchronisation » qui faisait bouger les boutons est corrigé en phase 8.)* Retouches mineures faites pendant les tests : message « adresse déjà utilisée » (phase 3) ; effacement du message d'erreur du formulaire de produit (phase 4a) ; « le stock restera négatif » (phase 6) ; longueurs écrites « 1 000 » et nom du fournisseur existant dans l'avertissement de doublon (phase 6b) ; alignement de l'en-tête (identité) ; tournure du message d'arrêt de la suppression (phase 7).
 7. **Danger évité dans `tests-regles.html` (phase 7).** L'essai « Demander la suppression du compte », qui attendait un refus, aurait été accepté par les règles version 7 et aurait lancé la suppression du compte de test principal. Il a été retiré avant la publication des règles. Leçon : tout essai qui touche à `suppressionDemandee` ou supprime l'entrepôt se fait uniquement avec un compte jetable (décision 63).
 8. **Couper le réseau de Firestore depuis la page (`disableNetwork`) n'arrête pas les transactions** (phase 7) : un essai « sans réseau » a réellement envoyé une demande de suppression (compte jetable 3, sans conséquence). Pour simuler l'absence d'Internet, forcer `navigator.onLine` à faux, ou faire échouer `fetch` vers `identitytoolkit` ; le vrai essai se fait en mode avion sur le téléphone.
 9. **Commandes Git : « Exit code 255 » alors que le commit est fait.** Git écrit des avertissements de fins de ligne (LF/CRLF) sur la sortie d'erreur ; l'outil le signale comme une erreur. Toujours vérifier avec `git log --oneline -1`. Un message de commit contenant des guillemets droits casse la commande PowerShell : écrire les messages sans guillemets.
 10. **Navigateur intégré.** Quand le panneau est caché, captures d'écran et clics échouent parfois (« tab not ready ») : réessayer, ou passer par la lecture de la page et le JavaScript. Juste après le démarrage du serveur local, une navigation peut échouer : réessayer après une seconde. En largeur 360 pixels simulée, les captures peuvent être rognées : mesurer les éléments plutôt que se fier à l'image.
 11. **PDF de la maquette illisible directement** (programme `pdftoppm` absent) : les 8 images JPEG ont été extraites du PDF par un petit script PowerShell (lecture seule), dans le dossier temporaire de la session.
+12. **Saisir le mot de passe de test sans l'écrire dans la conversation (phase 8).** Dans le navigateur intégré, coller (Ctrl+V) et lire le presse-papiers ne fonctionnent pas. Méthode utilisée : un petit script PowerShell, gardé dans le dossier temporaire de la session, lit la valeur dans `.env.test` et la sert **une seule fois** sur `http://localhost:8091/` à la page `http://localhost:8080/` (en-tête CORS), puis s'arrête (au plus 120 secondes) ; la page la place dans le champ et envoie le formulaire. La valeur n'apparaît ni à l'écran ni dans la conversation.
+13. **Fichier `.claude/launch.json` (phase 8).** Le serveur local est lancé depuis le dossier parent `C:\GitHub\Inventory Management` par `.claude/launch.json` (configuration `minstock-local` : `powershell -File inventorymanagement/outils/serveur-local.ps1 -SansNavigateur`, port 8080). Ce fichier est hors du dépôt Git.
+14. **Simuler une coupure sur l'ordinateur (phase 8).** Dans la page, `import('/vendor/firebase-firestore.js')` et `getFirestore(getApp())` donnent la même instance que l'application : `disableNetwork` / `enableNetwork` suffisent pour l'indicateur et les écritures en attente (pas pour les transactions, point 8). Forcer `navigator.onLine` à faux et envoyer l'événement `offline` teste l'autre source de l'indicateur.
 
 ### 8.6 Décisions prises
 
-Toutes sont dans `DECISIONS.md` (63 décisions, aucune effacée) :
+Toutes sont dans `DECISIONS.md` (70 décisions, aucune effacée) :
 
 - **1 à 7 (choix initiaux) :** Firestore en plan Spark ; connexion Google et e-mail ; quantités et prix en entiers ; `dernierMouvementId` ; GitHub Pages ; publication du code par le propriétaire.
 - **8 à 15 (audit) :** page `tests-regles.html` à la place du simulateur ; règles tolérantes au hors-ligne et suivi local des opérations ; dépôt public dès la fin de la phase 4b ; SDK local corrigé et serveur local ; règles produit-mouvement complétées ; suppression du compte avec reconnexion d'abord ; phase 4 coupée en deux ; dossier de travail.
@@ -820,13 +884,15 @@ Toutes sont dans `DECISIONS.md` (63 décisions, aucune effacée) :
 - **55 à 58 (identité visuelle) :** nom « MinStock » ; identité appliquée sans ajouter ni retirer de fonction (couleurs vérifiées, éléments de la maquette hors périmètre non repris) ; police Montserrat locale ; symbole SVG et trois compteurs dans la carte de valeur.
 - **59 (demande du propriétaire) :** compteurs cliquables qui filtrent la liste des produits ; la liste filtrée ne bouge pas sous le doigt.
 - **60 à 63 (phase 7) :** double confirmation et reconnexion avant la suppression ; règles version 7 (demande sans retour, effacements seulement après la demande, ajouts bloqués pendant la suppression) ; déroulement par paquets de 100 (produits avant mouvements), reprise automatique, effacement de la copie locale ; essais avec des comptes jetables.
+- **64 à 68 (phase 8) :** indicateur de synchronisation à quatre états dans l'en-tête, approximatif ; « En attente » à la place de « Quantité » ; avertissement avant « Se déconnecter » ; « Effacer les données de cet appareil et me déconnecter » ; stockage durable demandé au navigateur.
+- **69 et 70 (demandes du propriétaire du 2026-11-19) :** phase 8b (code SKU, type de stock, quantité à commander, prix de vente, tous facultatifs ; règles version 8) ; PEPS par lots, rotation, EOQ et notifications écartés de la première version.
 
 Les règles de conception de la section 7 restent à respecter dans toute la suite.
 
 ### 8.7 Prochaine action précise
 
-*(La phase 7 est terminée, test sur smartphone compris. Le plan de la phase 8 a été présenté au propriétaire le 2026-11-18 ; sa réponse est attendue. Rien de la phase 8 n'est codé.)*
+*(Phase 8 faite le 2026-11-19, tests sur l'ordinateur réussis, commit local fait. Guide de l'essai en mode avion donné au propriétaire le même jour.)*
 
-1. **Propriétaire :** répondre au plan de la phase 8 (section 2, phase 8 : quatre choix recommandés) — « Oui, commence » ou ses questions. Quand il le souhaite : **Push origin** dans GitHub Desktop (2 commits de documentation : `b2cc014` et cette note) ; les deux tests restants de la phase 3 et le message d'aide quand la fenêtre Google est bloquée. Conseillé : activer la validation en deux étapes du compte Google qui gère la console Firebase.
-2. **Assistant, au début de la prochaine session (ouverte dans `C:\GitHub\Inventory Management\inventorymanagement`, ou dans son dossier parent) :** lire `CLAUDE.md`, `PLAN.md` et `DECISIONS.md`. Si l'accord du propriétaire sur la phase 8 n'est pas noté ici, lui rappeler en quelques lignes le plan de la section 2 (phase 8) et attendre. Après l'accord : noter les décisions 64 et suivantes, puis coder par petites étapes (indicateur, « En attente » dans la fiche, avertissement de déconnexion, effacement de l'appareil, stockage persistant), tester sur `http://localhost:8080/` avec le compte `test-phase3@example.com` (mot de passe dans `.env.test`, jamais dans la conversation), faire un commit local, puis donner au propriétaire le guide de l'essai en mode avion (`DEMARRAGE.md`, section 9, étapes 1 à 7 et 9 à 11).
-3. **Rappels pour la suite :** aucune modification des règles Firestore n'est prévue en phase 8 ; ne jamais faire de `git push` ; ne jamais essayer la suppression du compte avec un vrai compte ; ne jamais ajouter d'essai touchant à `suppressionDemandee` dans la série habituelle de `tests-regles.html`.
+1. **Propriétaire :** **Push origin** dans GitHub Desktop (commits `b2cc014`, `84b6e87` et celui de la phase 8), attendre quelques minutes, vérifier « Version 0.11.0 » en bas du site sur le téléphone ; puis l'essai en mode avion (guide donné, `DEMARRAGE.md` section 9, étapes 1 à 7 et 9 à 11) avec le compte de test, et dire le résultat de chaque étape. Toujours en attente : les deux tests de la phase 3 et le message d'aide quand la fenêtre Google est bloquée. Conseillé : activer la validation en deux étapes du compte Google qui gère la console Firebase.
+2. **Assistant, au début de la prochaine session :** lire `CLAUDE.md`, `PLAN.md` et `DECISIONS.md`. Noter le résultat de l'essai en mode avion dans le compte rendu de la phase 8 (corriger d'abord ce qui échoue). Puis phase 8b : poser au propriétaire les cinq questions de détail (section 2, phase 8b), attendre ses réponses, mettre à jour `CLAUDE.md` (sections 4 et 5) avec son accord, noter les décisions 71 et suivantes, écrire les règles version 8 (nouveaux champs facultatifs : un produit qui ne les a pas reste accepté), compléter `tests-regles.html`, faire publier les règles par le propriétaire **avant** d'envoyer le code.
+3. **Rappels pour la suite :** ne jamais faire de `git push` ; ne jamais essayer la suppression du compte avec un vrai compte ; ne jamais ajouter d'essai touchant à `suppressionDemandee` dans la série habituelle de `tests-regles.html` ; après la mise en service, ne publier que des règles compatibles avec les versions de l'application déjà ouvertes sur les téléphones (section 7).

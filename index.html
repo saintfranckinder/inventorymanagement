@@ -14,6 +14,22 @@
     <div class="entete-contenu">
       <img class="entete-logo" src="./images/logo-minstock.svg" alt="" width="40" height="40">
       <h1 class="marque"><span class="marque-min">Min</span><span class="marque-stock">Stock</span></h1>
+      <!-- Indicateur de synchronisation, approximatif (phase 8, décision 64) -->
+      <button type="button" id="indicateur-synchro" class="indicateur-synchro" aria-expanded="false" aria-controls="synchro-explication" hidden>
+        <span class="synchro-pastille" aria-hidden="true"></span>
+        <span class="synchro-textes">
+          <span id="synchro-etat" class="synchro-etat"></span>
+          <span id="synchro-detail" class="synchro-detail" hidden>Envoi en attente</span>
+        </span>
+      </button>
+    </div>
+    <div id="synchro-explication" class="synchro-explication" hidden>
+      <p id="synchro-explication-texte"></p>
+      <p id="synchro-explication-attente" class="synchro-explication-attente" hidden></p>
+      <p class="synchro-explication-limite">
+        Cet indicateur est approximatif : par exemple, sur un Wi-Fi sans
+        Internet, il peut mettre quelques secondes à afficher « Hors ligne ».
+      </p>
     </div>
   </header>
 
@@ -354,6 +370,18 @@
         <button type="submit" id="bouton-enregistrer-devise" class="bouton bouton-principal" hidden>Changer la devise</button>
         <button type="button" id="bouton-verifier-devise" class="bouton bouton-secondaire" hidden>Vérifier de nouveau</button>
       </form>
+
+      <!-- Appareil partagé (phase 8, décision 67) -->
+      <div class="bloc-parametres">
+        <h3>Appareil partagé</h3>
+        <p class="aide">
+          Efface de cet appareil la copie de vos données (produits, historique,
+          fournisseurs), puis vous déconnecte. Vos données restent sur le
+          serveur : vous les retrouverez à la prochaine connexion, avec Internet.
+        </p>
+        <p id="erreur-effacer-appareil" class="message-erreur" role="alert" hidden></p>
+        <button type="button" id="bouton-effacer-appareil" class="bouton bouton-secondaire">Effacer les données de cet appareil et me déconnecter</button>
+      </div>
 
       <!-- Suppression du compte (phase 7, décision 60) -->
       <div class="bloc-parametres">

@@ -4,6 +4,7 @@
 // serveur.
 
 import { afficherMessage, afficherVue, effacerMessages, element, vueActuelle } from './interface.js';
+import { oublierEcoute, signalerEcoute } from './indicateur-synchro.js';
 import {
   LIBELLES_TYPE,
   LONGUEUR_MAX_MOTIF,
@@ -532,6 +533,7 @@ function afficherHistorique() {
 }
 
 function surMouvements(etat) {
+  signalerEcoute('mouvements', etat.depuisCache, etat.mouvements.some((mouvement) => mouvement.enAttente));
   mouvementsRecus = true;
   // Un mouvement qui était « en attente » et qui a disparu de l'écoute a été
   // refusé par le serveur : il sort de l'historique.
@@ -627,6 +629,7 @@ export function arreterEcranMouvements() {
     arreterEcoute();
     arreterEcoute = null;
   }
+  oublierEcoute('mouvements');
   contexte = null;
   produitDuFormulaire = null;
   mouvementsConnus.clear();

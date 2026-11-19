@@ -24,6 +24,7 @@ import {
   normaliserPourRecherche,
   vueActuelle
 } from './interface.js';
+import { oublierEcoute, signalerEcoute } from './indicateur-synchro.js';
 import { messageErreur } from './messages-erreur.js';
 
 // Compare les noms sans tenir compte des majuscules ni des accents.
@@ -214,6 +215,7 @@ function afficherListe() {
 }
 
 function surFournisseurs(etat) {
+  signalerEcoute('fournisseurs', etat.depuisCache, etat.fournisseurs.some((fournisseur) => fournisseur.enAttente));
   fournisseurs = etat.fournisseurs.slice().sort((a, b) => COMPARATEUR.compare(a.nom, b.nom));
   listeRecue = true;
   listeDuServeur = !etat.depuisCache;
@@ -234,6 +236,7 @@ function surFournisseurs(etat) {
 function surErreurFournisseurs(erreur) {
   console.error(erreur);
   arreterEcoute = null;
+  oublierEcoute('fournisseurs');
   element('fournisseurs-chargement').hidden = true;
   afficherMessage(
     'erreur-fournisseurs',
@@ -257,6 +260,7 @@ function arreterLEcoute() {
     arreterEcoute();
     arreterEcoute = null;
   }
+  oublierEcoute('fournisseurs');
   fournisseurs = [];
   listeRecue = false;
   listeDuServeur = false;

@@ -38,7 +38,15 @@ import {
   reprendreSuppression,
   suppressionPriseEnMain
 } from './ecran-suppression.js';
-import { suppressionCommenceeIci } from './suppression-compte.js';
+import { effacerDonneesLocales, suppressionCommenceeIci } from './suppression-compte.js';
+import {
+  arreterIndicateur,
+  brancherIndicateur,
+  demarrerIndicateur,
+  modificationsEnAttente,
+  signalerEcoute
+} from './indicateur-synchro.js';
+import { autreCompteAvecOperationsEnAttente } from './operations-en-attente.js';
 import {
   DEVISES,
   LONGUEUR_MAX_NOM_ENTREPOT,
@@ -50,7 +58,26 @@ import { demarrerFirebase, VERSION_SDK_FIREBASE } from './firebase-init.js';
 import { afficherMessage, afficherVue, effacerMessages, element, vueActuelle } from './interface.js';
 import { messageErreur } from './messages-erreur.js';
 
-const VERSION_APP = '0.10.0';
+const VERSION_APP = '0.11.0';
+
+// Message affiché sur l'écran de connexion après « Effacer les données de cet
+// appareil » (décision 67), qui recharge la page.
+const CLE_APPAREIL_EFFACE = 'appareil-efface';
+
+const QUESTION_DECONNEXION =
+  'Des modifications faites sur cet appareil n’ont pas encore été envoyées au serveur.\n\n' +
+  'Si vous vous déconnectez, elles restent sur cet appareil et partiront à votre ' +
+  'prochaine connexion ici avec ce compte, quand Internet sera là. Elles seraient ' +
+  'perdues si les données du navigateur étaient effacées.\n\n' +
+  'Se déconnecter quand même ?';
+
+const QUESTION_EFFACEMENT =
+  'Effacer les données de cet appareil ?\n\n' +
+  'La copie de vos données gardée sur cet appareil sera effacée, puis vous serez ' +
+  'déconnecté. Vos données restent sur le serveur : à la prochaine connexion, il ' +
+  'faudra Internet pour les recharger.\n\n' +
+  'Si d’autres comptes MinStock sont utilisés dans ce navigateur, leur copie sera ' +
+  'effacée aussi.';
 
 // Écrans accessibles sans être connecté.
 const VUES_SANS_COMPTE = ['vue-connexion', 'vue-inscription', 'vue-oubli', 'vue-confidentialite'];
@@ -73,6 +100,7 @@ let utilisateur = null;
 let arreterEcouteEntrepot = null;
 let memoireHorsLigneVerifiee = false;
 let premierEtatConnu = false;
+let stockagePersistantDemande = false;
 
 // ---------- Affichage ----------
 
@@ -125,12 +153,35 @@ async function verifierMemoireHorsLigneUneFois() {
   }
 }
 
+// Demande au navigateur de garder durablement les données de l'application
+// (décision 68). Il peut refuser sans le dire : ce n'est pas une garantie.
+// Demandé seulement une fois l'entrepôt chargé : certains navigateurs
+// (Firefox) posent la question à l'utilisateur.
+function demanderStockagePersistant() {
+  if (stockagePersistantDemande) {
+    return;
+  }
+  stockagePersistantDemande = true;
+  try {
+    if (!navigator.storage || typeof navigator.storage.persist !== 'function') {
+      return;
+    }
+    navigator.storage.persisted()
+      .then((deja) => deja || navigator.storage.persist())
+      .then((accorde) => console.info(`Stockage durable accordé par le navigateur : ${accorde ? 'oui' : 'non'}.`))
+      .catch(() => {});
+  } catch {
+    // Navigateur sans cette fonction : rien à faire.
+  }
+}
+
 // Arrête les écoutes des écrans de travail (déconnexion, suppression du compte).
 function arreterEcransDeTravail() {
   arreterEcranProduits();
   arreterEcranMouvements();
   arreterEcranParametres();
   arreterEcranFournisseurs();
+  arreterIndicateur();
 }
 
 function surEtatEntrepot(etat) {
@@ -163,6 +214,9 @@ function surEtatEntrepot(etat) {
     element('accueil-entrepot').textContent = etat.donnees.nomEntrepot;
     element('accueil-devise').textContent = nomDevise(etat.donnees.devise);
     element('accueil-compte').textContent = utilisateur.email || 'Compte sans adresse e-mail';
+    demarrerIndicateur(firebase.db, utilisateur.uid);
+    signalerEcoute('entrepot', etat.depuisCache);
+    demanderStockagePersistant();
     demarrerEcranProduits(firebase.db, utilisateur.uid, etat.donnees);
     demarrerEcranMouvements(firebase.db, utilisateur.uid);
     demarrerEcranParametres(firebase.db, utilisateur.uid, etat.donnees);
@@ -190,27 +244,45 @@ function surEtatEntrepot(etat) {
   );
 }
 
-// Après la suppression d'un compte, la page est rechargée : le message
-// s'affiche une fois sur l'écran de connexion (décision 62).
-function afficherMessageCompteSupprime() {
-  let resultat = null;
+// Lit puis oublie un message laissé avant le rechargement de la page.
+function lireMessageLaisse(cle) {
   try {
-    resultat = window.sessionStorage.getItem(CLE_COMPTE_SUPPRIME);
-    window.sessionStorage.removeItem(CLE_COMPTE_SUPPRIME);
+    const valeur = window.sessionStorage.getItem(cle);
+    window.sessionStorage.removeItem(cle);
+    return valeur;
   } catch {
+    return null;
+  }
+}
+
+// Après la suppression d'un compte (décision 62) ou l'effacement des données
+// de l'appareil (décision 67), la page est rechargée : le message s'affiche
+// une fois sur l'écran de connexion.
+function afficherMessageApresRechargement() {
+  const copieNonEffacee =
+    ' La copie gardée par ce navigateur n’a pas pu être effacée : fermez les autres onglets de MinStock, ' +
+    'puis effacez les données du site dans les réglages du navigateur.';
+
+  const compteSupprime = lireMessageLaisse(CLE_COMPTE_SUPPRIME);
+  if (compteSupprime) {
+    afficherMessage(
+      'info-connexion',
+      'Votre compte et toutes vos données ont été supprimés.' +
+      (compteSupprime === 'complet' ? '' : copieNonEffacee)
+    );
     return;
   }
-  if (!resultat) {
-    return;
+
+  const appareilEfface = lireMessageLaisse(CLE_APPAREIL_EFFACE);
+  if (appareilEfface) {
+    afficherMessage(
+      'info-connexion',
+      appareilEfface === 'complet'
+        ? 'Les données de cet appareil ont été effacées et vous êtes déconnecté. ' +
+          'Vos données restent sur le serveur.'
+        : 'Vous êtes déconnecté. Vos données restent sur le serveur.' + copieNonEffacee
+    );
   }
-  afficherMessage(
-    'info-connexion',
-    'Votre compte et toutes vos données ont été supprimés.' +
-    (resultat === 'complet'
-      ? ''
-      : ' La copie gardée par ce navigateur n’a pas pu être effacée : fermez les autres onglets de MinStock, ' +
-        'puis effacez les données du site dans les réglages du navigateur.')
-  );
 }
 
 function surErreurEntrepot(erreur) {
@@ -245,7 +317,7 @@ function surChangementUtilisateur(nouvelUtilisateur) {
       afficherVue('vue-connexion');
     }
     if (premierEtat) {
-      afficherMessageCompteSupprime();
+      afficherMessageApresRechargement();
     }
     return;
   }
@@ -385,6 +457,88 @@ function brancherPremierLancement() {
   });
 }
 
+// « Se déconnecter » : avertissement s'il reste des modifications non
+// envoyées (décision 66). Elles restent sur l'appareil et partiront à la
+// prochaine connexion avec ce compte.
+async function deconnecter(bouton) {
+  if (bouton.disabled) {
+    return;
+  }
+  if (utilisateur) {
+    let enAttente = false;
+    await avecBoutonOccupe(bouton, 'Vérification…', async () => {
+      enAttente = await modificationsEnAttente(firebase.db);
+    });
+    if (enAttente && !window.confirm(QUESTION_DECONNEXION)) {
+      return;
+    }
+  }
+  seDeconnecter(firebase.auth).catch((erreur) => console.error(erreur));
+}
+
+// « Effacer les données de cet appareil et me déconnecter » (décision 67).
+// Refusé tant que des modifications attendent d'être envoyées : elles
+// seraient perdues (CLAUDE.md, section 9).
+async function effacerDonneesAppareil() {
+  effacerMessages();
+  if (!utilisateur) {
+    return;
+  }
+  const uid = utilisateur.uid;
+  const bouton = element('bouton-effacer-appareil');
+  if (bouton.disabled) {
+    return;
+  }
+
+  let enAttente = false;
+  await avecBoutonOccupe(bouton, 'Vérification…', async () => {
+    enAttente = await modificationsEnAttente(firebase.db);
+  });
+  if (enAttente) {
+    afficherMessage(
+      'erreur-effacer-appareil',
+      'Rien n’a été effacé : des modifications faites sur cet appareil n’ont pas encore ' +
+      'été envoyées au serveur. Attendez, avec Internet, que l’indicateur en haut de ' +
+      'l’écran affiche « Synchronisé », puis recommencez.'
+    );
+    return;
+  }
+  if (autreCompteAvecOperationsEnAttente(uid)) {
+    afficherMessage(
+      'erreur-effacer-appareil',
+      'Rien n’a été effacé : un autre compte utilisé sur cet appareil a des opérations ' +
+      'pas encore envoyées. Connectez-vous avec ce compte, avec Internet, et attendez ' +
+      '« Synchronisé » avant d’effacer.'
+    );
+    return;
+  }
+  if (!window.confirm(QUESTION_EFFACEMENT) || !utilisateur || utilisateur.uid !== uid) {
+    return;
+  }
+
+  bouton.disabled = true;
+  bouton.textContent = 'Effacement…';
+  // Plus aucune écoute ni aucun écran de travail : la copie peut être effacée.
+  if (arreterEcouteEntrepot) {
+    arreterEcouteEntrepot();
+    arreterEcouteEntrepot = null;
+  }
+  arreterEcransDeTravail();
+  try {
+    await seDeconnecter(firebase.auth);
+  } catch (erreur) {
+    console.error(erreur);
+  }
+  const complet = await effacerDonneesLocales(firebase.db, uid);
+  try {
+    window.sessionStorage.setItem(CLE_APPAREIL_EFFACE, complet ? 'complet' : 'partiel');
+  } catch {
+    // Stockage bloqué : la page se recharge sans message.
+  }
+  // Firebase est arrêté : la page doit être rechargée.
+  window.location.reload();
+}
+
 function brancherNavigation() {
   for (const bouton of document.querySelectorAll('[data-aller]')) {
     bouton.addEventListener('click', () => {
@@ -396,10 +550,9 @@ function brancherNavigation() {
   }
 
   for (const bouton of document.querySelectorAll('[data-deconnexion]')) {
-    bouton.addEventListener('click', () => {
-      seDeconnecter(firebase.auth).catch((erreur) => console.error(erreur));
-    });
+    bouton.addEventListener('click', () => deconnecter(bouton));
   }
+  element('bouton-effacer-appareil').addEventListener('click', effacerDonneesAppareil);
 
   for (const caseACocher of document.querySelectorAll('input[data-afficher-mdp]')) {
     caseACocher.addEventListener('change', () => {
@@ -434,6 +587,7 @@ async function demarrer() {
   }
 
   brancherNavigation();
+  brancherIndicateur();
   brancherConnexion();
   brancherInscription();
   brancherMotDePasseOublie();

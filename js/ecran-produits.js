@@ -19,6 +19,7 @@ import {
   normaliserPourRecherche,
   vueActuelle
 } from './interface.js';
+import { oublierEcoute, signalerEcoute } from './indicateur-synchro.js';
 import { messageErreur } from './messages-erreur.js';
 import { nouvelIdMouvement } from './mouvements.js';
 import { suivreOperation } from './operations-en-attente.js';
@@ -157,12 +158,14 @@ function carteProduit(produit) {
     article.append(etiquette);
   }
 
-  // La quantité, entre « −1 » et « +1 ».
+  // La quantité, entre « −1 » et « +1 ». Tant que le serveur n'a pas
+  // confirmé, « En attente » remplace le mot « Quantité » sur la même ligne :
+  // rien ne bouge en dessous (décision 65).
   const quantite = document.createElement('p');
   quantite.className = 'quantite';
   const libelle = document.createElement('span');
-  libelle.className = 'quantite-libelle';
-  libelle.textContent = 'Quantité';
+  libelle.className = produit.enAttente ? 'quantite-libelle quantite-attente' : 'quantite-libelle';
+  libelle.textContent = produit.enAttente ? 'En attente' : 'Quantité';
   const valeur = document.createElement('span');
   valeur.className = 'quantite-valeur';
   valeur.textContent = `${formaterQuantite(produit.quantiteMilliemes)} ${produit.unite}`;
@@ -190,13 +193,6 @@ function carteProduit(produit) {
     negatif.className = 'produit-negatif';
     negatif.textContent = 'Stock négatif : à vérifier';
     article.append(negatif);
-  }
-
-  if (produit.enAttente) {
-    const attente = document.createElement('p');
-    attente.className = 'produit-attente';
-    attente.textContent = 'En attente de synchronisation';
-    article.append(attente);
   }
 
   const boutonMouvement = document.createElement('button');
@@ -353,6 +349,7 @@ function afficherListe() {
 }
 
 function surProduits(etat) {
+  signalerEcoute('produits', etat.depuisCache, etat.produits.some((produit) => produit.enAttente));
   produits = etat.produits.slice().sort((a, b) => COMPARATEUR.compare(a.nom, b.nom));
   afficherListe();
   surProduitsActifs(produits);
@@ -645,6 +642,7 @@ export function arreterEcranProduits() {
     arreterEcoute();
     arreterEcoute = null;
   }
+  oublierEcoute('produits');
   contexte = null;
   produits = [];
   idProduitEnCours = null;

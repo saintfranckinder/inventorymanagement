@@ -18,6 +18,7 @@ Le projet est en cours de construction. L'avancement est suivi dans `PLAN.md`.
 - Tableau de bord : valeur du stock (indicative), recherche par nom, alertes « Stock bas » et « Rupture », boutons rapides `−1` et `+1`.
 - Paramètres : changer le nom de l'entrepôt ; changer la devise tant que l'entrepôt ne contient aucun produit ; supprimer son compte et toutes ses données.
 - Carnet de fournisseurs : ajouter, modifier, supprimer, rechercher, et appeler ou écrire en un appui.
+- Indicateur de synchronisation en haut de l'écran ; avertissement avant de se déconnecter s'il reste des modifications non envoyées ; effacement des données de l'appareil (appareil partagé).
 
 ## Identité visuelle
 
@@ -43,7 +44,7 @@ Le projet est en cours de construction. L'avancement est suivi dans `PLAN.md`.
 - **Entrée** et **Sortie** : saisir la quantité sans signe. **Ajustement** : saisir la correction avec son signe (`-2,5` ou `+3`).
 - Un mouvement enregistré ne peut être ni modifié ni supprimé. Une erreur se corrige avec « Annuler cette opération » dans l'historique (voir plus bas), ou par un mouvement d'ajustement.
 - Un stock peut devenir négatif. L'application avertit avant l'enregistrement et affiche ensuite « Stock négatif : à vérifier ». Avec plusieurs appareils hors ligne, elle ne peut pas l'empêcher.
-- Un mouvement apparaît tout de suite, avec la mention « En attente de synchronisation » tant que le serveur ne l'a pas confirmé.
+- Un mouvement apparaît tout de suite. Tant que le serveur ne l'a pas confirmé, la fiche du produit affiche « En attente » à la place du mot « Quantité » (sur la même ligne : rien ne bouge en dessous), et l'historique affiche « En attente de synchronisation ».
 - L'historique est rangé selon l'heure de réception par le serveur. L'heure indiquée « Fait le » est celle de l'appareil au moment de l'opération ; si l'écart dépasse 5 minutes, les deux sont affichées.
 
 ### Annuler une opération faite par erreur
@@ -68,6 +69,39 @@ Le bouton « Paramètres », en bas de l'écran des produits, ouvre :
 
 - **Nom de l'entrepôt** : modifiable à tout moment, même sans Internet (de 1 à 100 caractères).
 - **Devise** : modifiable seulement tant que l'entrepôt ne contient aucun produit, même archivé, car changer la devise ne convertit pas les prix déjà saisis. L'application le vérifie auprès du serveur : il faut donc Internet pour changer la devise. Sans réponse du serveur, la devise reste bloquée et le bouton « Vérifier de nouveau » permet de réessayer.
+- **Appareil partagé** : « Effacer les données de cet appareil et me déconnecter » (voir « Synchronisation et utilisation sans Internet »).
+- **Supprimer mon compte** : voir plus bas.
+
+## Synchronisation et utilisation sans Internet
+
+### L'indicateur en haut de l'écran
+
+À droite du logo, un mot et une pastille indiquent l'état de la synchronisation avec le serveur :
+
+| Affichage | Signification |
+|---|---|
+| « Synchronisé » (pastille verte) | Le serveur a reçu les modifications faites sur cet appareil. |
+| « En attente de synchronisation » (pastille dorée) | Des modifications attendent la confirmation du serveur. Elles partent toutes seules. |
+| « Hors ligne » (pastille grise) | Pas de connexion au serveur. On peut continuer à travailler : les modifications sont gardées sur l'appareil. « Envoi en attente » signale qu'il en reste à envoyer. |
+| « Erreur de synchronisation » (rouge) | Le serveur a refusé une opération. Toucher l'indicateur mène au bloc « Opérations refusées ». |
+
+Toucher l'indicateur affiche une courte explication. Il est **approximatif** : le navigateur peut se croire en ligne sur un Wi-Fi sans Internet, et il faut alors quelques secondes pour voir « Hors ligne ». Un changement d'état n'apparaît qu'après une seconde et demie environ, pour éviter le clignotement : après un `+1` avec une bonne connexion, l'indicateur reste donc sur « Synchronisé ». Il n'affiche jamais de nombre de modifications en attente.
+
+### Se déconnecter avec des modifications non envoyées
+
+Si des modifications n'ont pas encore été envoyées, « Se déconnecter » demande d'abord confirmation. Les modifications restent sur l'appareil et partiront à la prochaine connexion avec ce compte, sur cet appareil, quand Internet sera là. Elles seraient perdues si les données du navigateur étaient effacées.
+
+### Effacer les données de cet appareil
+
+Dans **Paramètres**, « Effacer les données de cet appareil et me déconnecter » efface la copie des données gardée par le navigateur (produits, historique, fournisseurs), puis déconnecte. Les données du serveur ne sont pas touchées : à la prochaine connexion, il faut Internet pour les recharger.
+
+- L'effacement est refusé tant que des modifications de ce compte attendent d'être envoyées, ou qu'un autre compte utilisé sur le même appareil a des opérations non envoyées.
+- Il efface aussi la copie des autres comptes MinStock utilisés dans le même navigateur.
+- Si MinStock est ouvert dans un autre onglet, la copie ne peut pas être effacée : un message le signale après la déconnexion. Fermer les autres onglets et recommencer, ou effacer les données du site dans les réglages du navigateur.
+
+### Stockage durable
+
+Une fois l'entrepôt chargé, l'application demande au navigateur de ne pas effacer ses données de lui-même quand l'appareil manque de place. Le navigateur peut refuser sans le dire (Firefox, lui, pose la question). Ce n'est pas une sauvegarde : seul l'export (phase 9) en sera une.
 
 ## Carnet de fournisseurs
 
@@ -206,7 +240,8 @@ Sur GitHub Pages, le fichier vide `.nojekyll` doit rester à la racine : sans lu
 - **Produit renommé :** l'historique garde le nom du produit au moment de chaque opération.
 - **Fournisseurs modifiés sans Internet :** ils ne sont pas suivis par la liste des « Opérations refusées ». Le formulaire vérifie exactement les mêmes limites que les règles, donc un refus ne devrait pas arriver. Si un fournisseur est supprimé sur un appareil pendant qu'un autre, hors ligne, le modifie, la modification est perdue et le fournisseur reste supprimé. Pour le même fournisseur modifié sur deux appareils, la dernière modification arrivée au serveur l'emporte.
 - **Fournisseur supprimé :** aucun retour en arrière possible. L'export Excel (phase 9) servira de sauvegarde.
-- **Appareil partagé :** pour permettre l'utilisation sans Internet, le navigateur garde une copie des données déjà consultées (produits, mouvements, fournisseurs), **même après « Se déconnecter »**. L'application ne les montre plus, mais une personne qui sait fouiller dans le navigateur pourrait les lire. Utiliser l'application seulement sur ses propres appareils, verrouillés par un code ; sur un ordinateur partagé, effacer ensuite les données du site dans les réglages du navigateur.
+- **Appareil partagé :** pour permettre l'utilisation sans Internet, le navigateur garde une copie des données déjà consultées (produits, mouvements, fournisseurs), **même après « Se déconnecter »**. L'application ne les montre plus, mais une personne qui sait fouiller dans le navigateur pourrait les lire. Utiliser l'application seulement sur ses propres appareils, verrouillés par un code ; sur un appareil partagé, utiliser « Effacer les données de cet appareil et me déconnecter » dans Paramètres.
+- **Indicateur de synchronisation :** il est approximatif (voir plus haut). Une modification refusée qui n'est pas un mouvement ni une création de produit (nom, prix, archivage, fournisseur) s'affiche en message d'erreur, mais ne fait pas passer l'indicateur sur « Erreur de synchronisation ».
 - **Sécurité du compte :** quiconque connaît le mot de passe du compte voit tout l'entrepôt et le carnet de fournisseurs. Choisir un mot de passe solide, ou se connecter avec Google en activant la validation en deux étapes du compte Google. Le compte Google qui gère la console Firebase donne accès à toutes les données : il doit être protégé de la même façon.
 - **Ajustement d'inventaire :** la correction est saisie à la main. Si un autre appareil a modifié le stock entre-temps, le chiffre affiché au moment de la saisie n'était peut-être plus à jour.
 - **Quota gratuit :** chaque mouvement coûte deux écritures et quelques lectures de contrôle. La limite gratuite est de 20 000 écritures et 50 000 lectures par jour pour tous les comptes réunis ; si elle est atteinte, l'application se bloque jusqu'au lendemain, sans perte de données.

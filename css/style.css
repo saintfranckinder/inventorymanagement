@@ -104,6 +104,7 @@ li[tabindex="-1"]:focus:not(:focus-visible) {
   align-items: center;
   gap: 0.625rem;
   max-width: 26rem;
+  min-height: 3rem;
   margin: 0 auto;
 }
 
@@ -140,6 +141,97 @@ li[tabindex="-1"]:focus:not(:focus-visible) {
 
 .marque-stock {
   color: var(--accent);
+}
+
+/* Indicateur de synchronisation (décision 64) : un mot écrit et une pastille.
+   Hauteur fixe : un changement d'état ne fait pas bouger la page. */
+.indicateur-synchro {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 10rem;
+  min-height: 48px;
+  margin-left: auto;
+  padding: 0.25rem 0.75rem 0.25rem 0.625rem;
+  border: 1px solid var(--bordure-legere);
+  border-radius: 999px;
+  background: var(--carte);
+  box-shadow: var(--ombre-carte);
+  color: var(--texte);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: left;
+  cursor: pointer;
+}
+
+.synchro-pastille {
+  flex: none;
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+  background: var(--texte-discret);
+}
+
+.synchro-textes {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.synchro-detail {
+  color: var(--texte-discret);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.indicateur-synchro[data-etat="synchronise"] .synchro-pastille {
+  background: var(--ok);
+}
+
+.indicateur-synchro[data-etat="attente"] .synchro-pastille {
+  background: var(--or-texte);
+}
+
+.indicateur-synchro[data-etat="erreur"] {
+  border-color: var(--erreur-bordure);
+  background: var(--fond-erreur);
+  color: var(--erreur);
+}
+
+.indicateur-synchro[data-etat="erreur"] .synchro-pastille {
+  background: var(--erreur-bordure);
+}
+
+.synchro-explication {
+  max-width: 26rem;
+  margin: 0.5rem auto 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--bordure-legere);
+  border-radius: var(--rayon);
+  background: var(--carte);
+  box-shadow: var(--ombre-carte);
+}
+
+.synchro-explication p {
+  margin: 0 0 0.5rem;
+}
+
+.synchro-explication p:last-child {
+  margin-bottom: 0;
+}
+
+.synchro-explication-attente {
+  color: var(--alerte);
+  font-weight: 700;
+}
+
+.synchro-explication-limite {
+  color: var(--texte-discret);
+  font-size: 0.875rem;
 }
 
 /* ---------- Texte ---------- */
@@ -629,6 +721,13 @@ select:disabled {
   display: block;
   color: var(--texte-discret);
   font-size: 0.875rem;
+}
+
+/* « En attente » à la place de « Quantité » (décision 65) : même ligne,
+   même hauteur, rien ne bouge en dessous. */
+.quantite-libelle.quantite-attente {
+  color: var(--or-texte);
+  font-weight: 700;
 }
 
 .quantite-valeur {

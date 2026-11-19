@@ -22,11 +22,18 @@ import { documentExisteSurServeur } from './mouvements.js';
 
 const PREFIXE_CLE = 'operations-en-attente:';
 
-let avertirChangement = () => {};
+// Fonctions appelées après chaque changement de la liste (bloc « Opérations
+// refusées », indicateur de synchronisation).
+const rappels = [];
 
-// Fonction appelée après chaque changement de la liste.
 export function surChangementDesOperations(rappel) {
-  avertirChangement = rappel;
+  rappels.push(rappel);
+}
+
+function avertirChangement() {
+  for (const rappel of rappels) {
+    rappel();
+  }
 }
 
 function cle(uid) {
@@ -70,6 +77,27 @@ function marquerRefusee(uid, id) {
 
 export function operationsRefusees(uid) {
   return lireOperations(uid).filter((operation) => operation.etat === 'refusee');
+}
+
+// Vrai si un AUTRE compte a, sur cet appareil, des opérations pas encore
+// confirmées. Leur copie serait perdue si les données de l'appareil étaient
+// effacées (décision 67).
+export function autreCompteAvecOperationsEnAttente(uid) {
+  try {
+    for (let i = 0; i < window.localStorage.length; i += 1) {
+      const nom = window.localStorage.key(i);
+      if (!nom || !nom.startsWith(PREFIXE_CLE) || nom === cle(uid)) {
+        continue;
+      }
+      const liste = JSON.parse(window.localStorage.getItem(nom) || '[]');
+      if (Array.isArray(liste) && liste.some((operation) => operation.etat === 'en-attente')) {
+        return true;
+      }
+    }
+  } catch {
+    // Stockage bloqué ou illisible : rien n'y est suivi.
+  }
+  return false;
 }
 
 // L'utilisateur a pris connaissance d'une opération refusée.
