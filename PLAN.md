@@ -20,7 +20,7 @@ Dépôt GitHub : `saintfranckinder/minstock`, renommé par le propriétaire le 2
 | 5 | Tableau de bord | **Terminée le 2026-11-18** (test sur smartphone réussi le même jour, selon le propriétaire) |
 | 6 | Formulaires, historique lisible (avec « Annuler cette opération »), paramètres | **Terminée le 2026-11-18** (test sur smartphone réussi le même jour, selon le propriétaire) |
 | 6b | Carnet de fournisseurs (décisions 42 et 50 à 54) | **Terminée le 2026-11-18** (règles version 6 publiées par le propriétaire ; test sur smartphone réussi le même jour) |
-| — | Identité visuelle MinStock (décisions 55 à 58) et compteurs cliquables (décision 59) | **Faite le 2026-11-18** (identité validée sur smartphone ; compteurs cliquables à tester sur smartphone) |
+| — | Identité visuelle MinStock (décisions 55 à 58) et compteurs cliquables (décision 59) | **Terminée le 2026-11-18** (validées sur smartphone par le propriétaire) |
 | 7 | Suppression du compte | **Prochaine étape** (voir section 8.7) |
 | 8 | Hors ligne et indicateur de synchronisation | À faire |
 | 9 | Export Excel | À faire |
@@ -528,7 +528,11 @@ Tests exécutés par l'assistant, sur `http://localhost:8080/`, avec le compte d
 | 360 pixels : aucun défilement horizontal (écran des produits filtré, historique, fournisseurs, paramètres) ; compteurs de 92 × 64 pixels, « Tout afficher » de 48 pixels de haut | Réussi |
 | Non-régression : `tests-nombres.html` 104 sur 104 ; `tests-regles.html` 90 sur 90 ; aucune erreur dans la console | Réussi |
 
-Non testé : smartphone du propriétaire ; lecteur d'écran réel.
+Non testé : lecteur d'écran réel.
+
+**Test sur smartphone (2026-11-18), fait par le propriétaire :** version 0.9.1 sur le site en ligne ; le propriétaire indique que les compteurs cliquables fonctionnent.
+
+Question du propriétaire à cette occasion : pourquoi « Ciment » affiche des demi-sacs (7,5) après des `+1`. Vérifié sur le serveur, sans rien modifier : son stock de départ d'essai était de 12,5 sacs (phase 4b) ; chaque `+1` ajoute exactement 1 ; la somme des 14 mouvements du Ciment (7,5) et celle des 79 mouvements du Riz (4) sont égales aux quantités enregistrées. Correction possible pour un vrai produit : ajustement de `+0,5` ou `-0,5` avec un motif.
 
 ### Phase 7 : suppression du compte
 - **Résultat :** double confirmation, rappel d'exporter, reconnexion demandée en premier, suppression en ligne uniquement, reprise automatique si `suppressionDemandee` est vrai. Les fournisseurs sont supprimés avec le reste (décision 42).
@@ -634,7 +638,7 @@ Règles de conception retenues pour le code :
 
 ### 8.1 Phase actuelle
 
-- **Étape « identité visuelle MinStock » faite le 2026-11-18** (validée sur smartphone par le propriétaire), puis **compteurs cliquables** (décision 59), à tester sur smartphone. Phases 5, 6 et 6b terminées le même jour. Prochaine étape : **phase 7** (suppression du compte). Rien n'est commencé.
+- **Étape « identité visuelle MinStock » et compteurs cliquables terminés le 2026-11-18** (validés sur smartphone par le propriétaire). Phases 5, 6 et 6b terminées le même jour. Prochaine étape : **phase 7** (suppression du compte). Plan présenté au propriétaire le 2026-11-18 ; rien n'est codé avant son accord.
 - Version de l'application : `0.9.1`. Règles Firestore : **version 6**, publiée dans la console par le propriétaire le 2026-11-18, vérifiée active le même jour (90 essais sur 90, produits d'essai déjà créés).
 - Dépôt GitHub : `saintfranckinder/minstock`, **public**. Site : `https://saintfranckinder.github.io/minstock/` (GitHub Pages, branche `main`, dossier racine).
 - Dépôt Git, branche `main` : `cecf8d3` (phases 0 et 1), `48d55b3` (phase 2), `f09bf30` (phase 3), `96f2a3d` (phase 4a), `d8f1b5b` (phase 4b), `2f53da4` (note de passation), `b26abb6` (dépôt renommé), `e166a30` (recherche de secrets), `d5a7808` (décisions 40 et 41), `86d4eb4` (mise en ligne), `e1a5c70` (fin de l'étape « dépôt public »), `e202b2a` (décisions 42 et 43), `7e156a3` (phase 5), `eb40c59` (test sur smartphone de la phase 5), `456dff6` (phase 6), `de2ef92` (test sur smartphone de la phase 6), `14e00c9` (phase 6b), `36f5d20` (test sur smartphone de la phase 6b), `6eeb438` (identité visuelle), puis le commit des compteurs cliquables. Le propriétaire envoie chaque commit avec **Push origin** dans GitHub Desktop ; le site se met à jour quelques minutes après.
