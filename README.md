@@ -1,4 +1,4 @@
-# Gestion de stock
+# MinStock
 
 Application web de gestion de stock pour un entrepôt, utilisable sur ordinateur et smartphone, y compris avec une connexion Internet instable.
 
@@ -19,9 +19,17 @@ Le projet est en cours de construction. L'avancement est suivi dans `PLAN.md`.
 - Paramètres : changer le nom de l'entrepôt ; changer la devise tant que l'entrepôt ne contient aucun produit.
 - Carnet de fournisseurs : ajouter, modifier, supprimer, rechercher, et appeler ou écrire en un appui.
 
+## Identité visuelle
+
+- **Nom :** MinStock (« Min » en bleu nuit, « Stock » en bleu).
+- **Symbole :** `images/logo-minstock.svg`, redessiné en format vectoriel d'après le logo du propriétaire ; il sert aussi d'icône dans l'onglet du navigateur.
+- **Couleurs :** bleu nuit `#213547`, bleu `#2E618D`, doré `#C09D63` (toujours avec un texte foncé ; `#7A5F2C` quand le doré sert de texte), fond `#ECE9E4`. Toutes sont définies au début de `css/style.css`, et leurs contrastes ont été vérifiés pour rester lisibles en plein soleil.
+- **Police :** Montserrat pour le nom, les titres et les grands chiffres (licence libre SIL OFL, fichier copié dans `vendor/polices/` avec sa licence) ; la police du téléphone pour le reste du texte.
+- La maquette du propriétaire contient d'autres idées (scanner, rapports, notifications, barre de navigation en bas…) qui ne font pas partie de cette version : voir la décision 56.
+
 ## Tableau de bord
 
-- **Valeur du stock (indicative)** : pour chaque produit, quantité × prix d'achat **actuel** ; en haut de l'écran, le total de l'entrepôt, égal à la somme des lignes. Modifier un prix d'achat change la valeur de tout le stock de ce produit. Un stock négatif compte en négatif. Les produits archivés ne comptent pas.
+- **Valeur du stock (indicative)** : pour chaque produit, quantité × prix d'achat **actuel** ; en haut de l'écran, le total de l'entrepôt, égal à la somme des lignes, avec trois compteurs (nombre de produits, « Stock bas », « Ruptures ») calculés sur l'appareil. Modifier un prix d'achat change la valeur de tout le stock de ce produit. Un stock négatif compte en négatif. Les produits archivés ne comptent pas.
 - **Recherche** : par nom de produit, sans tenir compte des majuscules ni des accents (`cimént` trouve « Ciment »). Elle ne porte que sur les produits de la liste et ne consomme aucune lecture du quota gratuit. Le total reste celui de tout l'entrepôt.
 - **Alertes**, toujours écrites et pas seulement colorées :
   - « Stock bas » (orange) quand la quantité est inférieure ou égale au seuil d'alerte ;
@@ -140,8 +148,9 @@ Une adresse e-mail correspond toujours à un seul compte et aux mêmes données.
 | Élément | Rôle |
 |---|---|
 | `index.html`, `css/`, `js/` | L'application |
+| `images/` | Symbole du logo MinStock (SVG) |
 | `js/firebase-config.js` | L'adresse du projet Firebase (ce n'est pas un mot de passe) |
-| `vendor/` | Bibliothèques copiées dans le projet (Firebase, SheetJS) : voir `vendor/LISEZMOI.md` |
+| `vendor/` | Bibliothèques et police copiées dans le projet (Firebase, SheetJS, Montserrat) : voir `vendor/LISEZMOI.md` |
 | `firestore.rules` | Règles de sécurité de la base de données |
 | `tests-regles.html` | Page de test des règles de sécurité |
 | `tests-nombres.html` | Page de test des conversions de nombres |

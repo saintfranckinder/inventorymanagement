@@ -1,21 +1,63 @@
-/* Styles de base, pensés d'abord pour le smartphone. */
+/* Styles de MinStock, pensés d'abord pour le smartphone.
+   Identité visuelle du propriétaire (décisions 55 à 58) : bleu nuit, bleu,
+   doré, fond blanc cassé, cartes claires arrondies. Les contrastes des
+   couleurs de texte ont été vérifiés (au moins 4,5, norme WCAG). */
+
+/* Police Montserrat (licence libre OFL), copiée dans le projet :
+   rien n'est chargé depuis Internet (vendor/LISEZMOI.md). */
+@font-face {
+  font-family: "Montserrat";
+  font-style: normal;
+  font-weight: 500 700;
+  font-display: swap;
+  src: url("../vendor/polices/montserrat-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215,
+    U+FEFF, U+FFFD;
+}
 
 :root {
-  --fond: #f4f5f7;
+  /* Fonds et surfaces */
+  --fond: #ece9e4;
+  --fond-haut: #dce1e6;
   --carte: #ffffff;
-  --texte: #1b1f24;
+  --carte-bas: #faf8f5;
+  --bordure: #8b95a1;
+  --bordure-legere: #e2ded8;
+
+  /* Textes */
+  --texte: #1b2733;
   --texte-discret: #4b5563;
-  --bordure: #9aa3af;
-  --bordure-legere: #d0d5dd;
-  --principal: #0b5cad;
-  --principal-fonce: #084a8c;
-  --ok: #0b6b3a;
-  --alerte: #8a4b00;
-  --alerte-vif: #b54708;
-  --erreur: #a4161a;
-  --fond-alerte: #fff4e0;
-  --fond-erreur: #fdecec;
-  --fond-info: #e8f5ee;
+
+  /* Couleurs de la marque */
+  --principal: #213547;
+  --principal-haut: #4e6377;
+  --principal-fonce: #172634;
+  --accent: #2e618d;
+  --accent-haut: #4b7fae;
+  --or: #c09d63;
+  --or-haut: #d8bc8a;
+  --or-texte: #7a5f2c;
+
+  /* États */
+  --ok: #0b5a31;
+  --fond-info: #e6f2ea;
+  --bordure-info: #9ccbae;
+  --alerte: #7a3a00;
+  --alerte-bordure: #b5650f;
+  --fond-alerte: #fdead1;
+  --etiquette-alerte: #f6ddb8;
+  --erreur: #8a2a22;
+  --erreur-bordure: #c0392b;
+  --fond-erreur: #fadeda;
+  --etiquette-erreur: #f6cbc4;
+
+  /* Formes */
+  --rayon-carte: 1.125rem;
+  --rayon: 0.875rem;
+  --ombre-carte: 0 1px 2px rgba(33, 53, 71, 0.06), 0 8px 20px rgba(33, 53, 71, 0.08);
+  --ombre-bouton: 0 4px 12px rgba(33, 53, 71, 0.2);
+  --police-titres: "Montserrat", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 * {
@@ -24,7 +66,8 @@
 
 body {
   margin: 0;
-  background: var(--fond);
+  min-height: 100vh;
+  background: var(--fond) linear-gradient(180deg, var(--fond-haut) 0, rgba(236, 233, 228, 0) 20rem) no-repeat;
   color: var(--texte);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   font-size: 16px;
@@ -38,42 +81,89 @@ body {
 
 /* Focus clavier toujours visible. */
 :focus-visible {
-  outline: 3px solid var(--principal);
+  outline: 3px solid var(--accent);
   outline-offset: 2px;
 }
 
-h2[tabindex="-1"]:focus {
+h2[tabindex="-1"]:focus,
+li[tabindex="-1"]:focus:not(:focus-visible) {
   outline: none;
 }
 
+/* ---------- En-tête ---------- */
+
 .entete {
-  background: var(--principal);
-  color: #ffffff;
-  padding: 0.75rem 1rem;
+  padding: 1rem 1rem 0.25rem;
+}
+
+/* Même largeur que le contenu des écrans (28rem moins les marges). */
+.entete-contenu {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  max-width: 26rem;
+  margin: 0 auto;
+}
+
+.entete-logo {
+  display: block;
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
 }
 
 .entete h1 {
-  max-width: 28rem;
+  max-width: 26rem;
   margin: 0 auto;
+  color: var(--principal);
+  font-family: var(--police-titres);
   font-size: 1.25rem;
+  font-weight: 700;
   line-height: 1.25;
 }
+
+.entete-contenu h1 {
+  margin: 0;
+}
+
+/* Le nom « MinStock » : « Min » en bleu nuit, « Stock » en bleu. */
+.marque {
+  font-size: 1.625rem;
+  letter-spacing: -0.01em;
+}
+
+.marque-min {
+  color: var(--principal);
+}
+
+.marque-stock {
+  color: var(--accent);
+}
+
+/* ---------- Texte ---------- */
 
 main {
   max-width: 28rem;
   margin: 0 auto;
-  padding: 1.25rem 1rem 1rem;
+  padding: 1rem 1rem 1rem;
 }
 
 h2 {
   margin: 0 0 1rem;
-  font-size: 1.375rem;
-  line-height: 1.25;
+  color: var(--principal);
+  font-family: var(--police-titres);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 
 h3 {
-  margin: 1.25rem 0 0.25rem;
-  font-size: 1rem;
+  margin: 1.5rem 0 0.5rem;
+  color: var(--principal);
+  font-family: var(--police-titres);
+  font-size: 1.0625rem;
+  font-weight: 700;
 }
 
 p {
@@ -94,7 +184,7 @@ ul {
 
 label {
   display: block;
-  margin: 0 0 0.25rem;
+  margin: 0 0 0.375rem;
   font-weight: 600;
 }
 
@@ -109,13 +199,25 @@ textarea {
   width: 100%;
   min-height: 48px;
   margin: 0 0 1rem;
-  padding: 0.5rem 0.75rem;
+  padding: 0.625rem 0.875rem;
   background: var(--carte);
   color: var(--texte);
   border: 1px solid var(--bordure);
-  border-radius: 0.5rem;
+  border-radius: var(--rayon);
+  box-shadow: inset 0 1px 2px rgba(33, 53, 71, 0.06);
   font: inherit;
   font-size: 16px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--accent);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #6b7280;
 }
 
 textarea {
@@ -124,13 +226,13 @@ textarea {
 
 /* Une liste bloquée (devise) reste lisible, y compris en extérieur. */
 select:disabled {
-  background: #eef1f4;
+  background: #eeece8;
   color: var(--texte);
   opacity: 1;
 }
 
 .aide-champ {
-  margin: -0.75rem 0 1rem;
+  margin: -0.625rem 0 1rem;
   color: var(--texte-discret);
   font-size: 0.875rem;
 }
@@ -148,6 +250,7 @@ select:disabled {
   width: 1.25rem;
   height: 1.25rem;
   margin: 0;
+  accent-color: var(--principal);
 }
 
 /* ---------- Boutons ---------- */
@@ -158,30 +261,34 @@ select:disabled {
   min-height: 48px;
   margin: 0 0 0.75rem;
   padding: 0.625rem 1rem;
-  border-radius: 0.5rem;
+  border-radius: var(--rayon);
   font: inherit;
   font-weight: 600;
   cursor: pointer;
+  transition: background-color 0.15s, box-shadow 0.15s;
 }
 
+/* Bouton principal : bleu nuit légèrement brillant. */
 .bouton-principal {
-  background: var(--principal);
+  background: linear-gradient(180deg, var(--principal-haut) 0%, var(--principal) 55%, var(--principal-fonce) 100%);
   color: #ffffff;
-  border: 1px solid var(--principal);
+  border: 1px solid var(--principal-fonce);
+  box-shadow: var(--ombre-bouton), inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
 .bouton-principal:hover {
-  background: var(--principal-fonce);
+  background: linear-gradient(180deg, #5a7086 0%, #2a4157 55%, var(--principal) 100%);
 }
 
 .bouton-secondaire {
-  background: var(--carte);
-  color: var(--texte);
-  border: 1px solid var(--bordure);
+  background: linear-gradient(180deg, #ffffff 0%, #f4f2ee 100%);
+  color: var(--principal);
+  border: 1px solid #cfc9c0;
+  box-shadow: 0 1px 2px rgba(33, 53, 71, 0.08);
 }
 
 .bouton-secondaire:hover {
-  background: #eef1f4;
+  background: #f1eee9;
 }
 
 .bouton:disabled {
@@ -207,11 +314,12 @@ select:disabled {
   padding: 0.5rem 0;
   background: none;
   border: 0;
-  color: var(--principal);
+  color: var(--accent);
   font: inherit;
   font-weight: 600;
   text-align: left;
   text-decoration: underline;
+  text-underline-offset: 0.2em;
   cursor: pointer;
 }
 
@@ -222,34 +330,45 @@ select:disabled {
 .message-info {
   margin: 0 0 1rem;
   padding: 0.75rem 1rem;
-  border-radius: 0.5rem;
+  border-radius: var(--rayon);
   font-weight: 600;
 }
 
 .avertissement {
-  background: var(--fond-alerte);
-  border: 2px solid var(--alerte);
+  background: #fdf3e1;
+  border: 1px solid var(--alerte-bordure);
+  color: var(--texte);
 }
 
 .message-erreur {
   background: var(--fond-erreur);
-  border: 2px solid var(--erreur);
+  border: 1px solid var(--erreur-bordure);
   color: var(--erreur);
 }
 
 .message-info {
   background: var(--fond-info);
-  border: 2px solid var(--ok);
+  border: 1px solid var(--bordure-info);
   color: var(--ok);
 }
 
-/* ---------- Fiche de l'entrepôt ---------- */
+/* ---------- Cartes ---------- */
+
+.fiche,
+.produit,
+.mouvement,
+.operation-refusee,
+.bloc-parametres {
+  background: linear-gradient(180deg, var(--carte) 0%, var(--carte-bas) 100%);
+  border: 1px solid rgba(33, 53, 71, 0.08);
+  border-radius: var(--rayon-carte);
+  box-shadow: var(--ombre-carte);
+}
+
+/* ---------- Fiche (entrepôt, produit du formulaire) ---------- */
 
 .fiche {
   margin: 0 0 1rem;
-  background: var(--carte);
-  border: 1px solid var(--bordure-legere);
-  border-radius: 0.5rem;
 }
 
 .fiche > div {
@@ -281,15 +400,12 @@ select:disabled {
 }
 
 .produit {
-  margin: 0 0 0.75rem;
-  padding: 0.75rem 1rem 0.25rem;
-  background: var(--carte);
-  border: 1px solid var(--bordure-legere);
-  border-radius: 0.5rem;
+  margin: 0 0 0.875rem;
+  padding: 1rem 1rem 0.25rem;
 }
 
 .produit h4 {
-  margin: 0 0 0.25rem;
+  margin: 0 0 0.375rem;
   font-size: 1.0625rem;
   overflow-wrap: anywhere;
 }
@@ -300,8 +416,8 @@ select:disabled {
 }
 
 .produit-attente {
-  margin: 0.25rem 0 0;
-  color: var(--alerte);
+  margin: 0.375rem 0 0;
+  color: var(--or-texte);
   font-weight: 600;
 }
 
@@ -314,12 +430,12 @@ select:disabled {
 }
 
 .produit-negatif {
-  margin: 0.25rem 0 0;
+  margin: 0.375rem 0 0;
   color: var(--erreur);
-  font-weight: 600;
+  font-weight: 700;
 }
 
-/* ---------- Tableau de bord (phase 5) ---------- */
+/* ---------- Tableau de bord ---------- */
 
 /* Texte réservé aux lecteurs d'écran. */
 .lecteur-ecran {
@@ -334,41 +450,95 @@ select:disabled {
   border: 0;
 }
 
+/* Carte « Valeur du stock » : bleu nuit, comme dans la maquette. */
 .valeur-stock {
-  margin: 0 0 1rem;
-  padding: 0.75rem 1rem;
-  background: var(--carte);
-  border: 1px solid var(--bordure-legere);
-  border-radius: 0.5rem;
+  margin: 0 0 1.25rem;
+  padding: 1.125rem 1.125rem 1rem;
+  background: linear-gradient(180deg, var(--principal-haut) 0%, #2a3e52 45%, #1c2c3b 100%);
+  color: #ffffff;
+  border-radius: 1.375rem;
+  box-shadow: 0 10px 24px rgba(23, 38, 52, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .valeur-stock-titre {
   margin: 0;
-  color: var(--texte-discret);
-  font-size: 0.875rem;
+  color: #eef1f4;
+  font-size: 0.9375rem;
   font-weight: 600;
 }
 
 .valeur-stock-montant {
-  margin: 0 0 0.25rem;
-  font-size: 1.5rem;
+  margin: 0.125rem 0 0.875rem;
+  font-family: var(--police-titres);
+  font-size: 1.875rem;
   font-weight: 700;
+  line-height: 1.2;
   overflow-wrap: anywhere;
 }
 
 .valeur-stock-aide {
-  margin: 0;
-  color: var(--texte-discret);
-  font-size: 0.875rem;
+  margin: 0.875rem 0 0;
+  color: #e6ebf0;
+  font-size: 0.8125rem;
 }
 
-/* Alertes : une bordure de couleur ET une étiquette écrite. */
+/* Trois compteurs : produits, « Stock bas », « Ruptures » (décision 58). */
+.compteurs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.compteur {
+  padding: 0.5rem 0.625rem;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--rayon);
+}
+
+.compteur-nombre {
+  display: block;
+  font-family: var(--police-titres);
+  font-size: 1.375rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.compteur-libelle {
+  display: block;
+  color: #e6ebf0;
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+}
+
+.compteur-bas .compteur-nombre {
+  color: #ecd09c;
+}
+
+.compteur-rupture .compteur-nombre {
+  color: #f4b2a9;
+}
+
+/* Alertes : un fond teinté, une bordure de couleur ET une étiquette écrite. */
 .produit-bas {
-  border-left: 6px solid var(--alerte-vif);
+  background: linear-gradient(180deg, #fff7ec 0%, var(--fond-alerte) 100%);
+  border: 2px solid var(--alerte-bordure);
 }
 
 .produit-rupture {
-  border-left: 6px solid var(--erreur);
+  background: linear-gradient(180deg, #fdf0ee 0%, var(--fond-erreur) 100%);
+  border: 2px solid var(--erreur-bordure);
+}
+
+.produit-bas .quantite-valeur {
+  color: var(--alerte);
+}
+
+.produit-rupture .quantite-valeur {
+  color: var(--erreur);
 }
 
 .etiquette {
@@ -376,17 +546,18 @@ select:disabled {
   margin: 0 0 0.5rem;
   padding: 0.125rem 0.625rem;
   border-radius: 999px;
-  color: #ffffff;
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   font-weight: 700;
 }
 
 .etiquette-bas {
-  background: var(--alerte-vif);
+  background: var(--etiquette-alerte);
+  color: var(--alerte);
 }
 
 .etiquette-rupture {
-  background: var(--erreur);
+  background: var(--etiquette-erreur);
+  color: var(--erreur);
 }
 
 /* Quantité entre les boutons « −1 » et « +1 ». */
@@ -412,21 +583,26 @@ select:disabled {
 
 .quantite-valeur {
   display: block;
-  font-size: 1.25rem;
+  color: var(--principal);
+  font-family: var(--police-titres);
+  font-size: 1.375rem;
   font-weight: 700;
+  line-height: 1.25;
   overflow-wrap: anywhere;
 }
 
+/* « −1 » blanc, « +1 » bleu, comme dans la maquette. */
 .bouton-rapide {
   flex: none;
   min-width: 3.5rem;
   min-height: 48px;
   padding: 0 0.75rem;
-  background: var(--carte);
+  background: linear-gradient(180deg, #ffffff 0%, #f4f2ee 100%);
   color: var(--principal);
-  border: 2px solid var(--principal);
-  border-radius: 0.5rem;
-  font: inherit;
+  border: 1px solid #cfc9c0;
+  border-radius: var(--rayon);
+  box-shadow: 0 1px 2px rgba(33, 53, 71, 0.08);
+  font-family: var(--police-titres);
   font-size: 1.25rem;
   font-weight: 700;
   cursor: pointer;
@@ -435,11 +611,26 @@ select:disabled {
 }
 
 .bouton-rapide:hover {
-  background: #eef1f4;
+  background: #f1eee9;
 }
 
 .bouton-rapide:active {
-  background: #dde6f0;
+  background: #e7e3dc;
+}
+
+.bouton-rapide[data-action="plus"] {
+  background: linear-gradient(180deg, var(--accent-haut) 0%, var(--accent) 60%, #26557d 100%);
+  color: #ffffff;
+  border-color: #24507a;
+  box-shadow: 0 4px 10px rgba(46, 97, 141, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.bouton-rapide[data-action="plus"]:hover {
+  background: linear-gradient(180deg, #5689b7 0%, #33699a 60%, var(--accent) 100%);
+}
+
+.bouton-rapide[data-action="plus"]:active {
+  background: #26557d;
 }
 
 /* ---------- Mouvements ---------- */
@@ -451,7 +642,7 @@ select:disabled {
 }
 
 .choix-type legend {
-  margin: 0 0 0.25rem;
+  margin: 0 0 0.375rem;
   padding: 0;
   font-weight: 600;
 }
@@ -462,12 +653,19 @@ select:disabled {
   gap: 0.75rem;
   min-height: 48px;
   margin: 0 0 0.5rem;
-  padding: 0.5rem 0.75rem;
+  padding: 0.5rem 0.875rem;
   background: var(--carte);
-  border: 1px solid var(--bordure);
-  border-radius: 0.5rem;
+  border: 1px solid #cfc9c0;
+  border-radius: var(--rayon);
   font-weight: 600;
   cursor: pointer;
+}
+
+/* Type choisi : bordure bleue, en plus du bouton radio coché. */
+.choix:has(input:checked) {
+  background: #eef3f8;
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
 }
 
 .choix input {
@@ -475,6 +673,7 @@ select:disabled {
   height: 1.25rem;
   margin: 0;
   flex: none;
+  accent-color: var(--accent);
 }
 
 .choix-detail {
@@ -483,11 +682,8 @@ select:disabled {
 }
 
 .mouvement {
-  margin: 0 0 0.75rem;
-  padding: 0.75rem 1rem;
-  background: var(--carte);
-  border: 1px solid var(--bordure-legere);
-  border-radius: 0.5rem;
+  margin: 0 0 0.875rem;
+  padding: 0.875rem 1rem;
 }
 
 .mouvement h4 {
@@ -502,7 +698,8 @@ select:disabled {
 }
 
 .mouvement-variation {
-  font-weight: 600;
+  color: var(--principal);
+  font-weight: 700;
 }
 
 /* « Annuler cette opération » et la mention « Annulée » (phase 6). */
@@ -515,9 +712,42 @@ select:disabled {
   margin-top: 0.5rem;
   padding: 0.125rem 0.625rem;
   border-radius: 999px;
-  background: var(--texte-discret);
-  color: #ffffff;
+  background: #e3e7ec;
+  color: var(--principal);
   font-weight: 700;
+}
+
+.bloc-refus {
+  margin: 0 0 1rem;
+  padding: 0.875rem 1rem 0.25rem;
+  background: var(--fond-erreur);
+  border: 2px solid var(--erreur-bordure);
+  border-radius: var(--rayon-carte);
+}
+
+.bloc-refus h3 {
+  margin: 0 0 0.5rem;
+  color: var(--erreur);
+}
+
+.operation-refusee {
+  margin: 0 0 0.75rem;
+  padding: 0.75rem 1rem 0.25rem;
+}
+
+.operation-refusee p {
+  margin: 0 0 0.25rem;
+  overflow-wrap: anywhere;
+}
+
+.bouton-danger {
+  background: var(--carte);
+  color: var(--erreur);
+  border: 2px solid var(--erreur-bordure);
+}
+
+.bouton-danger:hover {
+  background: var(--fond-erreur);
 }
 
 /* ---------- Fournisseurs (phase 6b) ---------- */
@@ -556,51 +786,12 @@ select:disabled {
 /* ---------- Paramètres ---------- */
 
 .bloc-parametres {
-  margin: 0 0 1.5rem;
+  margin: 0 0 1.25rem;
   padding: 0 1rem 0.25rem;
-  background: var(--carte);
-  border: 1px solid var(--bordure-legere);
-  border-radius: 0.5rem;
 }
 
 .bloc-parametres h3 {
   margin: 1rem 0 0.75rem;
-}
-
-.bloc-refus {
-  margin: 0 0 1rem;
-  padding: 0.75rem 1rem 0.25rem;
-  background: var(--fond-erreur);
-  border: 2px solid var(--erreur);
-  border-radius: 0.5rem;
-}
-
-.bloc-refus h3 {
-  margin: 0 0 0.5rem;
-  color: var(--erreur);
-}
-
-.operation-refusee {
-  margin: 0 0 0.75rem;
-  padding: 0.75rem 1rem 0.25rem;
-  background: var(--carte);
-  border: 1px solid var(--bordure-legere);
-  border-radius: 0.5rem;
-}
-
-.operation-refusee p {
-  margin: 0 0 0.25rem;
-  overflow-wrap: anywhere;
-}
-
-.bouton-danger {
-  background: var(--carte);
-  color: var(--erreur);
-  border: 2px solid var(--erreur);
-}
-
-.bouton-danger:hover {
-  background: var(--fond-erreur);
 }
 
 /* ---------- Pied de page ---------- */
@@ -617,7 +808,7 @@ select:disabled {
   margin: 0;
 }
 
-/* ---------- Page de test des règles ---------- */
+/* ---------- Pages de test ---------- */
 
 .resultats {
   width: 100%;

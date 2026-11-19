@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 520" role="img" aria-label="MinStock">
+  <title>MinStock</title>
+  <!-- Symbole du logo MinStock, redessiné d'après le logo du propriétaire (décision 58) -->
+  <!-- Entrepôt : murs, toit et barre -->
+  <path d="M26.5 460V181L260.5 67L494 181V460" fill="none" stroke="#213547" stroke-width="41" stroke-linejoin="round"/>
+  <rect x="91" y="206" width="339" height="23" rx="11.5" fill="#213547"/>
+  <!-- Presse-papiers coché -->
+  <g fill="none" stroke="#B8A07C" stroke-width="17" stroke-linejoin="round">
+    <rect x="187" y="296.5" width="147.5" height="169" rx="5"/>
+    <path d="M220 385L244 409L300 354"/>
+  </g>
+  <circle cx="261" cy="280" r="12" fill="none" stroke="#B8A07C" stroke-width="11"/>
+  <rect x="220" y="288" width="82" height="25" rx="4" fill="#B8A07C"/>
+</svg>

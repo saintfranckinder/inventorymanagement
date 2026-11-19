@@ -3,12 +3,18 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Gestion de stock</title>
+  <title>MinStock</title>
+  <meta name="theme-color" content="#ece9e4">
+  <link rel="icon" href="./images/logo-minstock.svg" type="image/svg+xml">
+  <link rel="preload" href="./vendor/polices/montserrat-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
   <header class="entete">
-    <h1>Gestion de stock</h1>
+    <div class="entete-contenu">
+      <img class="entete-logo" src="./images/logo-minstock.svg" alt="" width="40" height="40">
+      <h1 class="marque"><span class="marque-min">Min</span><span class="marque-stock">Stock</span></h1>
+    </div>
   </header>
 
   <main>
@@ -203,6 +209,12 @@
       <div id="bloc-valeur" class="valeur-stock" hidden>
         <p class="valeur-stock-titre">Valeur du stock (indicative)</p>
         <p id="valeur-stock-total" class="valeur-stock-montant"></p>
+        <!-- Compteurs calculés sur l'appareil, sans lecture de plus (décision 58) -->
+        <ul class="compteurs" aria-label="Résumé des produits">
+          <li id="compteur-produits" class="compteur"><span class="compteur-nombre"></span> <span class="compteur-libelle"></span></li>
+          <li id="compteur-bas" class="compteur compteur-bas"><span class="compteur-nombre"></span> <span class="compteur-libelle"></span></li>
+          <li id="compteur-rupture" class="compteur compteur-rupture"><span class="compteur-nombre"></span> <span class="compteur-libelle"></span></li>
+        </ul>
         <p class="valeur-stock-aide">
           Calculée avec le prix d'achat actuel de chaque produit : modifier un
           prix change la valeur de tout le stock de ce produit. Un stock

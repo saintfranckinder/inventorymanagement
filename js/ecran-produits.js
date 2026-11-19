@@ -48,6 +48,9 @@ import {
 // Compare les noms sans tenir compte des majuscules ni des accents.
 const COMPARATEUR = new Intl.Collator('fr', { sensitivity: 'base', numeric: true });
 
+// Nombres entiers des compteurs : « 1 250 » plutôt que « 1250 ».
+const FORMAT_ENTIER = new Intl.NumberFormat('fr-FR');
+
 let contexte = null;          // { db, uid, devise }
 let produits = [];            // produits non archivés, triés par nom
 let arreterEcoute = null;
@@ -209,6 +212,29 @@ function afficherValeurTotale() {
   element('bloc-valeur').hidden = produits.length === 0;
   element('valeur-stock-total').textContent =
     formaterMontant(calculerValeurTotaleCentimes(produits), contexte.devise);
+
+  // Trois compteurs sur tous les produits actifs, même pendant une recherche,
+  // avec les seuils des alertes (décisions 46 et 58). Aucune lecture de plus.
+  let bas = 0;
+  let ruptures = 0;
+  for (const produit of produits) {
+    const etat = etatDuStock(produit);
+    if (etat === 'bas') {
+      bas += 1;
+    } else if (etat === 'rupture') {
+      ruptures += 1;
+    }
+  }
+  afficherCompteur('compteur-produits', produits.length, 'Produit', 'Produits');
+  afficherCompteur('compteur-bas', bas, 'Stock bas', 'Stock bas');
+  afficherCompteur('compteur-rupture', ruptures, 'Rupture', 'Ruptures');
+}
+
+// En français, 0 et 1 s'écrivent au singulier.
+function afficherCompteur(id, nombre, singulier, pluriel) {
+  const compteur = element(id);
+  compteur.querySelector('.compteur-nombre').textContent = FORMAT_ENTIER.format(nombre);
+  compteur.querySelector('.compteur-libelle').textContent = nombre >= 2 ? pluriel : singulier;
 }
 
 function afficherListe() {

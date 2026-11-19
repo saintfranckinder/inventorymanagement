@@ -17,6 +17,17 @@ Téléchargés le 2026-11-16.
 
 L'empreinte permet de vérifier qu'un fichier téléchargé de nouveau est bien identique à celui utilisé ici.
 
+## Police Montserrat (identité MinStock, décision 57)
+
+Téléchargée le 2026-11-18, non modifiée.
+
+| Fichier | Contenu | Source officielle | Empreinte SHA-256 |
+|---|---|---|---|
+| `polices/montserrat-latin.woff2` | Montserrat v31, caractères latins (dont les accents français, `’`, `«`, `»`, `−`), graisses 500 à 700 | `https://fonts.gstatic.com/s/montserrat/v31/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2` (adresse donnée par `https://fonts.googleapis.com/css2?family=Montserrat:wght@500..700`) | `06B16DB7A969135D48D38C49183BE7FB88D4452E2A3011957C7851941F4E4879` |
+| `polices/OFL-Montserrat.txt` | Licence SIL Open Font License 1.1 : usage, copie et diffusion gratuits, y compris dans une application | `https://raw.githubusercontent.com/google/fonts/main/ofl/montserrat/OFL.txt` | — |
+
+La licence doit toujours accompagner le fichier de la police.
+
 ## Correction appliquée au SDK Firebase
 
 Les fichiers officiels `firebase-auth.js` et `firebase-firestore.js` chargent `firebase-app.js` depuis Internet. Sans correction, l'application ne démarrerait pas hors ligne.

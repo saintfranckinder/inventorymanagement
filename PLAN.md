@@ -20,6 +20,7 @@ Dépôt GitHub : `saintfranckinder/minstock`, renommé par le propriétaire le 2
 | 5 | Tableau de bord | **Terminée le 2026-11-18** (test sur smartphone réussi le même jour, selon le propriétaire) |
 | 6 | Formulaires, historique lisible (avec « Annuler cette opération »), paramètres | **Terminée le 2026-11-18** (test sur smartphone réussi le même jour, selon le propriétaire) |
 | 6b | Carnet de fournisseurs (décisions 42 et 50 à 54) | **Terminée le 2026-11-18** (règles version 6 publiées par le propriétaire ; test sur smartphone réussi le même jour) |
+| — | Identité visuelle MinStock (décisions 55 à 58) | **Faite le 2026-11-18** ; test sur smartphone du propriétaire à faire |
 | 7 | Suppression du compte | **Prochaine étape** (voir section 8.7) |
 | 8 | Hors ligne et indicateur de synchronisation | À faire |
 | 9 | Export Excel | À faire |
@@ -473,6 +474,38 @@ Question du propriétaire à cette occasion : risque d'exposition des données d
 
 **Phase terminée le 2026-11-18.**
 
+### Étape intermédiaire : identité visuelle MinStock
+
+Demandée par le propriétaire le 2026-11-18, avant la phase 7, avec son logo (fichier JPEG « MinStock Logo », 1536 × 1536) et sa maquette « MinStock – UI mobile glossy » (PDF de 8 pages : 7 écrans de téléphone et une planche pour ordinateur). Consigne du propriétaire : garder les options et réglages convenus, travail « propre et épuré ». Décisions 55 à 58.
+
+**Compte rendu (2026-11-18)**
+
+Ce qui a été fait :
+
+- Nom « MinStock » : en-tête (symbole et nom en deux couleurs), onglet du navigateur, README.
+- Symbole du logo redessiné en SVG (`images/logo-minstock.svg`, fond transparent), aussi utilisé comme icône d'onglet (pages de test comprises). Le JPEG d'origine n'est pas copié dans le dépôt.
+- Police Montserrat téléchargée sur Google Fonts avec l'accord du propriétaire (`vendor/polices/montserrat-latin.woff2`, 37 956 octets, signature `wOF2` vérifiée, empreinte dans `vendor/LISEZMOI.md`) et sa licence `OFL-Montserrat.txt` ; `*.woff2` déclaré binaire dans `.gitattributes`.
+- `css/style.css` réécrit avec les mêmes classes : couleurs en variables, fond dégradé léger, cartes claires très arrondies avec ombre douce, boutons principaux bleu nuit légèrement brillants, `+1` bleu plein, `−1` blanc, alertes sur fond teinté avec bordure de couleur et étiquette écrite, quantité colorée selon l'alerte, carte « Valeur du stock » bleu nuit, type de mouvement choisi entouré de bleu.
+- Trois compteurs dans la carte de valeur (produits, « Stock bas », « Ruptures »), au singulier pour 0 et 1.
+- Version `0.9.0`. Aucun changement des données ni des règles Firestore.
+
+Tests exécutés par l'assistant, dans le navigateur intégré, sur `http://localhost:8080/`, avec le compte de test :
+
+| Test | Résultat |
+|---|---|
+| Contrastes des couleurs proposées (calculés) : textes de 5,4 à 12,6, bordures d'alerte de 3,6 à 4,5 | Réussi |
+| Police Montserrat chargée depuis le projet (aucun appel à Google pendant l'utilisation) | Réussi |
+| Compteurs : 4 produits, 0 puis 1 « Stock bas » (produit d'essai passé de 7 à 5 pièces), 2 « Ruptures », conformes aux cartes affichées | Réussi |
+| Écrans connexion, produits (carte normale, « Stock bas », « Rupture »), mouvement, historique (bouton d'annulation, « Annulée le »), paramètres, fournisseurs : affichage vérifié sur captures | Réussi |
+| 360 pixels : aucun défilement horizontal sur les écrans produits, mouvement, fiche produit, historique, paramètres, fournisseurs ; boutons `−1` / `+1` de 56 × 48 pixels ; compteurs de 92 × 64 pixels | Réussi |
+| En-tête aligné sur le contenu des écrans | Réussi (corrigé pendant les essais) |
+| `tests-nombres.html` : 104 sur 104 | Réussi |
+| Aucune erreur dans la console | Réussi |
+
+Tests non exécutés : smartphone du propriétaire (à faire après un **Push origin**, si possible en extérieur) ; lecteur d'écran réel ; très grande taille de texte réglée dans le téléphone.
+
+Constat : le produit « Essai phase 5 (stock bas) » du compte de test est revenu à 5 pièces (seuil 5), pour montrer l'alerte « Stock bas » (2 mouvements de plus).
+
 ### Phase 7 : suppression du compte
 - **Résultat :** double confirmation, rappel d'exporter, reconnexion demandée en premier, suppression en ligne uniquement, reprise automatique si `suppressionDemandee` est vrai. Les fournisseurs sont supprimés avec le reste (décision 42).
 - **Tests (compte de test uniquement) :**
@@ -577,10 +610,10 @@ Règles de conception retenues pour le code :
 
 ### 8.1 Phase actuelle
 
-- **Phase 6b (carnet de fournisseurs) terminée le 2026-11-18**, test sur smartphone réussi le même jour. Phases 5 et 6 terminées le même jour. Prochaine étape : **phase 7** (suppression du compte). Rien n'est commencé.
-- Version de l'application : `0.8.0`. Règles Firestore : **version 6**, publiée dans la console par le propriétaire le 2026-11-18, vérifiée active le même jour (90 essais sur 90, produits d'essai déjà créés).
+- **Étape « identité visuelle MinStock » faite le 2026-11-18**, test sur smartphone du propriétaire à faire. Phases 5, 6 et 6b terminées le même jour. Prochaine étape : **phase 7** (suppression du compte). Rien n'est commencé.
+- Version de l'application : `0.9.0`. Règles Firestore : **version 6**, publiée dans la console par le propriétaire le 2026-11-18, vérifiée active le même jour (90 essais sur 90, produits d'essai déjà créés).
 - Dépôt GitHub : `saintfranckinder/minstock`, **public**. Site : `https://saintfranckinder.github.io/minstock/` (GitHub Pages, branche `main`, dossier racine).
-- Dépôt Git, branche `main` : `cecf8d3` (phases 0 et 1), `48d55b3` (phase 2), `f09bf30` (phase 3), `96f2a3d` (phase 4a), `d8f1b5b` (phase 4b), `2f53da4` (note de passation), `b26abb6` (dépôt renommé), `e166a30` (recherche de secrets), `d5a7808` (décisions 40 et 41), `86d4eb4` (mise en ligne), `e1a5c70` (fin de l'étape « dépôt public »), `e202b2a` (décisions 42 et 43), `7e156a3` (phase 5), `eb40c59` (test sur smartphone de la phase 5), `456dff6` (phase 6), `de2ef92` (test sur smartphone de la phase 6), puis le commit de la phase 6b. Le propriétaire envoie chaque commit avec **Push origin** dans GitHub Desktop ; le site se met à jour quelques minutes après.
+- Dépôt Git, branche `main` : `cecf8d3` (phases 0 et 1), `48d55b3` (phase 2), `f09bf30` (phase 3), `96f2a3d` (phase 4a), `d8f1b5b` (phase 4b), `2f53da4` (note de passation), `b26abb6` (dépôt renommé), `e166a30` (recherche de secrets), `d5a7808` (décisions 40 et 41), `86d4eb4` (mise en ligne), `e1a5c70` (fin de l'étape « dépôt public »), `e202b2a` (décisions 42 et 43), `7e156a3` (phase 5), `eb40c59` (test sur smartphone de la phase 5), `456dff6` (phase 6), `de2ef92` (test sur smartphone de la phase 6), `14e00c9` (phase 6b), `36f5d20` (test sur smartphone de la phase 6b), puis le commit de l'identité visuelle. Le propriétaire envoie chaque commit avec **Push origin** dans GitHub Desktop ; le site se met à jour quelques minutes après.
 
 ### 8.2 Travail terminé
 
@@ -596,6 +629,7 @@ Règles de conception retenues pour le code :
 | 5 | Tableau de bord : valeur du stock indicative et total, recherche, alertes « Stock bas » / « Rupture », boutons `−1` / `+1` | `tests-nombres.html` : 104 sur 104 ; `tests-regles.html` : 67 sur 67 ; compte rendu de la phase 5 ; test sur smartphone réussi |
 | 6 | « Annuler cette opération » dans l'historique, écran « Paramètres » (nom de l'entrepôt, devise tant qu'aucun produit n'existe) | `tests-regles.html` : 72 sur 72 ; compte rendu de la phase 6 ; test sur smartphone réussi |
 | 6b | Carnet de fournisseurs : liste, recherche, « Appeler » / « WhatsApp » / « E-mail », ajout, modification, suppression ; règles version 6 | `tests-regles.html` : 90 sur 90 ; compte rendu de la phase 6b ; test sur smartphone réussi |
+| Identité | Nom MinStock, symbole SVG, police Montserrat, couleurs et style de la maquette, compteurs de la carte de valeur | compte rendu de l'étape « identité visuelle » |
 
 Les tests des phases 2 à 6b ont été exécutés par l'assistant dans le navigateur intégré, sur `http://localhost:8080/`, avec le compte de test. Tests sur smartphone faits par le propriétaire le 2026-11-18, sur le site en ligne (étape « dépôt public », puis phase 5).
 
@@ -636,8 +670,9 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 
 | Fichier | Rôle | Phases |
 |---|---|---|
-| `index.html`, `css/style.css` | Tous les écrans de l'application | 2, 3, 4a, 4b, 5, 6, 6b |
-| `js/app.js` | Démarrage, enchaînement des écrans, connexion ; numéro de version | 2, 3, 4a, 4b, 5, 6, 6b |
+| `index.html`, `css/style.css` | Tous les écrans de l'application ; identité visuelle (couleurs en variables au début de `style.css`) | 2, 3, 4a, 4b, 5, 6, 6b, identité |
+| `images/logo-minstock.svg` | Symbole du logo MinStock, aussi icône d'onglet | identité |
+| `js/app.js` | Démarrage, enchaînement des écrans, connexion ; numéro de version | 2, 3, 4a, 4b, 5, 6, 6b, identité |
 | `js/fournisseurs.js` | Lecture et écriture des fournisseurs ; limites des champs (décision 54) | 6b |
 | `js/ecran-fournisseurs.js` | Carnet de fournisseurs : liste, recherche, liens de contact, formulaire, suppression | 6b |
 | `js/firebase-config.js` | Configuration web Firebase (ce n'est pas un secret) | 2 |
@@ -656,12 +691,12 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 | `firestore.rules` | Règles de sécurité, version 6 | 2, 3, 4a, 4b, 6b |
 | `tests-regles.html`, `js/tests-regles.js` | 93 essais des règles sur le vrai serveur, 90 quand les produits d'essai existent déjà (compte de test en `@example.com` uniquement, décision 40 ; environ une minute) | 3, 4a, 4b, dépôt public, 6, 6b |
 | `tests-nombres.html`, `js/tests-nombres.js` | 104 essais de conversion et de calcul, sans connexion | 4a, 5 |
-| `vendor/` | SDK Firebase 13.4.0 (import corrigé), SheetJS 0.20.3, `LISEZMOI.md` | 2 |
+| `vendor/` | SDK Firebase 13.4.0 (import corrigé), SheetJS 0.20.3, police Montserrat et sa licence (`polices/`), `LISEZMOI.md` | 2, identité |
 | `demarrer.bat`, `outils/serveur-local.ps1` | Serveur local sur `http://localhost:8080/` | 2 |
 | `.gitignore`, `.gitattributes` | Fichiers exclus de Git ; `vendor/*.js` jamais modifiés par Git | 0, 2 |
 | `.nojekyll` | Fichier vide : GitHub Pages publie tout tel quel (décision 41) | dépôt public |
 | `CLAUDE.md`, `DEMARRAGE.md` | Cahier des charges et méthode de travail | 1 |
-| `PLAN.md`, `DECISIONS.md`, `README.md` | Suivi, décisions 1 à 54, documentation | Toutes |
+| `PLAN.md`, `DECISIONS.md`, `README.md` | Suivi, décisions 1 à 58, documentation | Toutes |
 
 **Hors Git :** `.env.test` contient l'adresse et le mot de passe des deux comptes de test. Il est ignoré par Git et n'apparaît dans aucun commit (vérifié le 2026-11-18).
 
@@ -678,7 +713,7 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 
 ### 8.6 Décisions prises
 
-Toutes sont dans `DECISIONS.md` (54 décisions, aucune effacée) :
+Toutes sont dans `DECISIONS.md` (58 décisions, aucune effacée) :
 
 - **1 à 7 (choix initiaux) :** Firestore en plan Spark ; connexion Google et e-mail ; quantités et prix en entiers ; `dernierMouvementId` ; GitHub Pages ; publication du code par le propriétaire.
 - **8 à 15 (audit) :** page `tests-regles.html` à la place du simulateur ; règles tolérantes au hors-ligne et suivi local des opérations ; dépôt public dès la fin de la phase 4b ; SDK local corrigé et serveur local ; règles produit-mouvement complétées ; suppression du compte avec reconnexion d'abord ; phase 4 coupée en deux ; dossier de travail.
@@ -691,13 +726,14 @@ Toutes sont dans `DECISIONS.md` (54 décisions, aucune effacée) :
 - **44 à 46 (phase 5) :** boutons `+1` / `−1` (formulaire prérempli si le stock deviendrait négatif) ; total du stock égal à la somme des lignes, stock négatif compté en négatif ; recherche sans majuscules ni accents, alertes « Stock bas » et « Rupture ».
 - **47 à 49 (phase 6) :** pas de filtre par produit dans l'historique pour l'instant ; cas où « Annuler cette opération » n'apparaît pas (annulation, déjà annulée, en attente, produit archivé) ; devise modifiable seulement si le serveur confirme qu'aucun produit n'existe.
 - **50 à 54 (phase 6b) :** fournisseur supprimé définitivement (plus d'archivage, décision 42 modifiée) ; noms en double autorisés avec avertissement ; liste écoutée seulement pendant que l'écran est ouvert ; boutons « Appeler », « WhatsApp », « E-mail » ; limites des champs.
+- **55 à 58 (identité visuelle) :** nom « MinStock » ; identité appliquée sans ajouter ni retirer de fonction (couleurs vérifiées, éléments de la maquette hors périmètre non repris) ; police Montserrat locale ; symbole SVG et trois compteurs dans la carte de valeur.
 
 Les règles de conception de la section 7 restent à respecter dans toute la suite.
 
 ### 8.7 Prochaine action précise
 
-*(La phase 6b est terminée, test sur smartphone compris : détail dans son compte rendu, section 2.)*
+*(L'étape « identité visuelle » est faite : détail dans son compte rendu, section 2.)*
 
-1. **Propriétaire :** quand il le souhaite, **Push origin** dans GitHub Desktop (documentation seulement), les deux tests restants de la phase 3 et le message d'aide quand la fenêtre Google est bloquée. Conseillé : activer la validation en deux étapes du compte Google qui gère la console Firebase.
-2. **Assistant, au début de la prochaine session (ouverte dans `C:\GitHub\Inventory Management\inventorymanagement`) :** lire `CLAUDE.md`, `PLAN.md` et `DECISIONS.md`, puis présenter le plan de la phase 7 (objectif, fichiers, risques, tests) et attendre l'accord du propriétaire avant de coder.
+1. **Propriétaire :** cliquer sur **Push origin** dans GitHub Desktop, attendre quelques minutes, vérifier « Version 0.9.0 » en bas de l'écran (recharger la page si l'ancien style reste affiché), puis regarder l'application sur le smartphone, si possible en extérieur : en-tête MinStock, carte de valeur et ses compteurs, cartes « Stock bas » et « Rupture », formulaires. Quand il le souhaite : les deux tests restants de la phase 3 et le message d'aide quand la fenêtre Google est bloquée. Conseillé : activer la validation en deux étapes du compte Google qui gère la console Firebase.
+2. **Assistant, au début de la prochaine session (ouverte dans `C:\GitHub\Inventory Management\inventorymanagement`) :** lire `CLAUDE.md`, `PLAN.md` et `DECISIONS.md`, noter le résultat du test sur smartphone de l'identité visuelle, puis présenter le plan de la phase 7 (objectif, fichiers, risques, tests) et attendre l'accord du propriétaire avant de coder.
 3. **Phase 7 (suppression du compte, `CLAUDE.md` section 8, décision 13) :** double confirmation, rappel d'exporter, reconnexion d'abord, en ligne seulement, reprise automatique si `suppressionDemandee` est vrai ; suppression des mouvements, produits, **fournisseurs**, puis du document `users/{uid}` et du compte. Point à vérifier avant de coder : taille de lot sûre (section 3, n° 3). Les règles changeront (suppression autorisée quand `suppressionDemandee` est vrai) : version 7 à publier par le propriétaire. Tests avec un compte de test uniquement (le second compte ou un compte créé pour l'occasion).
