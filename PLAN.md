@@ -655,7 +655,7 @@ Sur `https://saintfranckinder.github.io/minstock/`, version 0.11.0 affichée, av
 - Paramètres sans Internet : « Effacer les données de cet appareil » refusé avec le message prévu.
 - Retour d'Internet : l'indicateur affiche « Synchronisé » ; l'historique montre « Entrée : +1 pièce », « Fait le 19/11/2026 01:59 » **et** « Reçu par le serveur le 19/11/2026 02:11 » (écart de plus de 5 minutes : les deux heures sont affichées, test en attente depuis la phase 4b), avec le bouton « Annuler cette opération ».
 
-Non précisé : question avant « Se déconnecter » sur le téléphone (vérifiée sur l'ordinateur) ; `−1` final ; « Voir plus » sans Internet ; retour visible de « Quantité » sur la fiche ; modèle du téléphone et navigateur. Le produit d'essai « Essai phase 5 (zéro) » est à 8 pièces (il était déjà à 7 avant l'essai, à la suite d'essais précédents du propriétaire).
+Confirmé ensuite par le propriétaire : la question avant « Se déconnecter » est apparue sur le téléphone ; téléphone **Moto G Stylus 2024**, navigateur **Chrome**. Non précisé : `−1` final ; « Voir plus » sans Internet ; retour visible de « Quantité » sur la fiche. Le produit d'essai « Essai phase 5 (zéro) » est à 8 pièces (il était déjà à 7 avant l'essai, à la suite d'essais précédents du propriétaire).
 
 **Phase terminée le 2026-11-19.**
 
@@ -801,7 +801,7 @@ Les tests des phases 2 à 7 ont été exécutés par l'assistant dans le navigat
 | *(Fait le 2026-11-18 par le propriétaire ; lisibilité en extérieur non précisée.)* Tableau de bord sur smartphone : recherche, boutons `−1` / `+1` au doigt, alertes | Phase 5 (propriétaire) |
 | *(Fait le 2026-11-18 avec le second compte de test.)* Second compte réel qui ne voit pas les données du premier | Étape « dépôt public » |
 | *(Fait le 2026-11-19 en mode avion sur smartphone : « Fait le 01:59 », « Reçu par le serveur le 02:11 ».)* Affichage des deux heures quand l'écart dépasse 5 minutes | Phase 8 |
-| *(Fait le 2026-11-19 par le propriétaire, sauf l'étape 11 et la question de déconnexion sur le téléphone.)* Mode avion réel sur le téléphone : `DEMARRAGE.md` section 9, étapes 1 à 7 et 9 à 11 | Phase 8 |
+| *(Fait le 2026-11-19 par le propriétaire sur Moto G Stylus 2024 avec Chrome, question de déconnexion comprise ; sauf l'étape 11, deuxième appareil.)* Mode avion réel sur le téléphone : `DEMARRAGE.md` section 9, étapes 1 à 7 et 9 à 11 | Phase 8 |
 | Wi-Fi sans Internet (délai réel avant « Hors ligne ») | Phase 12 |
 | *(Fait le 2026-11-18 par le propriétaire.)* Historique et Paramètres sur smartphone : annuler une opération au doigt, renommer l'entrepôt, devise bloquée | Phase 6 (propriétaire) |
 | *(Fait le 2026-11-18 par le propriétaire.)* Fournisseurs sur smartphone : ajouter, rechercher, « Appeler » et « WhatsApp » avec son propre numéro, modifier, supprimer | Phase 6b (propriétaire) |
