@@ -22,7 +22,7 @@ Dépôt GitHub : `saintfranckinder/minstock`, renommé par le propriétaire le 2
 | 6b | Carnet de fournisseurs (décisions 42 et 50 à 54) | **Terminée le 2026-11-18** (règles version 6 publiées par le propriétaire ; test sur smartphone réussi le même jour) |
 | — | Identité visuelle MinStock (décisions 55 à 58) et compteurs cliquables (décision 59) | **Terminée le 2026-11-18** (validées sur smartphone par le propriétaire) |
 | 7 | Suppression du compte (décisions 60 à 63) | **Terminée le 2026-11-18** (règles version 7 publiées par le propriétaire ; test sur smartphone réussi avec un compte jetable) |
-| 8 | Hors ligne et indicateur de synchronisation (décisions 64 à 68) | **Faite le 2026-11-19** ; essai en mode avion du propriétaire à faire (voir 8.7) |
+| 8 | Hors ligne et indicateur de synchronisation (décisions 64 à 68) | **Terminée le 2026-11-19** (essai en mode avion réussi sur smartphone, selon les captures du propriétaire) |
 | 8b | Code SKU, type de stock, quantité à commander, prix de vente (décision 69) | **Prochaine étape** |
 | 9 | Export Excel | À faire |
 | 10 | Application installable (PWA) | À faire |
@@ -646,6 +646,19 @@ Constats :
 - La liste « en attente » simulée pour un autre compte et l'opération refusée simulée ont été retirées après les essais.
 - `disableNetwork` a suffi pour ces essais (aucune transaction en jeu) ; il ne remplace pas le vrai mode avion.
 
+**Essai en mode avion sur smartphone (2026-11-19), fait par le propriétaire**
+
+Sur `https://saintfranckinder.github.io/minstock/`, version 0.11.0 affichée, avec le compte de test (six captures d'écran envoyées à l'assistant) :
+
+- Mode avion : l'indicateur affiche « Hors ligne » ; l'écran « Fournisseurs » et l'historique restent affichés depuis la mémoire du téléphone.
+- `+1` sur « Essai phase 5 (zéro) » sans Internet : « En attente » à la place de « Quantité », 8 pièces ; écran des produits avec « Hors ligne » et « Envoi en attente » ; compteurs et valeur du stock (12 403,00 HTG) affichés.
+- Paramètres sans Internet : « Effacer les données de cet appareil » refusé avec le message prévu.
+- Retour d'Internet : l'indicateur affiche « Synchronisé » ; l'historique montre « Entrée : +1 pièce », « Fait le 19/11/2026 01:59 » **et** « Reçu par le serveur le 19/11/2026 02:11 » (écart de plus de 5 minutes : les deux heures sont affichées, test en attente depuis la phase 4b), avec le bouton « Annuler cette opération ».
+
+Non précisé : question avant « Se déconnecter » sur le téléphone (vérifiée sur l'ordinateur) ; `−1` final ; « Voir plus » sans Internet ; retour visible de « Quantité » sur la fiche ; modèle du téléphone et navigateur. Le produit d'essai « Essai phase 5 (zéro) » est à 8 pièces (il était déjà à 7 avant l'essai, à la suite d'essais précédents du propriétaire).
+
+**Phase terminée le 2026-11-19.**
+
 ### Phase 8b : code SKU, type de stock, quantité à commander, prix de vente
 - **Demandée par le propriétaire le 2026-11-19** (décision 69). Fonctions écartées de la première version : décision 70. Prix d'achat inchangé, toujours saisi à la main, sans coût moyen (décision 71) : le prix de vente ne sert jamais à la valeur du stock.
 - **Résultat :** quatre champs facultatifs dans la fiche produit, affichés sur la carte ; recherche par code SKU ; filtre par type de stock (sans lecture de plus) ; règles Firestore version 8 qui contrôlent ces champs et acceptent aussi les produits qui ne les ont pas ; `CLAUDE.md` mis à jour (sections 4 et 5).
@@ -745,7 +758,7 @@ Règles de conception retenues pour le code :
 
 ### 8.1 Phase actuelle
 
-- **Phase 8 (hors ligne et indicateur) faite le 2026-11-19**, tests sur l'ordinateur réussis ; reste l'essai en mode avion du propriétaire sur son téléphone. Phase 7 terminée le 2026-11-18. Prochaine étape : **phase 8b** (code SKU, type de stock, quantité à commander, prix de vente : décision 69), à commencer par les questions de détail de la section 2.
+- **Phase 8 (hors ligne et indicateur) terminée le 2026-11-19**, tests sur l'ordinateur et essai en mode avion sur smartphone réussis. Phase 7 terminée le 2026-11-18. Prochaine étape : **phase 8b** (code SKU, type de stock, quantité à commander, prix de vente : décision 69), à commencer par les questions de détail de la section 2.
 - Version de l'application : `0.11.0`. Règles Firestore : **version 7** (inchangées en phase 8), publiée dans la console par le propriétaire le 2026-11-18 ; `tests-regles.html` 88 sur 88 le 2026-11-19.
 - Dépôt GitHub : `saintfranckinder/minstock`, **public**. Site : `https://saintfranckinder.github.io/minstock/` (GitHub Pages, branche `main`, dossier racine).
 - Dépôt Git, branche `main` : `cecf8d3` (phases 0 et 1), `48d55b3` (phase 2), `f09bf30` (phase 3), `96f2a3d` (phase 4a), `d8f1b5b` (phase 4b), `2f53da4` (note de passation), `b26abb6` (dépôt renommé), `e166a30` (recherche de secrets), `d5a7808` (décisions 40 et 41), `86d4eb4` (mise en ligne), `e1a5c70` (fin de l'étape « dépôt public »), `e202b2a` (décisions 42 et 43), `7e156a3` (phase 5), `eb40c59` (test sur smartphone de la phase 5), `456dff6` (phase 6), `de2ef92` (test sur smartphone de la phase 6), `14e00c9` (phase 6b), `36f5d20` (test sur smartphone de la phase 6b), `6eeb438` (identité visuelle), `c95d942` (compteurs cliquables), `f60525d` (test sur smartphone des compteurs), `d952342` (phase 7), `b2cc014` (test sur smartphone de la phase 7), `84b6e87` (note de passation), puis le commit de la phase 8. Le propriétaire envoie chaque commit avec **Push origin** dans GitHub Desktop ; le site se met à jour quelques minutes après.
@@ -768,7 +781,7 @@ Règles de conception retenues pour le code :
 | 6b | Carnet de fournisseurs : liste, recherche, « Appeler » / « WhatsApp » / « E-mail », ajout, modification, suppression ; règles version 6 | `tests-regles.html` : 90 sur 90 ; compte rendu de la phase 6b ; test sur smartphone réussi |
 | Identité | Nom MinStock, symbole SVG, police Montserrat, couleurs et style de la maquette, compteurs de la carte de valeur (cliquables) | compte rendu de l'étape « identité visuelle » ; tests sur smartphone réussis |
 | 7 | Suppression du compte et de toutes ses données : double confirmation, reconnexion, effacement par paquets, reprise automatique, effacement de la copie locale ; règles version 7 | `tests-regles.html` : 88 sur 88 et 20 sur 20 (compte jetable) ; suppressions complète et interrompue réussies ; compte rendu de la phase 7 |
-| 8 | Indicateur de synchronisation, « En attente » à la place de « Quantité », avertissement de déconnexion, « Effacer les données de cet appareil », stockage durable demandé | `tests-nombres.html` : 104 sur 104 ; `tests-regles.html` : 88 sur 88 ; coupures simulées (compte rendu de la phase 8) ; mode avion sur téléphone à faire |
+| 8 | Indicateur de synchronisation, « En attente » à la place de « Quantité », avertissement de déconnexion, « Effacer les données de cet appareil », stockage durable demandé | `tests-nombres.html` : 104 sur 104 ; `tests-regles.html` : 88 sur 88 ; coupures simulées (compte rendu de la phase 8) ; mode avion sur smartphone réussi |
 
 Les tests des phases 2 à 7 ont été exécutés par l'assistant dans le navigateur intégré, sur `http://localhost:8080/`, avec les comptes de test (et des comptes jetables pour la phase 7). Tests sur smartphone faits par le propriétaire le 2026-11-18, sur le site en ligne, tous réussis : étape « dépôt public », phases 5, 6 et 6b, identité visuelle, compteurs cliquables, phase 7 (avec un compte jetable).
 
@@ -787,14 +800,15 @@ Les tests des phases 2 à 7 ont été exécutés par l'assistant dans le navigat
 | *(Fait le 2026-11-18 pour les phases 5, 6, 6b, l'identité et la phase 7.)* Affichage sur smartphone, à refaire pour chaque nouvel écran | Phases 8, 9, 10 |
 | *(Fait le 2026-11-18 par le propriétaire ; lisibilité en extérieur non précisée.)* Tableau de bord sur smartphone : recherche, boutons `−1` / `+1` au doigt, alertes | Phase 5 (propriétaire) |
 | *(Fait le 2026-11-18 avec le second compte de test.)* Second compte réel qui ne voit pas les données du premier | Étape « dépôt public » |
-| *(Avertissement d'archivage fait le 2026-11-18.)* Affichage des deux heures quand l'écart dépasse 5 minutes | Phase 8 (propriétaire, mode avion) |
-| *(Indicateur, « En attente », déconnexion et effacement de l'appareil vérifiés le 2026-11-19 sur l'ordinateur, coupures simulées.)* Mode avion réel sur le téléphone : `DEMARRAGE.md` section 9, étapes 1 à 7 et 9 à 11 ; Wi-Fi sans Internet | Phase 8 (propriétaire) |
+| *(Fait le 2026-11-19 en mode avion sur smartphone : « Fait le 01:59 », « Reçu par le serveur le 02:11 ».)* Affichage des deux heures quand l'écart dépasse 5 minutes | Phase 8 |
+| *(Fait le 2026-11-19 par le propriétaire, sauf l'étape 11 et la question de déconnexion sur le téléphone.)* Mode avion réel sur le téléphone : `DEMARRAGE.md` section 9, étapes 1 à 7 et 9 à 11 | Phase 8 |
+| Wi-Fi sans Internet (délai réel avant « Hors ligne ») | Phase 12 |
 | *(Fait le 2026-11-18 par le propriétaire.)* Historique et Paramètres sur smartphone : annuler une opération au doigt, renommer l'entrepôt, devise bloquée | Phase 6 (propriétaire) |
 | *(Fait le 2026-11-18 par le propriétaire.)* Fournisseurs sur smartphone : ajouter, rechercher, « Appeler » et « WhatsApp » avec son propre numéro, modifier, supprimer | Phase 6b (propriétaire) |
-| Liste des fournisseurs sans Internet (mode avion) | Phase 8 (propriétaire) |
+| *(Fait le 2026-11-19 : l'écran s'affiche en mode avion.)* Liste des fournisseurs sans Internet (mode avion) | Phase 8 |
 | *(Fait le 2026-11-18 par le propriétaire.)* Suppression du compte sur smartphone, **avec un compte jetable** | Phase 7 (propriétaire) |
 | Suppression d'un compte Google (reconnexion par la fenêtre Google) ; reconnexion exigée par Firebase pour la dernière étape ; coupure réelle pendant la suppression ; deux appareils pendant la suppression | Phases 8 et 12 |
-| Hors ligne réel (mode avion) : ajout de produit, mouvement, retour en ligne ; coupure entre l'envoi et la réponse ; « Voir plus » sans Internet ; premier chargement sans Internet sur un nouvel appareil | Phase 8 (propriétaire) ou 12 |
+| *(Mouvement en mode avion puis retour en ligne : fait le 2026-11-19.)* Hors ligne réel : ajout de produit ; coupure entre l'envoi et la réponse ; « Voir plus » sans Internet ; premier chargement sans Internet sur un nouvel appareil | Phase 12 |
 | Deux appareils qui modifient le même produit | Phase 8 ou 12 |
 | Réouverture de l'application en mode avion | Phase 10 |
 
@@ -891,8 +905,8 @@ Les règles de conception de la section 7 restent à respecter dans toute la sui
 
 ### 8.7 Prochaine action précise
 
-*(Phase 8 faite le 2026-11-19, tests sur l'ordinateur réussis, commit local fait. Guide de l'essai en mode avion donné au propriétaire le même jour.)*
+*(Phase 8 terminée le 2026-11-19, essai en mode avion sur smartphone compris.)*
 
-1. **Propriétaire :** *(phase 8 déjà envoyée sur GitHub.)* **Push origin** pour les deux commits de documentation (décision 71 et cette note) quand il le souhaite ; vérifier « Version 0.11.0 » en bas du site sur le téléphone ; puis l'essai en mode avion (guide donné, `DEMARRAGE.md` section 9, étapes 1 à 7 et 9 à 11) avec le compte de test, et dire le résultat de chaque étape. Toujours en attente : les deux tests de la phase 3 et le message d'aide quand la fenêtre Google est bloquée. Conseillé : activer la validation en deux étapes du compte Google qui gère la console Firebase.
-2. **Assistant, au début de la prochaine session :** lire `CLAUDE.md`, `PLAN.md` et `DECISIONS.md`. Noter le résultat de l'essai en mode avion dans le compte rendu de la phase 8 (corriger d'abord ce qui échoue). Puis phase 8b : poser au propriétaire les cinq questions de détail (section 2, phase 8b), attendre ses réponses, mettre à jour `CLAUDE.md` (sections 4 et 5) avec son accord, noter les décisions 72 et suivantes, écrire les règles version 8 (nouveaux champs facultatifs : un produit qui ne les a pas reste accepté), compléter `tests-regles.html`, faire publier les règles par le propriétaire **avant** d'envoyer le code.
+1. **Propriétaire :** **Push origin** pour les commits de documentation (décision 71, notes de passation) quand il le souhaite ; répondre aux cinq questions de la phase 8b. Toujours en attente : les deux tests de la phase 3 et le message d'aide quand la fenêtre Google est bloquée. Conseillé : activer la validation en deux étapes du compte Google qui gère la console Firebase.
+2. **Assistant, au début de la prochaine session :** lire `CLAUDE.md`, `PLAN.md` et `DECISIONS.md`. Phase 8b : poser au propriétaire les cinq questions de détail (section 2, phase 8b), attendre ses réponses, mettre à jour `CLAUDE.md` (sections 4 et 5) avec son accord, noter les décisions 72 et suivantes, écrire les règles version 8 (nouveaux champs facultatifs : un produit qui ne les a pas reste accepté), compléter `tests-regles.html`, faire publier les règles par le propriétaire **avant** d'envoyer le code.
 3. **Rappels pour la suite :** ne jamais faire de `git push` ; ne jamais essayer la suppression du compte avec un vrai compte ; ne jamais ajouter d'essai touchant à `suppressionDemandee` dans la série habituelle de `tests-regles.html` ; après la mise en service, ne publier que des règles compatibles avec les versions de l'application déjà ouvertes sur les téléphones (section 7).
