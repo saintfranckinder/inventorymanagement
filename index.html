@@ -322,7 +322,6 @@
           </button>
           <h2>Fournisseurs</h2>
         </div>
-        <button type="button" id="bouton-ajouter-fournisseur" class="bouton bouton-principal">Ajouter un fournisseur</button>
         <div id="bloc-recherche-fournisseur" class="recherche" hidden>
           <label for="recherche-fournisseur" class="lecteur-ecran">Rechercher un fournisseur</label>
           <svg class="icone recherche-icone" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -344,9 +343,20 @@
       <p id="fournisseurs-chargement" class="aide" hidden>
         Chargement de la liste… La première fois sur cet appareil, Internet est nécessaire.
       </p>
-      <p id="fournisseurs-vide" class="aide" hidden>Aucun fournisseur pour l'instant.</p>
+      <p id="fournisseurs-vide" class="aide" hidden>
+        Aucun fournisseur pour l'instant. Touchez le bouton « + » en bas à
+        droite pour en ajouter un.
+      </p>
       <p id="recherche-fournisseur-aucun" class="aide" role="status" hidden></p>
       <ul id="liste-fournisseurs" class="liste-produits"></ul>
+
+      <!-- Ajouter un fournisseur : bouton rond, comme sur l'accueil (décision 76) -->
+      <button type="button" id="bouton-ajouter-fournisseur" class="bouton-flottant" aria-label="Ajouter un fournisseur">
+        <svg class="icone" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M12 5v14"/>
+          <path d="M5 12h14"/>
+        </svg>
+      </button>
     </section>
 
     <!-- Ajouter ou modifier un fournisseur -->
@@ -404,7 +414,6 @@
           </button>
           <h2>Clients</h2>
         </div>
-        <button type="button" id="bouton-ajouter-client" class="bouton bouton-principal">Ajouter un client</button>
         <div id="bloc-recherche-client" class="recherche" hidden>
           <label for="recherche-client" class="lecteur-ecran">Rechercher un client</label>
           <svg class="icone recherche-icone" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -427,9 +436,20 @@
       <p id="clients-chargement" class="aide" hidden>
         Chargement de la liste… La première fois sur cet appareil, Internet est nécessaire.
       </p>
-      <p id="clients-vide" class="aide" hidden>Aucun client pour l'instant.</p>
+      <p id="clients-vide" class="aide" hidden>
+        Aucun client pour l'instant. Touchez le bouton « + » en bas à droite
+        pour en ajouter un.
+      </p>
       <p id="recherche-client-aucun" class="aide" role="status" hidden></p>
       <ul id="liste-clients" class="liste-produits"></ul>
+
+      <!-- Ajouter un client : bouton rond, comme sur l'accueil (décision 76) -->
+      <button type="button" id="bouton-ajouter-client" class="bouton-flottant" aria-label="Ajouter un client">
+        <svg class="icone" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M12 5v14"/>
+          <path d="M5 12h14"/>
+        </svg>
+      </button>
     </section>
 
     <!-- Ajouter ou modifier un client -->

@@ -416,6 +416,10 @@ function afficherListe() {
 
   const saisie = element('recherche-produit').value;
   const recherche = normaliserPourRecherche(saisie);
+  // Tant que la recherche contient du texte, la carte de valeur se replie
+  // (décision 76). Elle ne dépend ni du clavier ni du focus : la liste ne
+  // bouge pas au moment d'un appui sur « +1 » / « −1 ».
+  element('vue-accueil').classList.toggle('recherche-active', recherche !== '');
   const visibles = recherche
     ? filtres.filter((produit) => normaliserPourRecherche(produit.nom).includes(recherche))
     : filtres;
@@ -803,6 +807,7 @@ export function arreterEcranProduits() {
   element('liste-produits').textContent = '';
   element('produits-vide').hidden = true;
   element('recherche-produit').value = '';
+  element('vue-accueil').classList.remove('recherche-active');
   element('bloc-recherche').hidden = true;
   element('recherche-aucun').hidden = true;
   element('bloc-valeur').hidden = true;
