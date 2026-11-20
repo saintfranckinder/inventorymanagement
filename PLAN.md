@@ -23,7 +23,7 @@ Dépôt GitHub : `saintfranckinder/minstock`, renommé par le propriétaire le 2
 | — | Identité visuelle MinStock (décisions 55 à 58) et compteurs cliquables (décision 59) | **Terminée le 2026-11-18** (validées sur smartphone par le propriétaire) |
 | 7 | Suppression du compte (décisions 60 à 63) | **Terminée le 2026-11-18** (règles version 7 publiées par le propriétaire ; test sur smartphone réussi avec un compte jetable) |
 | 6c | Carnet de clients (décisions 72 et 73) | **Terminée le 2026-11-20** (règles version 8 publiées par le propriétaire ; test sur smartphone réussi) |
-| — | Accueil épuré (décision 74), haut figé et bouton retour (décision 75), partie figée réduite (décision 76) | **Fait le 2026-11-20** (versions 0.13.0 et 0.14.0 essayées sur smartphone par le propriétaire) ; version 0.15.0 à essayer sur smartphone |
+| — | Accueil épuré (décision 74), haut figé et bouton retour (décision 75), partie figée réduite (décision 76) | **Terminé le 2026-11-20** (version 0.15.0 essayée sur smartphone par le propriétaire : réussi) |
 | 8 | Hors ligne et indicateur de synchronisation (décisions 64 à 68) | **Terminée le 2026-11-19** (essai en mode avion réussi sur smartphone, selon les captures du propriétaire) |
 | 8b | Code SKU, type de stock, quantité à commander, prix de vente (décision 69) | À faire, après la phase 6c (règles version 9) |
 | 9 | Export Excel | À faire |
@@ -805,7 +805,9 @@ Tests exécutés par l'assistant (412 × 800, puis 360 × 780) :
 | Fournisseurs : partie figée de 119 pixels au lieu de 193 ; Clients : 61 ; bouton rond de 56 × 56, un seul visible à la fois ; il ouvre le formulaire ; retour → liste | Réussi |
 | Aucun défilement horizontal ; console d'une page neuve sans erreur | Réussi |
 
-Non testé : téléphone ; clavier réel.
+**Test sur smartphone (2026-11-20), fait par le propriétaire :** version 0.15.0 sur le site en ligne (Moto G Stylus 2024, Chrome) ; le propriétaire indique que le test est réussi (guide donné : place gagnée, recherche avec le clavier et carte repliée, bouton rond sur Fournisseurs et Clients, bouton retour du téléphone, fiche d'un produit fermée par le retour). Non précisé : détail de chaque étape.
+
+**Étape terminée le 2026-11-20** (accueil épuré, haut figé, bouton retour, partie figée réduite : décisions 74 à 76).
 
 ### Phase 8b : code SKU, type de stock, quantité à commander, prix de vente
 - **Demandée par le propriétaire le 2026-11-19** (décision 69). Fonctions écartées de la première version : décision 70. Prix d'achat inchangé, toujours saisi à la main, sans coût moyen (décision 71) : le prix de vente ne sert jamais à la valeur du stock.
@@ -906,7 +908,7 @@ Règles de conception retenues pour le code :
 
 ### 8.1 Phase actuelle
 
-- **Accueil épuré (décision 74), haut figé et bouton retour (décision 75), partie figée réduite (décision 76) faits le 2026-11-20**, tests sur l'ordinateur réussis ; reste le test sur smartphone de la version `0.15.0`.
+- **Accueil épuré (décision 74), haut figé et bouton retour (décision 75), partie figée réduite (décision 76) terminés le 2026-11-20**, tests sur l'ordinateur et sur smartphone (version `0.15.0`) réussis.
 - **Phase 6c (carnet de clients) terminée le 2026-11-20**, tests sur l'ordinateur et sur smartphone réussis. Phase 8 terminée le 2026-11-19. Prochaine étape : **phase 8b** (code SKU, type de stock, quantité à commander, prix de vente : décision 69, règles version 9), à commencer par les questions de détail de la section 2.
 - Version de l'application : `0.15.0`. Règles Firestore : **version 8**, publiée dans la console par le propriétaire le 2026-11-20 ; `tests-regles.html` 105 sur 105 (série habituelle) et 22 sur 22 (série « suppression ») le même jour.
 - Dépôt GitHub : `saintfranckinder/minstock`, **public**. Site : `https://saintfranckinder.github.io/minstock/` (GitHub Pages, branche `main`, dossier racine).
@@ -930,7 +932,7 @@ Règles de conception retenues pour le code :
 | 6b | Carnet de fournisseurs : liste, recherche, « Appeler » / « WhatsApp » / « E-mail », ajout, modification, suppression ; règles version 6 | `tests-regles.html` : 90 sur 90 ; compte rendu de la phase 6b ; test sur smartphone réussi |
 | Identité | Nom MinStock, symbole SVG, police Montserrat, couleurs et style de la maquette, compteurs de la carte de valeur (cliquables) | compte rendu de l'étape « identité visuelle » ; tests sur smartphone réussis |
 | 7 | Suppression du compte et de toutes ses données : double confirmation, reconnexion, effacement par paquets, reprise automatique, effacement de la copie locale ; règles version 7 | `tests-regles.html` : 88 sur 88 et 20 sur 20 (compte jetable) ; suppressions complète et interrompue réussies ; compte rendu de la phase 7 |
-| Accueil épuré | Une ligne par produit, fiche dans un panneau, bouton rond, barre en bas, ⚙ ; aucune donnée ni règle changée | compte rendu de l'étape « accueil épuré » ; smartphone à faire |
+| Accueil épuré | Une ligne par produit, fiche dans un panneau, bouton rond, barre en bas, ⚙ ; haut figé, bouton retour du téléphone, partie figée réduite (décisions 74 à 76) ; aucune donnée ni règle changée | compte rendu de l'étape « accueil épuré » ; test sur smartphone réussi (version 0.15.0) |
 | 6c | Carnet de clients (copie du carnet de fournisseurs, sans case VIP) ; règles version 8 ; clients effacés avec le compte | `tests-regles.html` : 105 sur 105 et 22 sur 22 ; compte rendu de la phase 6c ; test sur smartphone réussi |
 | 8 | Indicateur de synchronisation, « En attente » à la place de « Quantité », avertissement de déconnexion, « Effacer les données de cet appareil », stockage durable demandé | `tests-nombres.html` : 104 sur 104 ; `tests-regles.html` : 88 sur 88 ; coupures simulées (compte rendu de la phase 8) ; mode avion sur smartphone réussi |
 
@@ -1063,6 +1065,6 @@ Les règles de conception de la section 7 restent à respecter dans toute la sui
 
 *(Accueil épuré fait le 2026-11-20, tests sur l'ordinateur réussis, commit local fait. Les cinq questions de la phase 8b ont été posées au propriétaire le même jour, avec les recommandations de l'assistant ; réponse en attente.)*
 
-1. **Propriétaire :** **Push origin** (aucune règle à publier) ; vérifier « Version 0.15.0 » dans Paramètres (⚙) sur le téléphone ; essayer la place gagnée, la recherche avec le clavier (la carte se replie dès la première lettre), le bouton rond sur Fournisseurs et Clients, et le bouton retour du téléphone (fiche d'un produit → retour). Puis répondre aux cinq questions de la phase 8b. Toujours en attente : les deux tests de la phase 3 et le message d'aide quand la fenêtre Google est bloquée. Conseillé : activer la validation en deux étapes du compte Google qui gère la console Firebase.
+1. **Propriétaire :** *(version 0.15.0 essayée sur smartphone : réussi.)* Répondre aux cinq questions de la phase 8b. **Push origin** pour le commit de cette note quand il le souhaite. Toujours en attente : les deux tests de la phase 3 et le message d'aide quand la fenêtre Google est bloquée. Conseillé : activer la validation en deux étapes du compte Google qui gère la console Firebase.
 2. **Assistant, au début de la prochaine session :** lire `CLAUDE.md`, `PLAN.md` et `DECISIONS.md`. Phase 8b : poser au propriétaire les cinq questions de détail (section 2, phase 8b), attendre ses réponses, mettre à jour `CLAUDE.md` (sections 4 et 5) avec son accord, noter les décisions 72 et suivantes, écrire les règles version 9 (nouveaux champs facultatifs : un produit qui ne les a pas reste accepté), compléter `tests-regles.html`, faire publier les règles par le propriétaire **avant** d'envoyer le code.
 3. **Rappels pour la suite :** ne jamais faire de `git push` ; ne jamais essayer la suppression du compte avec un vrai compte ; ne jamais ajouter d'essai touchant à `suppressionDemandee` dans la série habituelle de `tests-regles.html` ; après la mise en service, ne publier que des règles compatibles avec les versions de l'application déjà ouvertes sur les téléphones (section 7).
