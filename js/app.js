@@ -21,6 +21,11 @@ import {
   demarrerEcranFournisseurs
 } from './ecran-fournisseurs.js';
 import {
+  arreterEcranClients,
+  brancherEcranClients,
+  demarrerEcranClients
+} from './ecran-clients.js';
+import {
   arreterEcranParametres,
   brancherEcranParametres,
   demarrerEcranParametres
@@ -58,7 +63,7 @@ import { demarrerFirebase, VERSION_SDK_FIREBASE } from './firebase-init.js';
 import { afficherMessage, afficherVue, effacerMessages, element, vueActuelle } from './interface.js';
 import { messageErreur } from './messages-erreur.js';
 
-const VERSION_APP = '0.11.0';
+const VERSION_APP = '0.12.0';
 
 // Message affiché sur l'écran de connexion après « Effacer les données de cet
 // appareil » (décision 67), qui recharge la page.
@@ -86,7 +91,7 @@ const VUES_SANS_COMPTE = ['vue-connexion', 'vue-inscription', 'vue-oubli', 'vue-
 // d'eux, une simple mise à jour de l'entrepôt ne doit pas le déplacer.
 const VUES_DE_TRAVAIL = [
   'vue-accueil', 'vue-produit', 'vue-mouvement', 'vue-historique', 'vue-parametres',
-  'vue-fournisseurs', 'vue-fournisseur', 'vue-suppression'
+  'vue-fournisseurs', 'vue-fournisseur', 'vue-clients', 'vue-client', 'vue-suppression'
 ];
 
 const AVERTISSEMENT_STOCKAGE =
@@ -181,6 +186,7 @@ function arreterEcransDeTravail() {
   arreterEcranMouvements();
   arreterEcranParametres();
   arreterEcranFournisseurs();
+  arreterEcranClients();
   arreterIndicateur();
 }
 
@@ -221,6 +227,7 @@ function surEtatEntrepot(etat) {
     demarrerEcranMouvements(firebase.db, utilisateur.uid);
     demarrerEcranParametres(firebase.db, utilisateur.uid, etat.donnees);
     demarrerEcranFournisseurs(firebase.db, utilisateur.uid);
+    demarrerEcranClients(firebase.db, utilisateur.uid);
     if (!VUES_DE_TRAVAIL.includes(vueActuelle())) {
       afficherVue('vue-accueil');
     }
@@ -596,6 +603,7 @@ async function demarrer() {
   brancherEcranMouvements();
   brancherEcranParametres();
   brancherEcranFournisseurs();
+  brancherEcranClients();
   brancherEcranSuppression();
 
   surveillerConnexion(firebase.auth, surChangementUtilisateur);

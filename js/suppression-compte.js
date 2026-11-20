@@ -5,8 +5,8 @@
 //   1. la demande (suppressionDemandee: true) est enregistrée par une
 //      transaction : elle exige Internet et ne laisse rien en attente ;
 //   2. les données sont effacées par paquets, dans cet ordre : produits,
-//      mouvements, fournisseurs (un mouvement envoyé en retard par un autre
-//      appareil est alors refusé, car son produit n'existe plus) ;
+//      mouvements, fournisseurs, clients (un mouvement envoyé en retard par
+//      un autre appareil est alors refusé, car son produit n'existe plus) ;
 //   3. puis le document de l'entrepôt ;
 //   4. puis le compte de connexion (js/auth.js) ;
 //   5. enfin, la copie gardée sur l'appareil est effacée.
@@ -41,7 +41,10 @@ const PREFIXE_OPERATIONS = 'operations-en-attente:';
 const ETAPES = [
   { collection: 'products', libelle: 'Produits' },
   { collection: 'movements', libelle: 'Historique des mouvements' },
-  { collection: 'suppliers', libelle: 'Fournisseurs' }
+  { collection: 'suppliers', libelle: 'Fournisseurs' },
+  // Phase 6c (décision 72) : sans cette ligne, les fiches des clients
+  // resteraient sur le serveur après la suppression du compte.
+  { collection: 'clients', libelle: 'Clients' }
 ];
 
 function avecDelai(promesse) {

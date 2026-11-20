@@ -18,6 +18,7 @@ Le projet est en cours de construction. L'avancement est suivi dans `PLAN.md`.
 - Tableau de bord : valeur du stock (indicative), recherche par nom, alertes « Stock bas » et « Rupture », boutons rapides `−1` et `+1`.
 - Paramètres : changer le nom de l'entrepôt ; changer la devise tant que l'entrepôt ne contient aucun produit ; supprimer son compte et toutes ses données.
 - Carnet de fournisseurs : ajouter, modifier, supprimer, rechercher, et appeler ou écrire en un appui.
+- Carnet de clients : même fonctionnement que les fournisseurs, pour les clients réguliers (« VIP » s'écrit dans les notes).
 - Indicateur de synchronisation en haut de l'écran ; avertissement avant de se déconnecter s'il reste des modifications non envoyées ; effacement des données de l'appareil (appareil partagé).
 
 ## Identité visuelle
@@ -94,7 +95,7 @@ Si des modifications n'ont pas encore été envoyées, « Se déconnecter » dem
 
 ### Effacer les données de cet appareil
 
-Dans **Paramètres**, « Effacer les données de cet appareil et me déconnecter » efface la copie des données gardée par le navigateur (produits, historique, fournisseurs), puis déconnecte. Les données du serveur ne sont pas touchées : à la prochaine connexion, il faut Internet pour les recharger.
+Dans **Paramètres**, « Effacer les données de cet appareil et me déconnecter » efface la copie des données gardée par le navigateur (produits, historique, fournisseurs, clients), puis déconnecte. Les données du serveur ne sont pas touchées : à la prochaine connexion, il faut Internet pour les recharger.
 
 - L'effacement est refusé tant que des modifications de ce compte attendent d'être envoyées, ou qu'un autre compte utilisé sur le même appareil a des opérations non envoyées.
 - Il efface aussi la copie des autres comptes MinStock utilisés dans le même navigateur.
@@ -118,9 +119,21 @@ Le bouton « Fournisseurs », sur l'écran des produits, ouvre le carnet. Il est
 
 Ce sont des informations sur d'autres personnes : n'enregistrer que ce qui est utile, et supprimer un fournisseur dont on n'a plus besoin.
 
+## Carnet de clients
+
+Le bouton « Clients », sur l'écran des produits, ouvre un carnet qui fonctionne exactement comme celui des fournisseurs (décisions 72 et 73).
+
+- **Fiche d'un client :** nom (obligatoire), téléphone, WhatsApp, e-mail, adresse et notes. Mêmes limites que les fournisseurs (notes : 1 000 caractères).
+- **Clients VIP :** il n'y a pas de case VIP. Écrivez « VIP » dans les notes, puis tapez `vip` dans la recherche pour n'afficher que ces clients.
+- **Recherche :** par nom ou par un mot des notes, sans tenir compte des majuscules ni des accents.
+- **Boutons, même nom, suppression définitive, lecture de la liste :** comme pour les fournisseurs (voir plus haut).
+- **Ce que le carnet ne fait pas :** il est indépendant du stock et ne gère pas les ventes : pas de lien avec les sorties, pas d'historique d'achats, de crédit, de remises ni de points de fidélité.
+
+Ce sont des informations sur d'autres personnes : n'enregistrer que ce qui est utile, et supprimer un client dont on n'a plus besoin.
+
 ## Supprimer son compte
 
-Dans **Paramètres**, le bouton « Supprimer mon compte et mes données » efface **définitivement** l'entrepôt, tous les produits (même archivés), tout l'historique, le carnet de fournisseurs et le compte de connexion.
+Dans **Paramètres**, le bouton « Supprimer mon compte et mes données » efface **définitivement** l'entrepôt, tous les produits (même archivés), tout l'historique, les carnets de fournisseurs et de clients, et le compte de connexion.
 
 1. Un écran explique ce qui sera effacé et rappelle d'exporter ses données avant (l'export Excel arrivera en phase 9).
 2. Double confirmation : cocher « Je comprends que tout sera supprimé définitivement » et taper `SUPPRIMER`.
@@ -161,7 +174,7 @@ Le fichier `firestore.rules` n'est pas appliqué automatiquement. À chaque modi
 5. Cliquez sur **Publier**.
 6. Vérifiez que la ligne « Version des regles » affichée dans la console est la même que dans le fichier.
 
-Tant que les règles publiées sont en retard sur le fichier, l'application affiche « Impossible de charger vos données » (ou, pour les fournisseurs, « Impossible de charger les fournisseurs »).
+Tant que les règles publiées sont en retard sur le fichier, l'application affiche « Impossible de charger vos données » (ou, pour les fournisseurs et les clients, « Impossible de charger les fournisseurs » ou « … les clients »).
 
 **Ordre à respecter quand les règles changent :** publier d'abord les règles dans la console, puis seulement envoyer le code avec **Push origin**. Les nouvelles règles restent compatibles avec la version déjà en ligne.
 
@@ -174,9 +187,9 @@ Tant que les règles publiées sont en retard sur le fichier, l'application affi
 
 À refaire après chaque publication des règles.
 
-Ces essais créent dans le compte de test deux produits « Produit d'essai (règles) ». Ils sont archivés à la fin de chaque passage et n'apparaissent donc pas dans la liste. Chaque passage ajoute aussi cinq mouvements à l'historique du compte de test, dont une opération et son annulation (impossibles à supprimer, par conception) ; leur somme est nulle. Un fournisseur d'essai est créé puis supprimé : il ne reste rien. Un passage dure environ une minute.
+Ces essais créent dans le compte de test deux produits « Produit d'essai (règles) ». Ils sont archivés à la fin de chaque passage et n'apparaissent donc pas dans la liste. Chaque passage ajoute aussi cinq mouvements à l'historique du compte de test, dont une opération et son annulation (impossibles à supprimer, par conception) ; leur somme est nulle. Un fournisseur d'essai et un client d'essai sont créés puis supprimés : il ne reste rien. Un passage dure environ une minute.
 
-**Essais de la suppression du compte :** connecté avec un compte jetable `test-suppression-…@example.com`, la même page lance à la place 20 essais des règles de suppression. Ils créent leurs propres données, demandent la suppression, vérifient les refus et les autorisations, puis effacent tout sauf le compte de connexion, qui peut resservir. Ces essais ne se lancent jamais avec un autre compte, et la série habituelle refuse de tourner sur un compte en cours de suppression.
+**Essais de la suppression du compte :** connecté avec un compte jetable `test-suppression-…@example.com`, la même page lance à la place 22 essais des règles de suppression. Ils créent leurs propres données, demandent la suppression, vérifient les refus et les autorisations, puis effacent tout sauf le compte de connexion, qui peut resservir. Ces essais ne se lancent jamais avec un autre compte, et la série habituelle refuse de tourner sur un compte en cours de suppression.
 
 ## Tester les conversions de nombres
 
@@ -243,6 +256,7 @@ Sur GitHub Pages, le fichier vide `.nojekyll` doit rester à la racine : sans lu
 - **Fournisseur supprimé :** aucun retour en arrière possible. L'export Excel (phase 9) servira de sauvegarde.
 - **Appareil partagé :** pour permettre l'utilisation sans Internet, le navigateur garde une copie des données déjà consultées (produits, mouvements, fournisseurs), **même après « Se déconnecter »**. L'application ne les montre plus, mais une personne qui sait fouiller dans le navigateur pourrait les lire. Utiliser l'application seulement sur ses propres appareils, verrouillés par un code ; sur un appareil partagé, utiliser « Effacer les données de cet appareil et me déconnecter » dans Paramètres.
 - **Indicateur de synchronisation :** il est approximatif (voir plus haut). Une modification refusée qui n'est pas un mouvement ni une création de produit (nom, prix, archivage, fournisseur) s'affiche en message d'erreur, mais ne fait pas passer l'indicateur sur « Erreur de synchronisation ».
-- **Sécurité du compte :** quiconque connaît le mot de passe du compte voit tout l'entrepôt et le carnet de fournisseurs. Choisir un mot de passe solide, ou se connecter avec Google en activant la validation en deux étapes du compte Google. Le compte Google qui gère la console Firebase donne accès à toutes les données : il doit être protégé de la même façon.
+- **Clients :** mêmes limites que les fournisseurs pour les modifications sans Internet et sur deux appareils. Si un téléphone resté sur une version de l'application antérieure à la 0.12.0 termine une suppression de compte, il n'efface pas les clients ; recharger la page avant de supprimer son compte.
+- **Sécurité du compte :** quiconque connaît le mot de passe du compte voit tout l'entrepôt et les carnets de fournisseurs et de clients. Choisir un mot de passe solide, ou se connecter avec Google en activant la validation en deux étapes du compte Google. Le compte Google qui gère la console Firebase donne accès à toutes les données : il doit être protégé de la même façon.
 - **Ajustement d'inventaire :** la correction est saisie à la main. Si un autre appareil a modifié le stock entre-temps, le chiffre affiché au moment de la saisie n'était peut-être plus à jour.
 - **Quota gratuit :** chaque mouvement coûte deux écritures et quelques lectures de contrôle. La limite gratuite est de 20 000 écritures et 50 000 lectures par jour pour tous les comptes réunis ; si elle est atteinte, l'application se bloque jusqu'au lendemain, sans perte de données.

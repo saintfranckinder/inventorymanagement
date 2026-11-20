@@ -1,12 +1,14 @@
 rules_version = '2';
 
 // Regles de securite de la base Firestore.
-// Version des regles : 7 (phase 7).
+// Version des regles : 8 (phase 6c).
 //
 // Phase 4b : chaque utilisateur accede a son document users/{uid}, a ses
 // produits et a ses mouvements de stock.
 // Phase 6b : ajout du carnet de fournisseurs (users/{uid}/suppliers),
 // independant du stock.
+// Phase 6c : ajout du carnet de clients (users/{uid}/clients), independant du
+// stock (decisions 72 et 73). Le reste est identique a la version 7.
 // Phase 7 : suppression du compte (decisions 13, 61 et 62). La demande
 // (suppressionDemandee = true) ne s'annule pas ; ensuite seulement, les
 // produits, les mouvements et l'entrepot peuvent etre supprimes, et plus
@@ -173,6 +175,26 @@ service cloud.firestore {
         && d.updatedAt is timestamp;
     }
 
+    // Controle des champs d'un client (decision 72) : uniquement les huit
+    // champs prevus ; memes limites que les fournisseurs, sans "produits
+    // fournis". Seul le nom est obligatoire.
+    function clientValide(d) {
+      return d.keys().hasOnly(['nom', 'telephone', 'whatsapp', 'email', 'adresse',
+                               'notes', 'createdAt', 'updatedAt'])
+        && d.keys().hasAll(['nom', 'telephone', 'whatsapp', 'email', 'adresse',
+                            'notes', 'createdAt', 'updatedAt'])
+        && d.nom is string
+        && d.nom.size() >= 1
+        && d.nom.size() <= 100
+        && telephoneValide(d.telephone)
+        && telephoneValide(d.whatsapp)
+        && emailValide(d.email)
+        && texteFacultatif(d.adresse, 200)
+        && texteFacultatif(d.notes, 1000)
+        && d.createdAt is timestamp
+        && d.updatedAt is timestamp;
+    }
+
     // Vu depuis le PRODUIT : le mouvement designe n'existait pas avant le
     // lot, il existe apres, il porte la meme valeur et vise ce produit.
     function mouvementNouveauEtConforme(uid, productId, mouvementId, delta) {
@@ -319,6 +341,28 @@ service cloud.firestore {
           && request.resource.data.updatedAt == request.time;
 
         // Suppression definitive par le proprietaire du compte (decision 50).
+        allow delete: if estProprietaire(uid);
+      }
+
+      match /clients/{clientId} {
+        // Lecture de ses propres clients (un par un, ou en liste).
+        allow read: if estProprietaire(uid);
+
+        // Creation : champs valides, dates du serveur, compte actif.
+        allow create: if estProprietaire(uid)
+          && compteActif(uid)
+          && identifiantValide(clientId)
+          && clientValide(request.resource.data)
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.updatedAt == request.time;
+
+        // Modification : champs valides, date de creation inchangee.
+        allow update: if estProprietaire(uid)
+          && clientValide(request.resource.data)
+          && request.resource.data.createdAt == resource.data.createdAt
+          && request.resource.data.updatedAt == request.time;
+
+        // Suppression definitive par le proprietaire du compte (decision 72).
         allow delete: if estProprietaire(uid);
       }
     }

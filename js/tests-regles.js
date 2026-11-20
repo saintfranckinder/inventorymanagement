@@ -8,6 +8,7 @@
 // Phase 6 : annulation d'une opération (identifiant « annulation-… »).
 // Phase 6b : carnet de fournisseurs (règles version 6). Le fournisseur
 // d'essai est créé puis supprimé à chaque passage : il ne reste rien.
+// Phase 6c : carnet de clients (règles version 8), même principe.
 // Phase 7 : suppression du compte (règles version 7, décision 63). Ces essais
 // ne se lancent QU'AVEC un compte jetable test-suppression…@example.com : ils
 // créent leurs propres données, demandent la suppression, vérifient les
@@ -49,6 +50,7 @@ const AUTRE_COMPTE = 'compte-de-quelqu-un-d-autre';
 const ID_PRODUIT_ESSAI = 'essai-regles';
 const ID_PRODUIT_AVEC_STOCK = 'essai-regles-stock';
 const ID_FOURNISSEUR_ESSAI = 'essai-regles-fournisseur';
+const ID_CLIENT_ESSAI = 'essai-regles-client';
 const FIN_ADRESSE_COMPTE_DE_TEST = '@example.com';
 const MESSAGE_PAS_UN_COMPTE_DE_TEST =
   'Ce compte n’est pas un compte de test : les essais ne seront pas lancés. ' +
@@ -848,6 +850,131 @@ function essaisFournisseurs(db, uid) {
   ];
 }
 
+// Carnet de clients (décision 72) : mêmes essais que les fournisseurs, sans
+// « produits fournis ».
+function essaisClients(db, uid) {
+  const mesClients = collection(db, 'users', uid, 'clients');
+  const clientEssai = doc(mesClients, ID_CLIENT_ESSAI);
+  const nouveau = () => doc(mesClients);
+
+  // Fiche valide ; `modifications` remplace ou ajoute des champs.
+  const fiche = (modifications = {}) => ({
+    nom: 'Client d’essai (règles)',
+    telephone: '+509 3712-3456',
+    whatsapp: '(509) 3712.3456',
+    email: 'client@example.com',
+    adresse: 'Rue de l’essai\nPort-au-Prince',
+    notes: 'VIP — essai des règles',
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    ...modifications
+  });
+  const sansChamp = (champ) => {
+    const resultat = fiche();
+    delete resultat[champ];
+    return resultat;
+  };
+
+  return [
+    {
+      nom: 'Créer un client valide (tous les champs)',
+      attendu: 'autorise',
+      operation: async () => {
+        // Reste d'un passage interrompu : on repart d'une place nette.
+        await deleteDoc(clientEssai).catch(() => {});
+        await setDoc(clientEssai, fiche());
+      }
+    },
+    {
+      nom: 'Lire ses clients',
+      attendu: 'autorise',
+      operation: () => getDocsFromServer(query(mesClients, limit(5)))
+    },
+    {
+      nom: 'Modifier son client (téléphone et notes)',
+      attendu: 'autorise',
+      operation: () => updateDoc(clientEssai, {
+        telephone: '3712 3456',
+        notes: 'Modifié',
+        updatedAt: serverTimestamp()
+      })
+    },
+    {
+      nom: 'Modifier la date de création d’un client',
+      attendu: 'refuse',
+      operation: () => updateDoc(clientEssai, {
+        createdAt: Timestamp.fromDate(new Date(2000, 0, 1)),
+        updatedAt: serverTimestamp()
+      })
+    },
+    {
+      nom: 'Client avec un champ non prévu',
+      attendu: 'refuse',
+      operation: () => setDoc(nouveau(), fiche({ champNonPrevu: true }))
+    },
+    {
+      nom: 'Client avec « produits fournis » (champ des fournisseurs)',
+      attendu: 'refuse',
+      operation: () => setDoc(nouveau(), fiche({ produitsFournis: 'ciment' }))
+    },
+    {
+      nom: 'Client sans le champ « adresse »',
+      attendu: 'refuse',
+      operation: () => setDoc(nouveau(), sansChamp('adresse'))
+    },
+    {
+      nom: 'Client sans nom (nom vide)',
+      attendu: 'refuse',
+      operation: () => setDoc(nouveau(), fiche({ nom: '' }))
+    },
+    {
+      nom: 'Nom de client de 101 caractères',
+      attendu: 'refuse',
+      operation: () => setDoc(nouveau(), fiche({ nom: 'x'.repeat(101) }))
+    },
+    {
+      nom: 'Téléphone de client avec des lettres',
+      attendu: 'refuse',
+      operation: () => setDoc(nouveau(), fiche({ telephone: '3712 ABCD' }))
+    },
+    {
+      nom: 'E-mail de client sans @',
+      attendu: 'refuse',
+      operation: () => setDoc(nouveau(), fiche({ email: 'client.example.com' }))
+    },
+    {
+      nom: 'Notes de client de 1 001 caractères',
+      attendu: 'refuse',
+      operation: () => setDoc(nouveau(), fiche({ notes: 'x'.repeat(1001) }))
+    },
+    {
+      nom: 'Date de création de client choisie par l’appareil',
+      attendu: 'refuse',
+      operation: () => setDoc(nouveau(), fiche({ createdAt: Timestamp.fromDate(new Date(2000, 0, 1)) }))
+    },
+    {
+      nom: 'Lire un client d’un autre compte',
+      attendu: 'refuse',
+      operation: () => getDocFromServer(doc(db, 'users', AUTRE_COMPTE, 'clients', 'essai'))
+    },
+    {
+      nom: 'Créer un client dans un autre compte',
+      attendu: 'refuse',
+      operation: () => setDoc(doc(db, 'users', AUTRE_COMPTE, 'clients', nouveau().id), fiche())
+    },
+    {
+      nom: 'Supprimer son client d’essai',
+      attendu: 'autorise',
+      operation: () => deleteDoc(clientEssai)
+    },
+    {
+      nom: 'Le client supprimé n’existe plus',
+      attendu: 'vrai',
+      operation: async () => !(await getDocFromServer(clientEssai)).exists()
+    }
+  ];
+}
+
 // Efface les données d'essai d'un compte jetable (passage précédent
 // interrompu), en suivant le parcours permis par les règles : demande de
 // suppression, puis effacement des données, puis de l'entrepôt.
@@ -860,7 +987,7 @@ async function remettreAZero(db, uid) {
   if (instantane.data().suppressionDemandee !== true) {
     await updateDoc(entrepot, { suppressionDemandee: true });
   }
-  for (const nom of ['products', 'movements', 'suppliers']) {
+  for (const nom of ['products', 'movements', 'suppliers', 'clients']) {
     const documents = await getDocsFromServer(collection(db, 'users', uid, nom));
     for (const document_ of documents.docs) {
       await deleteDoc(document_.ref);
@@ -876,10 +1003,22 @@ function essaisSuppression(db, uid) {
   const mesProduits = collection(db, 'users', uid, 'products');
   const mesMouvements = collection(db, 'users', uid, 'movements');
   const mesFournisseurs = collection(db, 'users', uid, 'suppliers');
+  const mesClients = collection(db, 'users', uid, 'clients');
   const produitSansStock = doc(mesProduits, 'essai-suppression-a');
   const produitAvecStock = doc(mesProduits, 'essai-suppression-b');
   const mouvement = doc(mesMouvements, 'essai-suppression-mouvement');
   const fournisseur = doc(mesFournisseurs, 'essai-suppression-fournisseur');
+  const client = doc(mesClients, 'essai-suppression-client');
+  const ficheClient = {
+    nom: 'Client d’essai (suppression)',
+    telephone: '',
+    whatsapp: '',
+    email: '',
+    adresse: '',
+    notes: '',
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  };
 
   const fiche = {
     nom: 'Fournisseur d’essai (suppression)',
@@ -893,7 +1032,7 @@ function essaisSuppression(db, uid) {
     updatedAt: serverTimestamp()
   };
   const toutEstVide = async () => {
-    for (const collection_ of [mesProduits, mesMouvements, mesFournisseurs]) {
+    for (const collection_ of [mesProduits, mesMouvements, mesFournisseurs, mesClients]) {
       if (!(await getDocsFromServer(query(collection_, limit(1)))).empty) {
         return false;
       }
@@ -948,6 +1087,11 @@ function essaisSuppression(db, uid) {
       operation: () => setDoc(fournisseur, fiche)
     },
     {
+      nom: 'Créer un client',
+      attendu: 'autorise',
+      operation: () => setDoc(client, ficheClient)
+    },
+    {
       nom: 'Supprimer un produit sans demande de suppression',
       attendu: 'refuse',
       operation: () => deleteDoc(produitSansStock)
@@ -993,12 +1137,17 @@ function essaisSuppression(db, uid) {
       operation: () => setDoc(doc(mesFournisseurs), fiche)
     },
     {
+      nom: 'Créer un client pendant la suppression',
+      attendu: 'refuse',
+      operation: () => setDoc(doc(mesClients), ficheClient)
+    },
+    {
       nom: 'Supprimer un produit d’un autre compte',
       attendu: 'refuse',
       operation: () => deleteDoc(doc(db, 'users', AUTRE_COMPTE, 'products', 'essai'))
     },
     {
-      nom: 'Supprimer en un seul lot les produits, le mouvement et le fournisseur',
+      nom: 'Supprimer en un seul lot les produits, le mouvement, le fournisseur et le client',
       attendu: 'autorise',
       operation: () => {
         const lot = writeBatch(db);
@@ -1006,11 +1155,12 @@ function essaisSuppression(db, uid) {
         lot.delete(produitAvecStock);
         lot.delete(mouvement);
         lot.delete(fournisseur);
+        lot.delete(client);
         return lot.commit();
       }
     },
     {
-      nom: 'Il ne reste plus aucun produit, mouvement ni fournisseur',
+      nom: 'Il ne reste plus aucun produit, mouvement, fournisseur ni client',
       attendu: 'vrai',
       operation: toutEstVide
     },
@@ -1118,7 +1268,8 @@ async function lancerLesTests(db, utilisateur) {
     ...essaisEntrepot(db, utilisateur.uid, entrepot),
     ...essaisProduits(db, utilisateur.uid, produitEssaiExiste),
     ...essaisMouvements(db, utilisateur.uid, produitAvecStockExiste),
-    ...essaisFournisseurs(db, utilisateur.uid)
+    ...essaisFournisseurs(db, utilisateur.uid),
+    ...essaisClients(db, utilisateur.uid)
   ];
   let reussis = 0;
   for (const essai of essais) {

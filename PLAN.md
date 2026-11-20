@@ -22,8 +22,9 @@ Dépôt GitHub : `saintfranckinder/minstock`, renommé par le propriétaire le 2
 | 6b | Carnet de fournisseurs (décisions 42 et 50 à 54) | **Terminée le 2026-11-18** (règles version 6 publiées par le propriétaire ; test sur smartphone réussi le même jour) |
 | — | Identité visuelle MinStock (décisions 55 à 58) et compteurs cliquables (décision 59) | **Terminée le 2026-11-18** (validées sur smartphone par le propriétaire) |
 | 7 | Suppression du compte (décisions 60 à 63) | **Terminée le 2026-11-18** (règles version 7 publiées par le propriétaire ; test sur smartphone réussi avec un compte jetable) |
+| 6c | Carnet de clients (décisions 72 et 73) | **Faite le 2026-11-20** (règles version 8 publiées par le propriétaire) ; test sur smartphone à faire |
 | 8 | Hors ligne et indicateur de synchronisation (décisions 64 à 68) | **Terminée le 2026-11-19** (essai en mode avion réussi sur smartphone, selon les captures du propriétaire) |
-| 8b | Code SKU, type de stock, quantité à commander, prix de vente (décision 69) | **Prochaine étape** |
+| 8b | Code SKU, type de stock, quantité à commander, prix de vente (décision 69) | À faire, après la phase 6c (règles version 9) |
 | 9 | Export Excel | À faire |
 | 10 | Application installable (PWA) | À faire |
 | 11 | Données de démonstration | À faire |
@@ -659,9 +660,58 @@ Confirmé ensuite par le propriétaire : la question avant « Se déconnecter »
 
 **Phase terminée le 2026-11-19.**
 
+### Phase 6c : carnet de clients
+- **Demandée par le propriétaire le 2026-11-20**, avant la phase 8b (décisions 72 et 73). Choix du propriétaire : bouton « Clients », pas de case VIP.
+- **Résultat :** copie du carnet de fournisseurs sans « produits fournis » ; recherche par nom ou dans les notes ; règles version 8 ; la suppression du compte efface aussi les clients ; texte de confidentialité complété.
+- **Tests :** `tests-regles.html` (série habituelle et série « suppression ») ; ajout, modification, suppression dans l'application ; effacement des clients par la suppression du compte ; 360 pixels ; smartphone.
+
+**Compte rendu de la phase 6c (2026-11-20)**
+
+Ce qui a été fait :
+
+- Nouveaux fichiers `js/clients.js` et `js/ecran-clients.js`, copiés et adaptés de ceux des fournisseurs, **sans modifier le code des fournisseurs** (seules les constantes `CARACTERES_TELEPHONE` et `FORME_EMAIL` sont importées de `js/fournisseurs.js`).
+- `index.html` : bouton « Clients » sous « Fournisseurs », écrans « Clients » et « Ajouter / Modifier un client », aide « écrivez VIP dans les notes, puis cherchez vip » ; texte de confidentialité, « Appareil partagé », « Supprimer mon compte » et liste de l'écran de suppression complétés.
+- Règles Firestore **version 8** : bloc `users/{uid}/clients` (huit champs exactement, limites de la décision 54, dates du serveur, création refusée si le compte est supprimé ou en cours de suppression, suppression par le propriétaire). Le reste est identique à la version 7. **Publiées par le propriétaire le 2026-11-20.**
+- `js/suppression-compte.js` : étape « Clients » ajoutée après « Fournisseurs ».
+- `js/app.js` : branchement des écrans clients ; version `0.12.0`. L'indicateur de synchronisation suit aussi la liste des clients.
+- `tests-regles.html` : 17 essais de plus dans la série habituelle (105, ou 108 quand les produits d'essai sont à créer) et 2 dans la série « suppression » (22).
+- `CLAUDE.md` mis à jour avec l'accord du propriétaire (sections 4, 5, 8, 10 et 12) ; README.
+
+Tests exécutés par l'assistant, dans le navigateur intégré, sur `http://localhost:8080/` :
+
+| Test | Résultat |
+|---|---|
+| Avant la publication des règles : écran « Clients » avec « Impossible de charger les clients… règles de sécurité (version 8)… » ; fournisseurs et reste de l'application normaux | Réussi |
+| Formulaire : nom vide, nom de 101 caractères, lettres dans le téléphone, `#` dans WhatsApp, e-mail sans point, notes de 1 001 caractères refusés, curseur sur le champ ; longueurs maximales des champs | Réussi |
+| `tests-regles.html` (compte `test-phase3@example.com`) : **105 sur 105**, dont les 17 essais des clients (champ des fournisseurs, champ manquant, nom, téléphone, e-mail, notes, dates, autre compte refusés) | Réussi |
+| `tests-regles.html` (compte jetable `test-suppression-1@example.com`) : **22 sur 22**, dont création d'un client refusée pendant la suppression et effacement d'un client dans le lot | Réussi |
+| Ajout de deux clients : « En attente de synchronisation » puis confirmation ; sur le serveur, exactement les huit champs, nom sans espaces autour, champs vides en chaînes vides, adresse sur deux lignes | Réussi |
+| Liens : `tel:+50937123456`, `https://wa.me/50937123456`, `mailto:…` ; WhatsApp sans indicatif : pas de bouton, phrase d'aide | Réussi |
+| Nom en double (majuscules et accent différents) : avertissement avec le nom existant ; « Annuler » : rien n'est ajouté | Réussi |
+| Recherche : `vip` et `  VÍP ` (notes), `jean` (nom), `zzz` (« Aucun client ne correspond ») | Réussi |
+| Modification : notes et WhatsApp changés sur le serveur, date de modification mise à jour, pas d'avertissement pour son propre nom | Réussi |
+| Client supprimé « ailleurs » pendant que son formulaire est ouvert : retour à la liste avec un message | Réussi |
+| Suppression : « Annuler » ne fait rien ; confirmation : client effacé du serveur (0 client restant) | Réussi |
+| Effacement par le module de suppression du compte (`demanderSuppression` puis `supprimerLesDonnees`, compte jetable, sans supprimer le compte de connexion) : étapes Produits → Historique → Fournisseurs → **Clients** → Entrepôt ; 3 clients, 1 fournisseur, 1 produit et l'entrepôt effacés ; plus aucun client sur le serveur | Réussi |
+| 360 pixels : boutons « Historique », « Fournisseurs », « Clients » de 48 pixels de haut ; liens de contact de 48 pixels ; aucun défilement horizontal | Réussi |
+| Non-régression : `tests-nombres.html` 104 sur 104 ; fournisseurs affichés normalement | Réussi |
+| Console après rechargement : aucune erreur (les deux refus notés plus tôt venaient de l'écran Clients avant la publication des règles) | Réussi |
+
+Tests non exécutés :
+
+- Smartphone (après **Push origin**).
+- Second compte qui ouvre l'écran « Clients » : l'isolation est vérifiée par les règles (lecture et création chez un autre compte refusées), pas dans l'écran.
+- Parcours complet « Supprimer mon compte » dans l'application avec des clients : le module d'effacement a été essayé directement (voir le tableau) pour ne pas consommer de compte jetable ; le parcours complet a été essayé en phase 7.
+- Clients sans Internet et sur deux appareils : même code que les fournisseurs.
+
+Constats :
+
+- Le compte de test principal n'a aucun client (les clients d'essai ont été supprimés). Le compte jetable `test-suppression-1@example.com` n'a plus d'entrepôt (remis à zéro par les essais) ; son compte de connexion est intact.
+- Pour ne pas déclencher la reprise automatique de la suppression (qui effacerait aussi le compte de connexion), le compte jetable a été connecté directement dans la page `tests-regles.html`, jamais dans l'application.
+
 ### Phase 8b : code SKU, type de stock, quantité à commander, prix de vente
 - **Demandée par le propriétaire le 2026-11-19** (décision 69). Fonctions écartées de la première version : décision 70. Prix d'achat inchangé, toujours saisi à la main, sans coût moyen (décision 71) : le prix de vente ne sert jamais à la valeur du stock.
-- **Résultat :** quatre champs facultatifs dans la fiche produit, affichés sur la carte ; recherche par code SKU ; filtre par type de stock (sans lecture de plus) ; règles Firestore version 8 qui contrôlent ces champs et acceptent aussi les produits qui ne les ont pas ; `CLAUDE.md` mis à jour (sections 4 et 5).
+- **Résultat :** quatre champs facultatifs dans la fiche produit, affichés sur la carte ; recherche par code SKU ; filtre par type de stock (sans lecture de plus) ; règles Firestore version 9 (la version 8 sert au carnet de clients, phase 6c) qui contrôlent ces champs et acceptent aussi les produits qui ne les ont pas ; `CLAUDE.md` mis à jour (sections 4 et 5).
 - **Avant de coder :** trancher avec le propriétaire : code SKU obligatoire ou non ; liste exacte des types ; affichage de la marge par unité ; avertissement si le prix de vente est plus bas que le prix d'achat ; valeur du stock au prix de vente (indicative).
 - **Tests :** `tests-regles.html` complété (types, longueurs, liste des types, produit sans les nouveaux champs accepté, modification d'un produit ancien) ; `tests-nombres.html` si un calcul est ajouté (marge, valeur au prix de vente) ; code SKU en double signalé ; produits existants affichés sans erreur ; ordre de publication : règles d'abord, code ensuite ; smartphone.
 
@@ -758,8 +808,8 @@ Règles de conception retenues pour le code :
 
 ### 8.1 Phase actuelle
 
-- **Phase 8 (hors ligne et indicateur) terminée le 2026-11-19**, tests sur l'ordinateur et essai en mode avion sur smartphone réussis. Phase 7 terminée le 2026-11-18. Prochaine étape : **phase 8b** (code SKU, type de stock, quantité à commander, prix de vente : décision 69), à commencer par les questions de détail de la section 2.
-- Version de l'application : `0.11.0`. Règles Firestore : **version 7** (inchangées en phase 8), publiée dans la console par le propriétaire le 2026-11-18 ; `tests-regles.html` 88 sur 88 le 2026-11-19.
+- **Phase 6c (carnet de clients) faite le 2026-11-20**, tests sur l'ordinateur réussis ; reste le test sur smartphone. Phase 8 terminée le 2026-11-19. Prochaine étape : **phase 8b** (code SKU, type de stock, quantité à commander, prix de vente : décision 69, règles version 9), à commencer par les questions de détail de la section 2.
+- Version de l'application : `0.12.0`. Règles Firestore : **version 8**, publiée dans la console par le propriétaire le 2026-11-20 ; `tests-regles.html` 105 sur 105 (série habituelle) et 22 sur 22 (série « suppression ») le même jour.
 - Dépôt GitHub : `saintfranckinder/minstock`, **public**. Site : `https://saintfranckinder.github.io/minstock/` (GitHub Pages, branche `main`, dossier racine).
 - Dépôt Git, branche `main` : `cecf8d3` (phases 0 et 1), `48d55b3` (phase 2), `f09bf30` (phase 3), `96f2a3d` (phase 4a), `d8f1b5b` (phase 4b), `2f53da4` (note de passation), `b26abb6` (dépôt renommé), `e166a30` (recherche de secrets), `d5a7808` (décisions 40 et 41), `86d4eb4` (mise en ligne), `e1a5c70` (fin de l'étape « dépôt public »), `e202b2a` (décisions 42 et 43), `7e156a3` (phase 5), `eb40c59` (test sur smartphone de la phase 5), `456dff6` (phase 6), `de2ef92` (test sur smartphone de la phase 6), `14e00c9` (phase 6b), `36f5d20` (test sur smartphone de la phase 6b), `6eeb438` (identité visuelle), `c95d942` (compteurs cliquables), `f60525d` (test sur smartphone des compteurs), `d952342` (phase 7), `b2cc014` (test sur smartphone de la phase 7), `84b6e87` (note de passation), puis le commit de la phase 8. Le propriétaire envoie chaque commit avec **Push origin** dans GitHub Desktop ; le site se met à jour quelques minutes après.
 - **État de l'envoi sur GitHub (vu dans la copie locale le 2026-11-19, sans interroger GitHub) :** le propriétaire a envoyé jusqu'à `e6e178b` (phase 8, version `0.11.0`). Restent à envoyer : `44567e0` (décision 71) et ce point de la note (documentation seulement).
@@ -781,6 +831,7 @@ Règles de conception retenues pour le code :
 | 6b | Carnet de fournisseurs : liste, recherche, « Appeler » / « WhatsApp » / « E-mail », ajout, modification, suppression ; règles version 6 | `tests-regles.html` : 90 sur 90 ; compte rendu de la phase 6b ; test sur smartphone réussi |
 | Identité | Nom MinStock, symbole SVG, police Montserrat, couleurs et style de la maquette, compteurs de la carte de valeur (cliquables) | compte rendu de l'étape « identité visuelle » ; tests sur smartphone réussis |
 | 7 | Suppression du compte et de toutes ses données : double confirmation, reconnexion, effacement par paquets, reprise automatique, effacement de la copie locale ; règles version 7 | `tests-regles.html` : 88 sur 88 et 20 sur 20 (compte jetable) ; suppressions complète et interrompue réussies ; compte rendu de la phase 7 |
+| 6c | Carnet de clients (copie du carnet de fournisseurs, sans case VIP) ; règles version 8 ; clients effacés avec le compte | `tests-regles.html` : 105 sur 105 et 22 sur 22 ; compte rendu de la phase 6c ; smartphone à faire |
 | 8 | Indicateur de synchronisation, « En attente » à la place de « Quantité », avertissement de déconnexion, « Effacer les données de cet appareil », stockage durable demandé | `tests-nombres.html` : 104 sur 104 ; `tests-regles.html` : 88 sur 88 ; coupures simulées (compte rendu de la phase 8) ; mode avion sur smartphone réussi |
 
 Les tests des phases 2 à 7 ont été exécutés par l'assistant dans le navigateur intégré, sur `http://localhost:8080/`, avec les comptes de test (et des comptes jetables pour la phase 7). Tests sur smartphone faits par le propriétaire le 2026-11-18, sur le site en ligne, tous réussis : étape « dépôt public », phases 5, 6 et 6b, identité visuelle, compteurs cliquables, phase 7 (avec un compte jetable).
@@ -834,6 +885,7 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 | `js/indicateur-synchro.js` | Indicateur de synchronisation (quatre états, approximatif) ; « des modifications attendent-elles ? » pour la déconnexion et l'effacement | 8 |
 | `js/fournisseurs.js` | Lecture et écriture des fournisseurs ; limites des champs (décision 54) | 6b |
 | `js/ecran-fournisseurs.js` | Carnet de fournisseurs : liste, recherche, liens de contact, formulaire, suppression | 6b |
+| `js/clients.js`, `js/ecran-clients.js` | Carnet de clients : copie adaptée des deux fichiers des fournisseurs (sans « produits fournis », recherche dans les notes) ; limites des champs | 6c |
 | `js/firebase-config.js` | Configuration web Firebase (ce n'est pas un secret) | 2 |
 | `js/firebase-init.js` | Démarrage de Firebase, mémoire hors ligne, test du stockage local | 2, 3 |
 | `js/auth.js` | Connexion, inscription, mot de passe oublié, déconnexion ; reconnexion et suppression du compte de connexion | 3, 7 |
@@ -849,19 +901,19 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 | `js/mouvements.js` | Lot d'une opération de stock ; lecture de l'historique ; identifiant `annulation-…` | 4b, 6 |
 | `js/operations-en-attente.js` | Suivi local des opérations non confirmées (`localStorage`, clé `operations-en-attente:{uid}`) ; opérations en attente des autres comptes | 4b, 8 |
 | `js/ecran-mouvements.js` | Formulaire de mouvement, `envoyerMouvement` (seul chemin d'envoi d'un mouvement), historique avec « Annuler cette opération », opérations refusées | 4b, 5, 6 |
-| `firestore.rules` | Règles de sécurité, version 7 | 2, 3, 4a, 4b, 6b, 7 |
-| `tests-regles.html`, `js/tests-regles.js` | **Ne jamais y ajouter d'essai qui touche à `suppressionDemandee` ou supprime l'entrepôt dans la série habituelle** (danger évité en phase 7). Série habituelle : 91 essais des règles sur le vrai serveur, 88 quand les produits d'essai existent déjà (compte de test en `@example.com` uniquement, décision 40 ; environ une minute). Série « suppression du compte » : 20 essais, seulement avec un compte jetable `test-suppression…@example.com` (décision 63) | 3, 4a, 4b, dépôt public, 6, 6b, 7 |
+| `firestore.rules` | Règles de sécurité, version 8 | 2, 3, 4a, 4b, 6b, 7, 6c |
+| `tests-regles.html`, `js/tests-regles.js` | **Ne jamais y ajouter d'essai qui touche à `suppressionDemandee` ou supprime l'entrepôt dans la série habituelle** (danger évité en phase 7). Série habituelle : 108 essais des règles sur le vrai serveur, 105 quand les produits d'essai existent déjà (compte de test en `@example.com` uniquement, décision 40 ; environ une minute). Série « suppression du compte » : 22 essais, seulement avec un compte jetable `test-suppression…@example.com` (décision 63) ; **connecter ce compte dans la page de test, jamais dans l'application** (la reprise automatique de la suppression effacerait son compte de connexion) | 3, 4a, 4b, dépôt public, 6, 6b, 7, 6c |
 | `tests-nombres.html`, `js/tests-nombres.js` | 104 essais de conversion et de calcul, sans connexion | 4a, 5 |
 | `vendor/` | SDK Firebase 13.4.0 (import corrigé), SheetJS 0.20.3, police Montserrat et sa licence (`polices/`), `LISEZMOI.md` | 2, identité |
 | `demarrer.bat`, `outils/serveur-local.ps1` | Serveur local sur `http://localhost:8080/` | 2 |
 | `.gitignore`, `.gitattributes` | Fichiers exclus de Git ; `vendor/*.js` jamais modifiés par Git ; `*.woff2` en binaire | 0, 2, identité |
 | `.nojekyll` | Fichier vide : GitHub Pages publie tout tel quel (décision 41) | dépôt public |
 | `CLAUDE.md`, `DEMARRAGE.md` | Cahier des charges et méthode de travail ; modifiés avec l'accord du propriétaire (fournisseurs, annulation, suppression au lieu d'archivage des fournisseurs : section 6 de ce fichier) | 1, évolutions 42 et 43, 6b |
-| `PLAN.md`, `DECISIONS.md`, `README.md` | Suivi, décisions 1 à 71, documentation | Toutes |
+| `PLAN.md`, `DECISIONS.md`, `README.md` | Suivi, décisions 1 à 73, documentation | Toutes |
 
 **Hors Git :** `.env.test` contient l'adresse et le mot de passe des deux comptes de test et des comptes jetables `test-suppression-1` à `-3@example.com` (2 et 3 supprimés par les essais de la phase 7 ; 1 actif, entrepôt d'essai vide, réservé à la série « suppression » de `tests-regles.html`). Il est ignoré par Git et n'apparaît dans aucun commit (vérifié le 2026-11-18).
 
-**État du compte de test dans Firebase :** entrepôt « NzuriDeal » (HTG ; ancien nom « Entrepôt de test », renommé par le propriétaire pendant son test de la phase 6), aucune suppression demandée (vérifié après les essais de la phase 7) ; aucun fournisseur ; 4 produits actifs — dernières quantités relevées sur le serveur le 2026-11-18 (le propriétaire fait aussi des essais sur son téléphone, elles peuvent avoir changé) : « Ciment » 7,5 sac (14 mouvements, stock de départ d'essai de 12,5), « Riz 25 kg (Tchako) » 4 sac (79 mouvements), « Essai phase 5 (stock bas) » 5 pièces (seuil 5), « Essai phase 5 (zéro) » 0 pièce (seuil 0) ; produits archivés « Huile » et deux « Produit d'essai (règles) » ; plus de 120 mouvements au total, plus 5 à chaque passage de `tests-regles.html`. Les mouvements ne peuvent pas être supprimés. Second compte de test `test-isolation@example.org` (créé le 2026-11-18) : entrepôt « Entrepôt isolation (test) » (HTG), aucun produit ; sa devise a été passée à USD puis remise à HTG pendant les essais de la phase 6. Il doit rester sans produit pour pouvoir refaire l'essai du changement de devise. Compte jetable `test-suppression-1@example.com` : entrepôt d'essai « Essai hors ligne », vide ; réservé à la série « suppression » de `tests-regles.html`, qui le remet à zéro à chaque passage. Comptes jetables 2 et 3 supprimés par les essais ; le compte jetable créé par le propriétaire sur son téléphone a été supprimé par son essai.
+**État du compte de test dans Firebase :** entrepôt « NzuriDeal » (HTG ; ancien nom « Entrepôt de test », renommé par le propriétaire pendant son test de la phase 6), aucune suppression demandée (vérifié après les essais de la phase 7) ; un fournisseur ajouté par le propriétaire pendant ses essais sur téléphone ; aucun client (vérifié le 2026-11-20) ; 4 produits actifs — dernières quantités relevées sur le serveur le 2026-11-18 (le propriétaire fait aussi des essais sur son téléphone, elles peuvent avoir changé) : « Ciment » 7,5 sac (14 mouvements, stock de départ d'essai de 12,5), « Riz 25 kg (Tchako) » 4 sac (79 mouvements), « Essai phase 5 (stock bas) » 5 pièces (seuil 5), « Essai phase 5 (zéro) » 0 pièce (seuil 0) ; produits archivés « Huile » et deux « Produit d'essai (règles) » ; plus de 120 mouvements au total, plus 5 à chaque passage de `tests-regles.html`. Les mouvements ne peuvent pas être supprimés. Second compte de test `test-isolation@example.org` (créé le 2026-11-18) : entrepôt « Entrepôt isolation (test) » (HTG), aucun produit ; sa devise a été passée à USD puis remise à HTG pendant les essais de la phase 6. Il doit rester sans produit pour pouvoir refaire l'essai du changement de devise. Compte jetable `test-suppression-1@example.com` : plus d'entrepôt depuis les essais du 2026-11-20 (compte de connexion intact) ; réservé à la série « suppression » de `tests-regles.html`, qui recrée et efface ses propres données à chaque passage. **Ne jamais le connecter dans l'application** : seulement dans `tests-regles.html`. Comptes jetables 2 et 3 supprimés par les essais ; le compte jetable créé par le propriétaire sur son téléphone a été supprimé par son essai.
 
 ### 8.5 Erreurs rencontrées
 
@@ -882,7 +934,7 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 
 ### 8.6 Décisions prises
 
-Toutes sont dans `DECISIONS.md` (71 décisions, aucune effacée) :
+Toutes sont dans `DECISIONS.md` (73 décisions, aucune effacée) :
 
 - **1 à 7 (choix initiaux) :** Firestore en plan Spark ; connexion Google et e-mail ; quantités et prix en entiers ; `dernierMouvementId` ; GitHub Pages ; publication du code par le propriétaire.
 - **8 à 15 (audit) :** page `tests-regles.html` à la place du simulateur ; règles tolérantes au hors-ligne et suivi local des opérations ; dépôt public dès la fin de la phase 4b ; SDK local corrigé et serveur local ; règles produit-mouvement complétées ; suppression du compte avec reconnexion d'abord ; phase 4 coupée en deux ; dossier de travail.
@@ -899,14 +951,15 @@ Toutes sont dans `DECISIONS.md` (71 décisions, aucune effacée) :
 - **59 (demande du propriétaire) :** compteurs cliquables qui filtrent la liste des produits ; la liste filtrée ne bouge pas sous le doigt.
 - **60 à 63 (phase 7) :** double confirmation et reconnexion avant la suppression ; règles version 7 (demande sans retour, effacements seulement après la demande, ajouts bloqués pendant la suppression) ; déroulement par paquets de 100 (produits avant mouvements), reprise automatique, effacement de la copie locale ; essais avec des comptes jetables.
 - **64 à 68 (phase 8) :** indicateur de synchronisation à quatre états dans l'en-tête, approximatif ; « En attente » à la place de « Quantité » ; avertissement avant « Se déconnecter » ; « Effacer les données de cet appareil et me déconnecter » ; stockage durable demandé au navigateur.
-- **69 à 71 (demandes du propriétaire du 2026-11-19) :** phase 8b (code SKU, type de stock, quantité à commander, prix de vente, tous facultatifs ; règles version 8) ; PEPS par lots, rotation, EOQ et notifications écartés de la première version ; prix d'achat saisi à la main conservé, sans coût moyen pondéré (option A ; prix de l'arrivage noté dans le motif).
+- **69 à 71 (demandes du propriétaire du 2026-11-19) :** phase 8b (code SKU, type de stock, quantité à commander, prix de vente, tous facultatifs ; règles version 9 depuis la décision 72) ; PEPS par lots, rotation, EOQ et notifications écartés de la première version ; prix d'achat saisi à la main conservé, sans coût moyen pondéré (option A ; prix de l'arrivage noté dans le motif).
+- **72 et 73 (demande du propriétaire du 2026-11-20) :** carnet de clients en phase 6c, copie du carnet de fournisseurs sans case VIP (« VIP » dans les notes), règles version 8 ; carnet indépendant du stock, sans gestion des ventes.
 
 Les règles de conception de la section 7 restent à respecter dans toute la suite.
 
 ### 8.7 Prochaine action précise
 
-*(Phase 8 terminée le 2026-11-19, essai en mode avion sur smartphone compris.)*
+*(Phase 6c faite le 2026-11-20, règles version 8 publiées, tests sur l'ordinateur réussis, commit local fait. Phase 8 terminée le 2026-11-19.)*
 
-1. **Propriétaire :** **Push origin** pour les commits de documentation (décision 71, notes de passation) quand il le souhaite ; répondre aux cinq questions de la phase 8b. Toujours en attente : les deux tests de la phase 3 et le message d'aide quand la fenêtre Google est bloquée. Conseillé : activer la validation en deux étapes du compte Google qui gère la console Firebase.
-2. **Assistant, au début de la prochaine session :** lire `CLAUDE.md`, `PLAN.md` et `DECISIONS.md`. Phase 8b : poser au propriétaire les cinq questions de détail (section 2, phase 8b), attendre ses réponses, mettre à jour `CLAUDE.md` (sections 4 et 5) avec son accord, noter les décisions 72 et suivantes, écrire les règles version 8 (nouveaux champs facultatifs : un produit qui ne les a pas reste accepté), compléter `tests-regles.html`, faire publier les règles par le propriétaire **avant** d'envoyer le code.
+1. **Propriétaire :** **Push origin** (les règles version 8 sont déjà publiées : le code peut partir) ; vérifier « Version 0.12.0 » sur le téléphone ; tester le carnet de clients au doigt (ajouter un client avec son propre numéro, « Appeler », « WhatsApp », recherche « vip », modifier, supprimer). Puis répondre aux cinq questions de la phase 8b. Toujours en attente : les deux tests de la phase 3 et le message d'aide quand la fenêtre Google est bloquée. Conseillé : activer la validation en deux étapes du compte Google qui gère la console Firebase.
+2. **Assistant, au début de la prochaine session :** lire `CLAUDE.md`, `PLAN.md` et `DECISIONS.md`. Phase 8b : poser au propriétaire les cinq questions de détail (section 2, phase 8b), attendre ses réponses, mettre à jour `CLAUDE.md` (sections 4 et 5) avec son accord, noter les décisions 72 et suivantes, écrire les règles version 9 (nouveaux champs facultatifs : un produit qui ne les a pas reste accepté), compléter `tests-regles.html`, faire publier les règles par le propriétaire **avant** d'envoyer le code.
 3. **Rappels pour la suite :** ne jamais faire de `git push` ; ne jamais essayer la suppression du compte avec un vrai compte ; ne jamais ajouter d'essai touchant à `suppressionDemandee` dans la série habituelle de `tests-regles.html` ; après la mise en service, ne publier que des règles compatibles avec les versions de l'application déjà ouvertes sur les téléphones (section 7).

@@ -152,6 +152,12 @@
           informations sur d'autres personnes : n'enregistrez que ce qui vous
           est utile, et supprimez un fournisseur dont vous n'avez plus besoin.
         </li>
+        <li>
+          Les coordonnées des clients que vous enregistrez : nom, téléphone,
+          WhatsApp, e-mail, adresse et notes. Ce sont aussi des informations sur
+          d'autres personnes : n'enregistrez que ce qui vous est utile, et
+          supprimez un client dont vous n'avez plus besoin.
+        </li>
       </ul>
 
       <h3>Utilisation</h3>
@@ -257,6 +263,7 @@
       <button type="button" id="bouton-ajouter-produit" class="bouton bouton-principal">Ajouter un produit</button>
       <button type="button" id="bouton-historique" class="bouton bouton-secondaire">Historique des mouvements</button>
       <button type="button" id="bouton-fournisseurs" class="bouton bouton-secondaire">Fournisseurs</button>
+      <button type="button" id="bouton-clients" class="bouton bouton-secondaire">Clients</button>
 
       <h3 id="titre-produits" tabindex="-1">Produits</h3>
       <!-- Filtre choisi avec les compteurs (décision 59) -->
@@ -346,6 +353,72 @@
       </form>
     </section>
 
+    <!-- Carnet de clients (phase 6c, décisions 72 et 73) -->
+    <section id="vue-clients" data-vue hidden>
+      <h2>Clients</h2>
+      <button type="button" id="bouton-retour-clients" class="bouton bouton-secondaire">Retour aux produits</button>
+      <button type="button" id="bouton-ajouter-client" class="bouton bouton-principal">Ajouter un client</button>
+
+      <p class="aide">
+        Le carnet est indépendant du stock : il ne crée et ne modifie aucun
+        mouvement. Pour repérer vos clients VIP, écrivez « VIP » dans les notes,
+        puis cherchez « vip ».
+      </p>
+
+      <p id="erreur-clients" class="message-erreur" role="alert" hidden></p>
+      <p id="info-clients" class="message-info" role="status" hidden></p>
+
+      <div id="bloc-recherche-client" hidden>
+        <label for="recherche-client">Rechercher un client</label>
+        <input id="recherche-client" type="search" autocomplete="off" enterkeyhint="search" placeholder="Nom ou mot des notes">
+      </div>
+      <p id="clients-chargement" class="aide" hidden>
+        Chargement de la liste… La première fois sur cet appareil, Internet est nécessaire.
+      </p>
+      <p id="clients-vide" class="aide" hidden>Aucun client pour l'instant.</p>
+      <p id="recherche-client-aucun" class="aide" role="status" hidden></p>
+      <ul id="liste-clients" class="liste-produits"></ul>
+    </section>
+
+    <!-- Ajouter ou modifier un client -->
+    <section id="vue-client" data-vue hidden>
+      <h2 id="client-titre">Ajouter un client</h2>
+
+      <form id="formulaire-client" novalidate>
+        <label for="client-nom">Nom</label>
+        <input id="client-nom" type="text" autocomplete="off">
+
+        <label for="client-telephone">Téléphone (facultatif)</label>
+        <input id="client-telephone" type="tel" autocomplete="off" aria-describedby="aide-client-telephone">
+        <p id="aide-client-telephone" class="aide-champ">Exemple : +509 3712 3456</p>
+
+        <label for="client-whatsapp">WhatsApp (facultatif)</label>
+        <input id="client-whatsapp" type="tel" autocomplete="off" aria-describedby="aide-client-whatsapp">
+        <p id="aide-client-whatsapp" class="aide-champ">
+          Avec l'indicatif du pays au début (par exemple +509 3712 3456),
+          pour que le bouton WhatsApp fonctionne.
+        </p>
+
+        <label for="client-email">E-mail (facultatif)</label>
+        <input id="client-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false">
+
+        <label for="client-adresse">Adresse (facultatif)</label>
+        <textarea id="client-adresse" rows="2"></textarea>
+
+        <label for="client-notes">Notes (facultatif)</label>
+        <textarea id="client-notes" rows="3" aria-describedby="aide-client-notes"></textarea>
+        <p id="aide-client-notes" class="aide-champ">
+          Exemple : VIP, préfère être appelé le matin.
+        </p>
+
+        <p id="erreur-client" class="message-erreur" role="alert" hidden></p>
+
+        <button type="submit" id="bouton-enregistrer-client" class="bouton bouton-principal">Enregistrer</button>
+        <button type="button" id="bouton-annuler-client" class="bouton bouton-secondaire">Annuler</button>
+        <button type="button" id="bouton-supprimer-client" class="bouton bouton-danger" hidden>Supprimer ce client</button>
+      </form>
+    </section>
+
     <!-- Paramètres de l'entrepôt (phase 6, décision 49) -->
     <section id="vue-parametres" data-vue hidden>
       <h2>Paramètres</h2>
@@ -376,7 +449,7 @@
         <h3>Appareil partagé</h3>
         <p class="aide">
           Efface de cet appareil la copie de vos données (produits, historique,
-          fournisseurs), puis vous déconnecte. Vos données restent sur le
+          fournisseurs, clients), puis vous déconnecte. Vos données restent sur le
           serveur : vous les retrouverez à la prochaine connexion, avec Internet.
         </p>
         <p id="erreur-effacer-appareil" class="message-erreur" role="alert" hidden></p>
@@ -388,7 +461,7 @@
         <h3>Supprimer mon compte</h3>
         <p class="aide">
           Efface définitivement votre entrepôt, vos produits, tout l'historique,
-          vos fournisseurs et votre compte de connexion.
+          vos fournisseurs, vos clients et votre compte de connexion.
         </p>
         <button type="button" id="bouton-supprimer-compte" class="bouton bouton-danger">Supprimer mon compte et mes données</button>
       </div>
@@ -403,6 +476,7 @@
         <li>tous vos produits, même archivés ;</li>
         <li>tout l'historique des mouvements ;</li>
         <li>votre carnet de fournisseurs ;</li>
+        <li>votre carnet de clients ;</li>
         <li>votre compte de connexion.</li>
       </ul>
       <p class="avertissement">

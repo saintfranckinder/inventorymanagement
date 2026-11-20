@@ -94,13 +94,14 @@ L'application gère un seul entrepôt par compte utilisateur.
 6. Action permettant de saisir une quantité précise, par exemple `+10` ou `-2,5`, avec motif facultatif.
 7. Formulaire simple pour ajouter ou modifier un produit.
 8. Historique des entrées, sorties et ajustements, avec date, heure, produit, quantité et motif (50 derniers, puis « Voir plus »). Chaque ligne propose « Annuler cette opération » (section 6, règle 12).
-9. Export Excel en un clic, avec trois feuilles : `Stock`, `Historique` et `Fournisseurs`.
+9. Export Excel en un clic, avec quatre feuilles : `Stock`, `Historique`, `Fournisseurs` et `Clients`.
 10. Données de démonstration, uniquement lorsque l'entrepôt est vide.
 11. Indicateur de l'état de connexion et de synchronisation (voir section 7).
 12. Paramètres : modifier le nom de l'entrepôt. La devise n'est modifiable que si l'entrepôt ne contient encore aucun produit (changer la devise ne convertit pas les montants).
 13. Bouton « Supprimer mon compte et mes données », avec double confirmation (voir section 8).
-14. Court texte de confidentialité accessible depuis l'écran de connexion : données collectées (adresse e-mail, nom du compte Google le cas échéant, données de stock, coordonnées des fournisseurs saisies par l'utilisateur), usage, absence de revente ou de partage, possibilité de supprimer son compte.
+14. Court texte de confidentialité accessible depuis l'écran de connexion : données collectées (adresse e-mail, nom du compte Google le cas échéant, données de stock, coordonnées des fournisseurs et des clients saisies par l'utilisateur), usage, absence de revente ou de partage, possibilité de supprimer son compte.
 15. Carnet de fournisseurs (phase 6b, décisions 42 et 50 à 54) : ajouter, modifier et supprimer un fournisseur, avec nom, téléphone, WhatsApp, e-mail, adresse, produits fournis et notes ; recherche par nom ou par produit fourni ; boutons « Appeler », « WhatsApp » et « E-mail » qui ouvrent l'application correspondante du téléphone. Le carnet est indépendant du stock : il ne crée ni ne modifie aucun mouvement.
+16. Carnet de clients (phase 6c, décisions 72 et 73) : même fonctionnement que le carnet de fournisseurs, avec nom, téléphone, WhatsApp, e-mail, adresse et notes (pas de case VIP : « VIP » peut s'écrire dans les notes) ; recherche par nom ou dans les notes. Indépendant du stock ; aucune gestion des ventes.
 
 ### Ordre de priorité si le temps manque
 
@@ -109,7 +110,7 @@ L'application gère un seul entrepôt par compte utilisateur.
 3. Fonctionnement hors ligne.
 4. Export Excel.
 5. Installation sur téléphone (PWA).
-6. Carnet de fournisseurs.
+6. Carnets de fournisseurs et de clients.
 7. Données de démonstration.
 
 ### Hors périmètre de la première version
@@ -126,6 +127,7 @@ Ne pas développer sans demande explicite :
 - Comptabilité complète, facturation ou gestion des ventes.
 - Notifications complexes.
 - Lien entre les mouvements et les fournisseurs (choisir un fournisseur lors d'une entrée) : « niveau 2 », non retenu pour l'instant (décision 42).
+- Lien entre les mouvements et les clients, historique d'achats, crédit ou dettes des clients, remises, points de fidélité (décision 73).
 
 ## 5. Modèle de données
 
@@ -148,6 +150,7 @@ Pour éviter les erreurs d'arrondi des nombres à virgule, **toutes les quantit�
 - `users/{uid}/products/{productId}` : `nom`, `unite`, `quantiteMilliemes`, `seuilAlerteMilliemes`, `prixAchatCentimes`, `archive`, `dernierMouvementId`, `createdAt`, `updatedAt`.
 - `users/{uid}/movements/{movementId}` : `productId`, `nomProduit`, `unite`, `deltaMilliemes`, `type`, `motif`, `auteurUid`, `dateAppareil`, `dateServeur`.
 - `users/{uid}/suppliers/{supplierId}` (phase 6b, décisions 42 et 50) : `nom`, `telephone`, `whatsapp`, `email`, `adresse`, `produitsFournis`, `notes`, `createdAt`, `updatedAt`. Seul `nom` est obligatoire ; un champ facultatif non rempli vaut une chaîne vide. `produitsFournis` est un texte libre, sans lien avec les produits du stock. Un fournisseur supprimé est effacé définitivement : il n'y a pas d'archivage (décision 50).
+- `users/{uid}/clients/{clientId}` (phase 6c, décision 72) : `nom`, `telephone`, `whatsapp`, `email`, `adresse`, `notes`, `createdAt`, `updatedAt`. Seul `nom` est obligatoire ; un champ facultatif non rempli vaut une chaîne vide. Un client supprimé est effacé définitivement.
 
 ### Règles
 
@@ -203,7 +206,7 @@ Ne pas afficher un nombre exact de modifications en attente. Ne pas attribuer à
 
 - Un utilisateur ne peut lire et écrire que dans `users/{son uid}`.
 - Tout accès non autorisé est refusé par défaut.
-- Valider dans les règles les types, les champs autorisés, les longueurs des textes (nom 100 caractères, unité 30, motif 200) et les valeurs numériques (entiers, `deltaMilliemes` différent de 0). Fournisseurs (décision 54) : nom 1 à 100 caractères ; téléphone et WhatsApp 30 caractères au plus, seulement des chiffres, des espaces et `+ - ( ) .` ; e-mail 254 caractères au plus, vide ou de la forme `x@y` ; adresse 200 ; produits fournis 500 ; notes 1 000.
+- Valider dans les règles les types, les champs autorisés, les longueurs des textes (nom 100 caractères, unité 30, motif 200) et les valeurs numériques (entiers, `deltaMilliemes` différent de 0). Fournisseurs (décision 54) : nom 1 à 100 caractères ; téléphone et WhatsApp 30 caractères au plus, seulement des chiffres, des espaces et `+ - ( ) .` ; e-mail 254 caractères au plus, vide ou de la forme `x@y` ; adresse 200 ; produits fournis 500 ; notes 1 000. Clients (décision 72) : mêmes limites, sans « produits fournis ».
 
 ### Lien entre produit et mouvement
 
@@ -224,7 +227,7 @@ Principe à appliquer, puis à vérifier avec la page de test `tests-regles.html
 1. Double confirmation à l'écran, avec rappel d'exporter les données avant.
 2. Demander à l'utilisateur de se reconnecter avant de supprimer quoi que ce soit. La suppression n'est possible qu'en ligne (décision 13).
 3. Écrire `suppressionDemandee: true` sur `users/{uid}`. Une suppression demandée ne s'annule pas.
-4. Supprimer les mouvements, les produits, les fournisseurs, puis le document `users/{uid}`. Si la suppression est interrompue, elle reprend automatiquement à la connexion suivante tant que `suppressionDemandee` est vrai.
+4. Supprimer les mouvements, les produits, les fournisseurs, les clients, puis le document `users/{uid}`. Si la suppression est interrompue, elle reprend automatiquement à la connexion suivante tant que `suppressionDemandee` est vrai.
 5. Supprimer le compte Firebase Authentication. Si Firebase exige malgré tout une connexion récente, demander à l'utilisateur de se reconnecter, puis réessayer.
 6. Tester ce parcours avec un compte de test, jamais avec le compte du propriétaire.
 
@@ -250,7 +253,7 @@ Principe à appliquer, puis à vérifier avec la page de test `tests-regles.html
 
 - Le bouton principal est `Exporter le stock (Excel)`.
 - Générer le fichier dans le navigateur, sans service externe payant.
-- Le fichier contient les feuilles `Stock`, `Historique` (historique complet, chargé au moment de l'export) et `Fournisseurs` (décision 42), avec les quantités et montants convertis en nombres décimaux.
+- Le fichier contient les feuilles `Stock`, `Historique` (historique complet, chargé au moment de l'export), `Fournisseurs` (décision 42) et `Clients` (décision 72), avec les quantités et montants convertis en nombres décimaux.
 - Nom du fichier : `stock_AAAA-MM-JJ.xlsx`.
 - Si l'appareil est hors ligne ou si des mouvements sont encore en attente, avertir l'utilisateur que l'export peut ne pas contenir les données non synchronisées d'autres appareils, et que l'historique peut être incomplet s'il n'a pas été entièrement chargé.
 - L'export est la seule sauvegarde disponible : le plan Spark n'inclut aucune sauvegarde automatique du serveur. Le dire clairement à l'utilisateur.
@@ -291,6 +294,7 @@ Le propriétaire doit pouvoir suivre les tests avec des instructions en françai
 - Vérifier qu'une modification directe de la quantité sans mouvement est refusée.
 - Annuler une opération : le stock revient exactement à sa valeur ; une seconde annulation de la même opération est refusée, y compris depuis un autre appareil.
 - Fournisseurs : ajouter, modifier et supprimer ; un compte ne voit pas les fournisseurs d'un autre.
+- Clients : ajouter, modifier et supprimer ; un compte ne voit pas les clients d'un autre ; la suppression du compte efface aussi les clients.
 - Vérifier les alertes de stock bas et de rupture.
 - Exporter le stock et l'historique, et ouvrir le fichier dans Excel.
 - Tester sur ordinateur et smartphone.
