@@ -64,7 +64,30 @@ import { demarrerFirebase, VERSION_SDK_FIREBASE } from './firebase-init.js';
 import { afficherMessage, afficherVue, effacerMessages, element, vueActuelle } from './interface.js';
 import { messageErreur } from './messages-erreur.js';
 
-const VERSION_APP = '0.13.0';
+const VERSION_APP = '0.14.0';
+
+// Bouton retour du téléphone (décision 75) : pour chaque écran secondaire, le
+// bouton de l'écran qui fait déjà « revenir » (flèche ←, « Annuler »…). Le
+// retour du téléphone le touche à la place de l'utilisateur. Les écrans qui
+// n'y figurent pas (accueil, connexion, chargement…) sont des écrans de base :
+// là, le retour quitte l'application comme d'habitude.
+// Niveau 1 : ouvert depuis un écran de base ; niveau 2 : ouvert depuis un
+// écran de niveau 1 (formulaire d'un carnet, suppression du compte).
+const ECRANS_NIVEAU_2 = ['vue-fournisseur', 'vue-client', 'vue-suppression'];
+const BOUTONS_RETOUR = {
+  'vue-historique': '#bouton-retour-historique',
+  'vue-fournisseurs': '#bouton-retour-fournisseurs',
+  'vue-fournisseur': '#bouton-annuler-fournisseur',
+  'vue-clients': '#bouton-retour-clients',
+  'vue-client': '#bouton-annuler-client',
+  'vue-parametres': '#bouton-retour-parametres',
+  'vue-produit': '#bouton-annuler-produit',
+  'vue-mouvement': '#bouton-annuler-mouvement',
+  'vue-suppression': '#bouton-annuler-suppression',
+  'vue-inscription': '#vue-inscription [data-aller="vue-connexion"]',
+  'vue-oubli': '#vue-oubli [data-aller="vue-connexion"]',
+  'vue-confidentialite': '#vue-confidentialite [data-aller="vue-connexion"]'
+};
 
 // Écrans où s'affichent la barre de navigation et le bouton ⚙ (décision 74).
 // Ils sont cachés dans les formulaires, pour ne pas quitter une saisie par
@@ -113,6 +136,14 @@ let memoireHorsLigneVerifiee = false;
 let premierEtatConnu = false;
 let stockagePersistantDemande = false;
 let entrepotCharge = false;       // un compte est connecté et son entrepôt est affiché
+
+// Historique du navigateur (décision 75) : autant d'entrées ajoutées que le
+// niveau de l'écran affiché (0, 1 ou 2). Elles sont ajoutées au moment d'un
+// toucher : Chrome ignore au retour les entrées ajoutées sans geste de
+// l'utilisateur.
+let profondeurHistorique = 0;      // entrées ajoutées par l'application
+let retourEnCours = false;         // un retour du téléphone est en train d'être traité
+let ignorerProchainRetour = false; // le prochain « popstate » vient de history.go() appelé ici
 
 // ---------- Affichage ----------
 
@@ -202,6 +233,77 @@ function mettreAJourNavigation() {
     } else {
       bouton.removeAttribute('aria-current');
     }
+  }
+}
+
+// ---------- Bouton retour du téléphone (décision 75) ----------
+
+function niveauEcran(vue) {
+  if (!BOUTONS_RETOUR[vue]) {
+    return 0;
+  }
+  return ECRANS_NIVEAU_2.includes(vue) ? 2 : 1;
+}
+
+// Ramène le nombre d'entrées ajoutées au niveau de l'écran affiché.
+function ajusterHistorique() {
+  const niveau = niveauEcran(vueActuelle());
+  while (profondeurHistorique < niveau) {
+    window.history.pushState({ minstock: profondeurHistorique + 1 }, '');
+    profondeurHistorique += 1;
+  }
+  if (profondeurHistorique > niveau) {
+    // Retour vers un écran moins profond par un bouton de l'application : les
+    // entrées en trop sont retirées, pour que le retour du téléphone mène
+    // ensuite au bon écran (ou quitte l'application depuis l'accueil).
+    const enTrop = profondeurHistorique - niveau;
+    profondeurHistorique = niveau;
+    ignorerProchainRetour = true;
+    window.history.go(-enTrop);
+  }
+}
+
+// Après chaque changement d'écran fait dans l'application.
+function synchroniserHistorique() {
+  if (!retourEnCours) {
+    ajusterHistorique();
+  }
+}
+
+// Le bouton retour du téléphone a été pressé : le navigateur a déjà reculé
+// d'une entrée. L'écran fait comme si son bouton « retour » était touché.
+function surRetourDuTelephone() {
+  if (ignorerProchainRetour) {
+    ignorerProchainRetour = false;
+    return;
+  }
+  if (profondeurHistorique === 0) {
+    return;
+  }
+  profondeurHistorique -= 1;
+  const selecteur = BOUTONS_RETOUR[vueActuelle()];
+  const bouton = selecteur ? document.querySelector(selecteur) : null;
+  retourEnCours = true;
+  try {
+    if (bouton && !bouton.disabled) {
+      bouton.click();
+    }
+  } finally {
+    retourEnCours = false;
+  }
+  ajusterHistorique();
+}
+
+// Hauteur de l'en-tête figé, qui change quand l'explication de l'indicateur
+// s'ouvre : la partie figée des écrans se place juste dessous.
+function suivreHauteurEntete() {
+  const entete = document.querySelector('.entete');
+  const appliquer = () => {
+    document.documentElement.style.setProperty('--hauteur-entete', `${entete.offsetHeight}px`);
+  };
+  appliquer();
+  if (typeof ResizeObserver === 'function') {
+    new ResizeObserver(appliquer).observe(entete);
   }
 }
 
@@ -618,6 +720,9 @@ function brancherNavigation() {
   // Le bouton ⚙ ouvre Paramètres (js/ecran-parametres.js).
   element('bouton-parametres').addEventListener('click', () => quitterLesCarnets('vue-parametres'));
   document.addEventListener('vue-changee', mettreAJourNavigation);
+  document.addEventListener('vue-changee', synchroniserHistorique);
+  window.addEventListener('popstate', surRetourDuTelephone);
+  suivreHauteurEntete();
 
   for (const caseACocher of document.querySelectorAll('input[data-afficher-mdp]')) {
     caseACocher.addEventListener('change', () => {

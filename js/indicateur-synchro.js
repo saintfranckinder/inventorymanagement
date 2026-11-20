@@ -185,7 +185,8 @@ function surToucher() {
     afficherVue('vue-accueil');
     const bloc = element('operations-refusees');
     const titre = bloc.querySelector('h3');
-    bloc.scrollIntoView({ block: 'start' });
+    // Le bloc est juste sous la partie figée de l'accueil (décision 75).
+    window.scrollTo(0, 0);
     if (titre) {
       titre.tabIndex = -1;
       titre.focus({ preventScroll: true });

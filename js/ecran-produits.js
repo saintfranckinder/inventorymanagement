@@ -371,8 +371,10 @@ function choisirFiltre(nouveau) {
   element('recherche-produit').value = '';
   afficherListe();
 
+  // La liste commence juste sous la partie figée (décision 75) : remonter en
+  // haut de la page suffit pour la montrer.
   const titre = element('titre-produits');
-  titre.scrollIntoView({ block: 'start' });
+  window.scrollTo(0, 0);
   if (nouveau === 'tous') {
     titre.focus({ preventScroll: true });
     annoncer(`Tous les produits sont affichés : ${FORMAT_ENTIER.format(produits.length)}.`);

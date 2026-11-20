@@ -94,8 +94,20 @@ li[tabindex="-1"]:focus:not(:focus-visible) {
 
 /* ---------- En-tête ---------- */
 
+/* L'en-tête reste toujours en haut (décision 75). Son fond reprend le haut
+   du dégradé de la page, pour que ce qui défile dessous ne se voie pas.
+   --hauteur-entete est mise à jour par js/app.js quand l'explication de
+   l'indicateur s'ouvre. */
+:root {
+  --hauteur-entete: 68px;
+}
+
 .entete {
+  position: sticky;
+  top: 0;
+  z-index: 15;
   padding: 1rem 1rem 0.25rem;
+  background: linear-gradient(180deg, var(--fond-haut) 0%, #dfe2e6 100%);
 }
 
 /* Même largeur que le contenu des écrans (28rem moins les marges). */
@@ -694,6 +706,32 @@ select:disabled {
 
 .compteur-rupture .compteur-nombre {
   color: #f4b2a9;
+}
+
+/* Partie figée sous l'en-tête (décision 75) : nom de l'entrepôt, carte de
+   valeur et recherche sur l'accueil ; titre, « Ajouter » et recherche sur
+   Fournisseurs et Clients ; titre sur Mouvements et Paramètres. Seul le
+   reste de l'écran défile. */
+.haut-fixe {
+  position: sticky;
+  top: var(--hauteur-entete);
+  z-index: 10;
+  margin: -1rem -1rem 0.75rem;
+  padding: 1rem 1rem 0.0625rem;
+  background: linear-gradient(180deg, #dfe2e6 0%, var(--fond) 15.75rem);
+  box-shadow: 0 8px 10px -10px rgba(33, 53, 71, 0.35);
+}
+
+/* Titre d'écran avec la flèche ← à gauche (décision 75). */
+.titre-ecran {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin: -0.5rem 0 0.75rem -0.75rem;
+}
+
+.titre-ecran h2 {
+  margin: 0;
 }
 
 /* Titre « Produits » lu par les lecteurs d'écran, sans place à l'écran

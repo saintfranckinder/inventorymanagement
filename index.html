@@ -219,20 +219,9 @@
     <!-- Tableau de bord : valeur du stock, recherche, produits (phase 5),
          disposition « accueil épuré » (décision 74) -->
     <section id="vue-accueil" data-vue hidden>
+      <!-- Partie figée en haut : seule la liste défile (décision 75) -->
+      <div class="haut-fixe">
       <h2 id="accueil-entrepot"></h2>
-
-      <p id="erreur-accueil" class="message-erreur" role="alert" hidden></p>
-      <p id="info-accueil" class="message-info" role="status" hidden></p>
-
-      <!-- Opérations que le serveur a refusées (voir js/operations-en-attente.js) -->
-      <section id="operations-refusees" class="bloc-refus" role="alert" hidden>
-        <h3>Opérations refusées par le serveur</h3>
-        <p>
-          Ces opérations n'ont pas été enregistrées : le stock et l'historique
-          n'en tiennent pas compte. Refaites-les si elles sont toujours valables.
-        </p>
-        <ul id="liste-operations-refusees" class="liste-produits"></ul>
-      </section>
 
       <!-- Valeur de tout l'entrepôt (décision 45) -->
       <div id="bloc-valeur" class="valeur-stock" hidden>
@@ -273,12 +262,6 @@
         </p>
       </div>
 
-      <h3 id="titre-produits" class="titre-produits" tabindex="-1">Produits</h3>
-      <!-- Filtre choisi avec les compteurs (décision 59) -->
-      <div id="bloc-filtre" class="filtre-actif" hidden>
-        <p id="filtre-texte" class="filtre-texte" tabindex="-1"></p>
-        <button type="button" id="bouton-tout-afficher" class="bouton bouton-secondaire">Tout afficher</button>
-      </div>
       <div id="bloc-recherche" class="recherche" hidden>
         <label for="recherche-produit" class="lecteur-ecran">Rechercher un produit</label>
         <svg class="icone recherche-icone" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -286,6 +269,27 @@
           <path d="M16.2 16.2L21 21"/>
         </svg>
         <input id="recherche-produit" type="search" autocomplete="off" enterkeyhint="search" placeholder="Rechercher un produit">
+      </div>
+      </div>
+
+      <p id="erreur-accueil" class="message-erreur" role="alert" hidden></p>
+      <p id="info-accueil" class="message-info" role="status" hidden></p>
+
+      <!-- Opérations que le serveur a refusées (voir js/operations-en-attente.js) -->
+      <section id="operations-refusees" class="bloc-refus" role="alert" hidden>
+        <h3>Opérations refusées par le serveur</h3>
+        <p>
+          Ces opérations n'ont pas été enregistrées : le stock et l'historique
+          n'en tiennent pas compte. Refaites-les si elles sont toujours valables.
+        </p>
+        <ul id="liste-operations-refusees" class="liste-produits"></ul>
+      </section>
+
+      <h3 id="titre-produits" class="titre-produits" tabindex="-1">Produits</h3>
+      <!-- Filtre choisi avec les compteurs (décision 59) -->
+      <div id="bloc-filtre" class="filtre-actif" hidden>
+        <p id="filtre-texte" class="filtre-texte" tabindex="-1"></p>
+        <button type="button" id="bouton-tout-afficher" class="bouton bouton-secondaire">Tout afficher</button>
       </div>
       <p id="produits-vide" class="aide" hidden>
         Aucun produit pour l'instant. Touchez le bouton « + » en bas à droite
@@ -307,9 +311,27 @@
 
     <!-- Carnet de fournisseurs (phase 6b, décisions 42 et 50 à 54) -->
     <section id="vue-fournisseurs" data-vue hidden>
-      <h2>Fournisseurs</h2>
-      <button type="button" id="bouton-retour-fournisseurs" class="bouton bouton-secondaire">Retour aux produits</button>
-      <button type="button" id="bouton-ajouter-fournisseur" class="bouton bouton-principal">Ajouter un fournisseur</button>
+      <!-- Partie figée en haut (décision 75) -->
+      <div class="haut-fixe">
+        <div class="titre-ecran">
+          <button type="button" id="bouton-retour-fournisseurs" class="bouton-icone" aria-label="Retour aux produits">
+            <svg class="icone" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M19 12H5"/>
+              <path d="M11 6l-6 6 6 6"/>
+            </svg>
+          </button>
+          <h2>Fournisseurs</h2>
+        </div>
+        <button type="button" id="bouton-ajouter-fournisseur" class="bouton bouton-principal">Ajouter un fournisseur</button>
+        <div id="bloc-recherche-fournisseur" class="recherche" hidden>
+          <label for="recherche-fournisseur" class="lecteur-ecran">Rechercher un fournisseur</label>
+          <svg class="icone recherche-icone" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <circle cx="11" cy="11" r="7"/>
+            <path d="M16.2 16.2L21 21"/>
+          </svg>
+          <input id="recherche-fournisseur" type="search" autocomplete="off" enterkeyhint="search" placeholder="Nom ou produit fourni">
+        </div>
+      </div>
 
       <p class="aide">
         Le carnet est indépendant du stock : il ne crée et ne modifie aucun
@@ -319,10 +341,6 @@
       <p id="erreur-fournisseurs" class="message-erreur" role="alert" hidden></p>
       <p id="info-fournisseurs" class="message-info" role="status" hidden></p>
 
-      <div id="bloc-recherche-fournisseur" hidden>
-        <label for="recherche-fournisseur">Rechercher un fournisseur</label>
-        <input id="recherche-fournisseur" type="search" autocomplete="off" enterkeyhint="search" placeholder="Nom ou produit fourni">
-      </div>
       <p id="fournisseurs-chargement" class="aide" hidden>
         Chargement de la liste… La première fois sur cet appareil, Internet est nécessaire.
       </p>
@@ -375,9 +393,27 @@
 
     <!-- Carnet de clients (phase 6c, décisions 72 et 73) -->
     <section id="vue-clients" data-vue hidden>
-      <h2>Clients</h2>
-      <button type="button" id="bouton-retour-clients" class="bouton bouton-secondaire">Retour aux produits</button>
-      <button type="button" id="bouton-ajouter-client" class="bouton bouton-principal">Ajouter un client</button>
+      <!-- Partie figée en haut (décision 75) -->
+      <div class="haut-fixe">
+        <div class="titre-ecran">
+          <button type="button" id="bouton-retour-clients" class="bouton-icone" aria-label="Retour aux produits">
+            <svg class="icone" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M19 12H5"/>
+              <path d="M11 6l-6 6 6 6"/>
+            </svg>
+          </button>
+          <h2>Clients</h2>
+        </div>
+        <button type="button" id="bouton-ajouter-client" class="bouton bouton-principal">Ajouter un client</button>
+        <div id="bloc-recherche-client" class="recherche" hidden>
+          <label for="recherche-client" class="lecteur-ecran">Rechercher un client</label>
+          <svg class="icone recherche-icone" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <circle cx="11" cy="11" r="7"/>
+            <path d="M16.2 16.2L21 21"/>
+          </svg>
+          <input id="recherche-client" type="search" autocomplete="off" enterkeyhint="search" placeholder="Nom ou mot des notes">
+        </div>
+      </div>
 
       <p class="aide">
         Le carnet est indépendant du stock : il ne crée et ne modifie aucun
@@ -388,10 +424,6 @@
       <p id="erreur-clients" class="message-erreur" role="alert" hidden></p>
       <p id="info-clients" class="message-info" role="status" hidden></p>
 
-      <div id="bloc-recherche-client" hidden>
-        <label for="recherche-client">Rechercher un client</label>
-        <input id="recherche-client" type="search" autocomplete="off" enterkeyhint="search" placeholder="Nom ou mot des notes">
-      </div>
       <p id="clients-chargement" class="aide" hidden>
         Chargement de la liste… La première fois sur cet appareil, Internet est nécessaire.
       </p>
@@ -441,8 +473,18 @@
 
     <!-- Paramètres de l'entrepôt (phase 6, décision 49) -->
     <section id="vue-parametres" data-vue hidden>
-      <h2>Paramètres</h2>
-      <button type="button" id="bouton-retour-parametres" class="bouton bouton-secondaire">Retour aux produits</button>
+      <!-- Titre figé en haut (décision 75) -->
+      <div class="haut-fixe">
+        <div class="titre-ecran">
+          <button type="button" id="bouton-retour-parametres" class="bouton-icone" aria-label="Retour aux produits">
+            <svg class="icone" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M19 12H5"/>
+              <path d="M11 6l-6 6 6 6"/>
+            </svg>
+          </button>
+          <h2>Paramètres</h2>
+        </div>
+      </div>
 
       <form id="formulaire-nom-entrepot" class="bloc-parametres" novalidate>
         <h3>Nom de l'entrepôt</h3>
@@ -668,8 +710,18 @@
 
     <!-- Historique des mouvements -->
     <section id="vue-historique" data-vue hidden>
-      <h2>Historique des mouvements</h2>
-      <button type="button" id="bouton-retour-historique" class="bouton bouton-secondaire">Retour aux produits</button>
+      <!-- Titre figé en haut (décision 75) -->
+      <div class="haut-fixe">
+        <div class="titre-ecran">
+          <button type="button" id="bouton-retour-historique" class="bouton-icone" aria-label="Retour aux produits">
+            <svg class="icone" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M19 12H5"/>
+              <path d="M11 6l-6 6 6 6"/>
+            </svg>
+          </button>
+          <h2>Historique des mouvements</h2>
+        </div>
+      </div>
 
       <p class="aide">
         Une opération faite par erreur se corrige avec « Annuler cette
