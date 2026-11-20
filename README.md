@@ -20,6 +20,7 @@ Le projet est en cours de construction. L'avancement est suivi dans `PLAN.md`.
 - Carnet de fournisseurs : ajouter, modifier, supprimer, rechercher, et appeler ou écrire en un appui.
 - Carnet de clients : même fonctionnement que les fournisseurs, pour les clients réguliers (« VIP » s'écrit dans les notes).
 - Indicateur de synchronisation en haut de l'écran ; avertissement avant de se déconnecter s'il reste des modifications non envoyées ; effacement des données de l'appareil (appareil partagé).
+- Accueil épuré : une ligne par produit, fiche du produit dans un panneau qui monte du bas, barre de navigation en bas (Stock, Mouvements, Fournisseurs, Clients), Paramètres derrière l'icône ⚙.
 
 ## Identité visuelle
 
@@ -27,9 +28,19 @@ Le projet est en cours de construction. L'avancement est suivi dans `PLAN.md`.
 - **Symbole :** `images/logo-minstock.svg`, redessiné en format vectoriel d'après le logo du propriétaire ; il sert aussi d'icône dans l'onglet du navigateur.
 - **Couleurs :** bleu nuit `#213547`, bleu `#2E618D`, doré `#C09D63` (toujours avec un texte foncé ; `#7A5F2C` quand le doré sert de texte), fond `#ECE9E4`. Toutes sont définies au début de `css/style.css`, et leurs contrastes ont été vérifiés pour rester lisibles en plein soleil.
 - **Police :** Montserrat pour le nom, les titres et les grands chiffres (licence libre SIL OFL, fichier copié dans `vendor/polices/` avec sa licence) ; la police du téléphone pour le reste du texte.
-- La maquette du propriétaire contient d'autres idées (scanner, rapports, notifications, barre de navigation en bas…) qui ne font pas partie de cette version : voir la décision 56.
+- La maquette du propriétaire contient d'autres idées (scanner, rapports, notifications…) qui ne font pas partie de cette version : voir la décision 56. La barre de navigation en bas a été ajoutée ensuite, avec l'accueil épuré (décision 74).
+- **Icônes** (⚙, ⓘ, loupe, barre du bas) : dessinées directement dans `index.html`, sans bibliothèque ni fichier chargé depuis Internet.
 
 ## Tableau de bord
+
+Disposition « accueil épuré » (décision 74), d'après la maquette du propriétaire :
+
+- **En haut :** le nom MinStock, l'indicateur de synchronisation et l'icône ⚙ (Paramètres : nom de l'entrepôt, devise, compte, « Se déconnecter », version).
+- **Carte bleu nuit :** valeur du stock et compteurs ; l'icône ⓘ affiche l'explication du calcul.
+- **Une ligne par produit :** nom (deux lignes au plus), « Achat … · seuil … », alertes écrites, puis `−1`, la quantité avec son unité, `+1`. Tant que le serveur n'a pas confirmé, « En attente de synchronisation » remplace « Achat … » sans changer la hauteur de la ligne.
+- **Toucher le nom d'un produit** ouvre sa fiche dans un panneau qui monte du bas : `−1` / `+1`, seuil, prix d'achat, valeur, « Mouvement de stock », « Modifier ». Il se ferme avec ✕, en touchant le fond gris, avec Échap ou avec le bouton retour du téléphone.
+- **Bouton rond `+`** en bas à droite : ajouter un produit (à ne pas confondre avec `+1` sur une ligne, qui ajoute une unité).
+- **Barre en bas :** Stock, Mouvements, Fournisseurs, Clients. Elle n'apparaît que sur ces quatre écrans, pas dans les formulaires ni dans Paramètres.
 
 - **Valeur du stock (indicative)** : pour chaque produit, quantité × prix d'achat **actuel** ; en haut de l'écran, le total de l'entrepôt, égal à la somme des lignes, avec trois compteurs (nombre de produits, « Stock bas », « Ruptures ») calculés sur l'appareil.
 - **Compteurs cliquables** : toucher « Stock bas » ou « Ruptures » n'affiche que les produits concernés (l'écran descend jusqu'à la liste) ; « Produits » ou « Tout afficher » montrent de nouveau tout. Un produit qui sort de l'alerte pendant que vous travaillez reste affiché jusqu'au prochain choix de filtre, pour que la liste ne bouge pas sous le doigt. Choisir un filtre vide la recherche ; le filtre s'enlève en ajoutant un produit et à la déconnexion. Modifier un prix d'achat change la valeur de tout le stock de ce produit. Un stock négatif compte en négatif. Les produits archivés ne comptent pas.
@@ -45,7 +56,7 @@ Le projet est en cours de construction. L'avancement est suivi dans `PLAN.md`.
 - **Entrée** et **Sortie** : saisir la quantité sans signe. **Ajustement** : saisir la correction avec son signe (`-2,5` ou `+3`).
 - Un mouvement enregistré ne peut être ni modifié ni supprimé. Une erreur se corrige avec « Annuler cette opération » dans l'historique (voir plus bas), ou par un mouvement d'ajustement.
 - Un stock peut devenir négatif. L'application avertit avant l'enregistrement et affiche ensuite « Stock négatif : à vérifier ». Avec plusieurs appareils hors ligne, elle ne peut pas l'empêcher.
-- Un mouvement apparaît tout de suite. Tant que le serveur ne l'a pas confirmé, la fiche du produit affiche « En attente » à la place du mot « Quantité » (sur la même ligne : rien ne bouge en dessous), et l'historique affiche « En attente de synchronisation ».
+- Un mouvement apparaît tout de suite. Tant que le serveur ne l'a pas confirmé, la ligne du produit affiche « En attente de synchronisation » à la place de « Achat … » (même hauteur : rien ne bouge), le panneau du produit affiche « en attente » sous la quantité, et l'historique affiche « En attente de synchronisation ».
 - **Arrivage à un nouveau prix :** noter le prix dans le motif de l'entrée (par exemple « Arrivage à 1 200 HTG le sac »), puis corriger le prix d'achat dans la fiche du produit avec « Modifier ». L'application ne calcule pas de coût moyen : la valeur du stock utilise le dernier prix d'achat saisi (décision 71).
 - L'historique est rangé selon l'heure de réception par le serveur. L'heure indiquée « Fait le » est celle de l'appareil au moment de l'opération ; si l'écart dépasse 5 minutes, les deux sont affichées.
 
@@ -67,12 +78,14 @@ Chaque mouvement et chaque création de produit est noté sur l'appareil jusqu'�
 
 ## Paramètres
 
-Le bouton « Paramètres », en bas de l'écran des produits, ouvre :
+L'icône ⚙, en haut à droite des écrans Stock, Mouvements, Fournisseurs et Clients, ouvre :
 
 - **Nom de l'entrepôt** : modifiable à tout moment, même sans Internet (de 1 à 100 caractères).
 - **Devise** : modifiable seulement tant que l'entrepôt ne contient aucun produit, même archivé, car changer la devise ne convertit pas les prix déjà saisis. L'application le vérifie auprès du serveur : il faut donc Internet pour changer la devise. Sans réponse du serveur, la devise reste bloquée et le bouton « Vérifier de nouveau » permet de réessayer.
+- **Compte** : l'adresse du compte connecté et le bouton « Se déconnecter ».
 - **Appareil partagé** : « Effacer les données de cet appareil et me déconnecter » (voir « Synchronisation et utilisation sans Internet »).
 - **Supprimer mon compte** : voir plus bas.
+- **Version** de l'application, tout en bas.
 
 ## Synchronisation et utilisation sans Internet
 
@@ -83,11 +96,11 @@ Le bouton « Paramètres », en bas de l'écran des produits, ouvre :
 | Affichage | Signification |
 |---|---|
 | « Synchronisé » (pastille verte) | Le serveur a reçu les modifications faites sur cet appareil. |
-| « En attente de synchronisation » (pastille dorée) | Des modifications attendent la confirmation du serveur. Elles partent toutes seules. |
-| « Hors ligne » (pastille grise) | Pas de connexion au serveur. On peut continuer à travailler : les modifications sont gardées sur l'appareil. « Envoi en attente » signale qu'il en reste à envoyer. |
-| « Erreur de synchronisation » (rouge) | Le serveur a refusé une opération. Toucher l'indicateur mène au bloc « Opérations refusées ». |
+| « En attente » (pastille dorée) | En attente de synchronisation : des modifications attendent la confirmation du serveur. Elles partent toutes seules. |
+| « Hors ligne » (pastille grise) | Pas de connexion au serveur. On peut continuer à travailler : les modifications sont gardées sur l'appareil. « À envoyer » signale qu'il en reste à envoyer. |
+| « Erreur » (rouge) | Erreur de synchronisation : le serveur a refusé une opération. Toucher l'indicateur mène au bloc « Opérations refusées ». |
 
-Toucher l'indicateur affiche une courte explication. Il est **approximatif** : le navigateur peut se croire en ligne sur un Wi-Fi sans Internet, et il faut alors quelques secondes pour voir « Hors ligne ». Un changement d'état n'apparaît qu'après une seconde et demie environ, pour éviter le clignotement : après un `+1` avec une bonne connexion, l'indicateur reste donc sur « Synchronisé ». Il n'affiche jamais de nombre de modifications en attente.
+Faute de place à côté de l'icône ⚙, l'indicateur affiche des mots courts ; le nom complet de l'état est dans l'explication et lu par les lecteurs d'écran (décision 74). Toucher l'indicateur affiche une courte explication. Il est **approximatif** : le navigateur peut se croire en ligne sur un Wi-Fi sans Internet, et il faut alors quelques secondes pour voir « Hors ligne ». Un changement d'état n'apparaît qu'après une seconde et demie environ, pour éviter le clignotement : après un `+1` avec une bonne connexion, l'indicateur reste donc sur « Synchronisé ». Il n'affiche jamais de nombre de modifications en attente.
 
 ### Se déconnecter avec des modifications non envoyées
 
@@ -256,6 +269,7 @@ Sur GitHub Pages, le fichier vide `.nojekyll` doit rester à la racine : sans lu
 - **Fournisseur supprimé :** aucun retour en arrière possible. L'export Excel (phase 9) servira de sauvegarde.
 - **Appareil partagé :** pour permettre l'utilisation sans Internet, le navigateur garde une copie des données déjà consultées (produits, mouvements, fournisseurs), **même après « Se déconnecter »**. L'application ne les montre plus, mais une personne qui sait fouiller dans le navigateur pourrait les lire. Utiliser l'application seulement sur ses propres appareils, verrouillés par un code ; sur un appareil partagé, utiliser « Effacer les données de cet appareil et me déconnecter » dans Paramètres.
 - **Indicateur de synchronisation :** il est approximatif (voir plus haut). Une modification refusée qui n'est pas un mouvement ni une création de produit (nom, prix, archivage, fournisseur) s'affiche en message d'erreur, mais ne fait pas passer l'indicateur sur « Erreur de synchronisation ».
+- **Accueil épuré :** le bouton rond `+` (ajouter un produit) passe par-dessus la droite de la liste ; quand une ligne est juste derrière lui, faire défiler un peu avant de toucher son `+1`. Une ligne qui passe en « Stock bas » ou « Rupture » s'agrandit vers le bas (ses propres boutons ne bougent pas). L'unité s'affiche telle qu'elle a été saisie, sans pluriel automatique (« 7 sac »).
 - **Clients :** mêmes limites que les fournisseurs pour les modifications sans Internet et sur deux appareils. Si un téléphone resté sur une version de l'application antérieure à la 0.12.0 termine une suppression de compte, il n'efface pas les clients ; recharger la page avant de supprimer son compte.
 - **Sécurité du compte :** quiconque connaît le mot de passe du compte voit tout l'entrepôt et les carnets de fournisseurs et de clients. Choisir un mot de passe solide, ou se connecter avec Google en activant la validation en deux étapes du compte Google. Le compte Google qui gère la console Firebase donne accès à toutes les données : il doit être protégé de la même façon.
 - **Ajustement d'inventaire :** la correction est saisie à la main. Si un autre appareil a modifié le stock entre-temps, le chiffre affiché au moment de la saisie n'était peut-être plus à jour.

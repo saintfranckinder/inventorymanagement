@@ -433,6 +433,13 @@ export function brancherEcranFournisseurs() {
   });
 }
 
+// Quitter le carnet par la barre de navigation ou par ⚙ (décision 74) :
+// l'écoute de la liste s'arrête, comme avec « Retour aux produits »
+// (décision 52).
+export function quitterEcranFournisseurs() {
+  arreterLEcoute();
+}
+
 // À appeler quand l'entrepôt du compte connecté est connu.
 export function demarrerEcranFournisseurs(db, uid) {
   if (contexte && contexte.uid === uid) {

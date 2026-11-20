@@ -3,6 +3,8 @@
 // Tableau de bord : valeur du stock « indicative », recherche par nom,
 // alertes « Stock bas » et « Rupture », boutons rapides « −1 » / « +1 »
 // (décisions 44 à 46).
+// Disposition « accueil épuré » (décision 74) : une ligne par produit ;
+// toucher la ligne ouvre la fiche du produit, un panneau qui monte du bas.
 
 import {
   envoyerMouvement,
@@ -64,6 +66,9 @@ let idProduitEnCours = null;  // produit en cours de modification, ou null pour 
 let filtre = 'tous';
 let idsDuFiltre = null;
 
+// Produit affiché dans le panneau de sa fiche, ou null (décision 74).
+let idFiche = null;
+
 const TEXTES_FILTRE = {
   bas: { nom: 'Stock bas', aucun: 'Aucun produit en stock bas pour l’instant.' },
   rupture: { nom: 'Ruptures', aucun: 'Aucun produit en rupture pour l’instant.' }
@@ -76,13 +81,6 @@ const UNE_UNITE_MILLIEMES = 1000;
 
 // Les alertes sont toujours écrites, pas seulement colorées.
 const LIBELLES_ETAT = { bas: 'Stock bas', rupture: 'Rupture' };
-
-function ligneDetail(libelle, valeur) {
-  const ligne = document.createElement('p');
-  ligne.className = 'produit-detail';
-  ligne.textContent = `${libelle} : ${valeur}`;
-  return ligne;
-}
 
 // « rupture » (rouge) si la quantité est à 0 ou en dessous ; sinon « bas »
 // (orange) si elle atteint le seuil d'alerte (CLAUDE.md, section 11).
@@ -117,6 +115,7 @@ function actionRapide(idProduit, action) {
   if (action === 'moins' && produit.quantiteMilliemes - UNE_UNITE_MILLIEMES < 0) {
     // Le stock deviendrait négatif : l'avertissement passe avant l'envoi
     // (décision 34). Le formulaire s'ouvre prérempli ; rien n'est envoyé.
+    fermerFiche();
     ouvrirFormulaireMouvement(produit, { type: 'sortie', quantite: '1' });
     return;
   }
@@ -142,76 +141,163 @@ function boutonRapide(produit, action) {
   return bouton;
 }
 
+function etiquetteAlerte(texte, classe) {
+  const etiquette = document.createElement('span');
+  etiquette.className = `etiquette ${classe}`;
+  etiquette.textContent = texte;
+  return etiquette;
+}
+
+// Alertes toujours écrites, pas seulement colorées (CLAUDE.md, section 11).
+function etiquettesAlerte(produit) {
+  const etat = etatDuStock(produit);
+  const etiquettes = [];
+  if (etat !== 'normal') {
+    etiquettes.push(etiquetteAlerte(LIBELLES_ETAT[etat], `etiquette-${etat}`));
+  }
+  if (produit.quantiteMilliemes < 0) {
+    etiquettes.push(etiquetteAlerte('Stock négatif : à vérifier', 'etiquette-rupture'));
+  }
+  return etiquettes;
+}
+
+// Une ligne par produit (décision 74) : nom, « Achat … · seuil … »,
+// alertes, puis « −1 », quantité, « +1 ». Toucher le nom ouvre la fiche.
 function carteProduit(produit) {
   const etat = etatDuStock(produit);
-  const article = document.createElement('li');
-  article.className = etat === 'normal' ? 'produit' : `produit produit-${etat}`;
+  const ligne = document.createElement('li');
+  ligne.className = etat === 'normal' ? 'produit-ligne' : `produit-ligne produit-ligne-${etat}`;
 
-  const nom = document.createElement('h4');
+  const infos = document.createElement('button');
+  infos.type = 'button';
+  infos.className = 'produit-infos';
+  infos.dataset.action = 'fiche';
+  infos.dataset.produit = produit.id;
+
+  const nom = document.createElement('span');
+  nom.className = 'produit-nom';
   nom.textContent = produit.nom;
-  article.append(nom);
 
-  if (etat !== 'normal') {
-    const etiquette = document.createElement('p');
-    etiquette.className = `etiquette etiquette-${etat}`;
-    etiquette.textContent = LIBELLES_ETAT[etat];
-    article.append(etiquette);
+  // Tant que le serveur n'a pas confirmé, « En attente de synchronisation »
+  // remplace cette ligne, qui garde la même hauteur : rien ne bouge
+  // (décisions 65 et 74).
+  const details = document.createElement('span');
+  details.className = produit.enAttente ? 'produit-meta produit-meta-attente' : 'produit-meta';
+  details.textContent = produit.enAttente
+    ? 'En attente de synchronisation'
+    : `Achat ${formaterMontant(produit.prixAchatCentimes, contexte.devise)} · ` +
+      `seuil ${formaterQuantite(produit.seuilAlerteMilliemes)}`;
+
+  const voir = document.createElement('span');
+  voir.className = 'lecteur-ecran';
+  voir.textContent = ' — ouvrir la fiche';
+  infos.append(nom, details);
+
+  const alertes = etiquettesAlerte(produit);
+  if (alertes.length > 0) {
+    const bloc = document.createElement('span');
+    bloc.className = 'produit-alertes';
+    bloc.append(...alertes);
+    infos.append(bloc);
   }
+  infos.append(voir);
+  infos.addEventListener('click', () => ouvrirFiche(produit.id));
 
-  // La quantité, entre « −1 » et « +1 ». Tant que le serveur n'a pas
-  // confirmé, « En attente » remplace le mot « Quantité » sur la même ligne :
-  // rien ne bouge en dessous (décision 65).
   const quantite = document.createElement('p');
   quantite.className = 'quantite';
-  const libelle = document.createElement('span');
-  libelle.className = produit.enAttente ? 'quantite-libelle quantite-attente' : 'quantite-libelle';
-  libelle.textContent = produit.enAttente ? 'En attente' : 'Quantité';
   const valeur = document.createElement('span');
   valeur.className = 'quantite-valeur';
-  valeur.textContent = `${formaterQuantite(produit.quantiteMilliemes)} ${produit.unite}`;
-  quantite.append(libelle, valeur);
+  valeur.textContent = formaterQuantite(produit.quantiteMilliemes);
+  const unite = document.createElement('span');
+  unite.className = 'quantite-libelle';
+  unite.textContent = produit.unite;
+  quantite.append(valeur, unite);
 
   const ligneQuantite = document.createElement('div');
   ligneQuantite.className = 'ligne-quantite';
   ligneQuantite.append(boutonRapide(produit, 'moins'), quantite, boutonRapide(produit, 'plus'));
-  article.append(ligneQuantite);
 
-  article.append(
-    ligneDetail('Seuil d’alerte', `${formaterQuantite(produit.seuilAlerteMilliemes)} ${produit.unite}`),
-    ligneDetail('Prix d’achat', formaterMontant(produit.prixAchatCentimes, contexte.devise)),
-    ligneDetail(
-      'Valeur (indicative)',
-      formaterMontant(
-        calculerValeurCentimes(produit.quantiteMilliemes, produit.prixAchatCentimes),
-        contexte.devise
-      )
-    )
-  );
+  ligne.append(infos, ligneQuantite);
+  return ligne;
+}
 
-  if (produit.quantiteMilliemes < 0) {
-    const negatif = document.createElement('p');
-    negatif.className = 'produit-negatif';
-    negatif.textContent = 'Stock négatif : à vérifier';
-    article.append(negatif);
+// ---------- Fiche d'un produit : panneau qui monte du bas (décision 74) ----------
+
+function produitDeLaFiche() {
+  return produits.find((produit) => produit.id === idFiche) || null;
+}
+
+// Met le panneau à jour (quantité, alertes, « en attente ») sans le
+// reconstruire : les boutons « −1 » / « +1 » restent sous le doigt.
+function remplirFiche() {
+  const produit = produitDeLaFiche();
+  if (!produit || !contexte) {
+    return;
   }
+  element('fiche-titre').textContent = produit.nom;
+  const etiquettes = element('fiche-etiquettes');
+  const alertes = etiquettesAlerte(produit).filter((etiquette) =>
+    !etiquette.textContent.startsWith('Stock négatif'));
+  etiquettes.replaceChildren(...alertes);
+  etiquettes.hidden = alertes.length === 0;
 
-  const boutonMouvement = document.createElement('button');
-  boutonMouvement.type = 'button';
-  boutonMouvement.className = 'bouton bouton-principal';
-  boutonMouvement.textContent = 'Mouvement de stock';
-  boutonMouvement.setAttribute('aria-label', `Mouvement de stock pour ${produit.nom}`);
-  boutonMouvement.addEventListener('click', () => ouvrirFormulaireMouvement(produit));
-  article.append(boutonMouvement);
+  const etat = etatDuStock(produit);
+  const quantite = element('fiche-quantite');
+  quantite.textContent = formaterQuantite(produit.quantiteMilliemes);
+  quantite.classList.toggle('quantite-bas', etat === 'bas');
+  quantite.classList.toggle('quantite-rupture', etat === 'rupture');
+  const unite = element('fiche-unite');
+  unite.textContent = produit.enAttente ? `${produit.unite} · en attente` : `${produit.unite} en stock`;
+  unite.classList.toggle('quantite-attente', produit.enAttente === true);
+  element('fiche-negatif').hidden = produit.quantiteMilliemes >= 0;
 
-  const bouton = document.createElement('button');
-  bouton.type = 'button';
-  bouton.className = 'bouton bouton-secondaire';
-  bouton.textContent = 'Modifier';
-  bouton.setAttribute('aria-label', `Modifier ${produit.nom}`);
-  bouton.addEventListener('click', () => ouvrirFormulaire(produit.id));
-  article.append(bouton);
+  element('fiche-moins').setAttribute('aria-label', `Retirer 1 ${produit.unite} : ${produit.nom}`);
+  element('fiche-plus').setAttribute('aria-label', `Ajouter 1 ${produit.unite} : ${produit.nom}`);
+  element('fiche-seuil').textContent =
+    `${formaterQuantite(produit.seuilAlerteMilliemes)} ${produit.unite}`;
+  element('fiche-prix').textContent = formaterMontant(produit.prixAchatCentimes, contexte.devise);
+  element('fiche-valeur').textContent = formaterMontant(
+    calculerValeurCentimes(produit.quantiteMilliemes, produit.prixAchatCentimes),
+    contexte.devise
+  );
+}
 
-  return article;
+function ouvrirFiche(idProduit) {
+  idFiche = idProduit;
+  if (!produitDeLaFiche()) {
+    idFiche = null;
+    return;
+  }
+  remplirFiche();
+  const panneau = element('fiche-produit');
+  if (!panneau.open) {
+    panneau.showModal();
+  }
+}
+
+function fermerFiche() {
+  const panneau = element('fiche-produit');
+  if (panneau.open) {
+    panneau.close();
+  }
+  surFermetureFiche();
+}
+
+// Après la fermeture (par ✕, le fond, Échap ou le bouton retour) : le focus
+// revient sur la ligne du produit, qui a pu être reconstruite pendant que le
+// panneau était ouvert. Appelée directement, et aussi par l'événement
+// « close » du panneau : la seconde fois, elle ne fait rien.
+function surFermetureFiche() {
+  const id = idFiche;
+  idFiche = null;
+  if (id && vueActuelle() === 'vue-accueil') {
+    const ligne = element('liste-produits').querySelector(
+      `button[data-action="fiche"][data-produit="${CSS.escape(id)}"]`
+    );
+    if (ligne) {
+      ligne.focus({ preventScroll: true });
+    }
+  }
 }
 
 // Valeur de tout l'entrepôt (produits actifs), même pendant une recherche :
@@ -301,14 +387,16 @@ function enleverFiltre() {
 }
 
 function afficherListe() {
-  // La liste est reconstruite à chaque changement : le bouton « +1 » / « −1 »
-  // qui avait le focus clavier le retrouve ensuite.
+  const liste = element('liste-produits');
+
+  // La liste est reconstruite à chaque changement : le bouton de la liste
+  // (« −1 », « +1 » ou la ligne) qui avait le focus clavier le retrouve
+  // ensuite. Les boutons du panneau de la fiche ne sont pas concernés.
   const actif = document.activeElement;
-  const focusRapide = actif && actif.classList && actif.classList.contains('bouton-rapide')
+  const focusRapide = actif && liste.contains(actif) && actif.dataset && actif.dataset.action
     ? { action: actif.dataset.action, produit: actif.dataset.produit }
     : null;
 
-  const liste = element('liste-produits');
   liste.textContent = '';
   element('produits-vide').hidden = produits.length > 0;
   element('bloc-recherche').hidden = produits.length === 0;
@@ -338,7 +426,7 @@ function afficherListe() {
     liste.append(carteProduit(produit));
   }
 
-  if (focusRapide) {
+  if (focusRapide && focusRapide.produit) {
     const bouton = liste.querySelector(
       `button[data-action="${focusRapide.action}"][data-produit="${CSS.escape(focusRapide.produit)}"]`
     );
@@ -353,6 +441,15 @@ function surProduits(etat) {
   produits = etat.produits.slice().sort((a, b) => COMPARATEUR.compare(a.nom, b.nom));
   afficherListe();
   surProduitsActifs(produits);
+  // Panneau de la fiche ouvert : mis à jour, ou fermé si le produit vient
+  // d'être archivé (ici ou ailleurs).
+  if (idFiche !== null) {
+    if (produitDeLaFiche()) {
+      remplirFiche();
+    } else {
+      fermerFiche();
+    }
+  }
   // Si le produit ouvert dans le formulaire vient d'être archivé ailleurs,
   // revenir à la liste.
   if (vueActuelle() === 'vue-produit' && idProduitEnCours !== null &&
@@ -606,6 +703,57 @@ export function brancherEcranProduits() {
     bouton.addEventListener('click', () => choisirFiltre(bouton.dataset.filtre));
   }
   element('bouton-tout-afficher').addEventListener('click', () => choisirFiltre('tous'));
+
+  // Explication de la valeur du stock, derrière l'icône ⓘ (décision 74).
+  element('bouton-info-valeur').addEventListener('click', () => {
+    const aide = element('valeur-stock-aide');
+    aide.hidden = !aide.hidden;
+    element('bouton-info-valeur').setAttribute('aria-expanded', String(!aide.hidden));
+  });
+
+  // Panneau de la fiche d'un produit (décision 74).
+  const panneau = element('fiche-produit');
+  panneau.addEventListener('close', surFermetureFiche);
+  // Échap ou bouton retour du téléphone : même fermeture que ✕.
+  panneau.addEventListener('cancel', (evenement) => {
+    evenement.preventDefault();
+    fermerFiche();
+  });
+  // Toucher le fond gris, en dehors du panneau, le ferme.
+  panneau.addEventListener('click', (evenement) => {
+    const cadre = panneau.getBoundingClientRect();
+    const dehors = evenement.clientX < cadre.left || evenement.clientX > cadre.right ||
+      evenement.clientY < cadre.top || evenement.clientY > cadre.bottom;
+    if (evenement.target === panneau && dehors) {
+      fermerFiche();
+    }
+  });
+  element('bouton-fermer-fiche').addEventListener('click', fermerFiche);
+  element('fiche-moins').addEventListener('click', () => {
+    if (idFiche) {
+      actionRapide(idFiche, 'moins');
+    }
+  });
+  element('fiche-plus').addEventListener('click', () => {
+    if (idFiche) {
+      actionRapide(idFiche, 'plus');
+    }
+  });
+  element('bouton-fiche-mouvement').addEventListener('click', () => {
+    const produit = produitDeLaFiche();
+    fermerFiche();
+    if (produit) {
+      ouvrirFormulaireMouvement(produit);
+    }
+  });
+  element('bouton-fiche-modifier').addEventListener('click', () => {
+    const produit = produitDeLaFiche();
+    fermerFiche();
+    if (produit) {
+      ouvrirFormulaire(produit.id);
+    }
+  });
+
   element('bouton-annuler-produit').addEventListener('click', fermerFormulaire);
   element('bouton-archiver-produit').addEventListener('click', archiver);
   element('formulaire-produit').addEventListener('submit', (evenement) => {
@@ -643,6 +791,10 @@ export function arreterEcranProduits() {
     arreterEcoute = null;
   }
   oublierEcoute('produits');
+  fermerFiche();
+  idFiche = null;
+  element('valeur-stock-aide').hidden = true;
+  element('bouton-info-valeur').setAttribute('aria-expanded', 'false');
   contexte = null;
   produits = [];
   idProduitEnCours = null;

@@ -18,12 +18,14 @@ import {
 import {
   arreterEcranFournisseurs,
   brancherEcranFournisseurs,
-  demarrerEcranFournisseurs
+  demarrerEcranFournisseurs,
+  quitterEcranFournisseurs
 } from './ecran-fournisseurs.js';
 import {
   arreterEcranClients,
   brancherEcranClients,
-  demarrerEcranClients
+  demarrerEcranClients,
+  quitterEcranClients
 } from './ecran-clients.js';
 import {
   arreterEcranParametres,
@@ -56,14 +58,18 @@ import {
   DEVISES,
   LONGUEUR_MAX_NOM_ENTREPOT,
   creerEntrepot,
-  nomDevise,
   surveillerEntrepot
 } from './entrepot.js';
 import { demarrerFirebase, VERSION_SDK_FIREBASE } from './firebase-init.js';
 import { afficherMessage, afficherVue, effacerMessages, element, vueActuelle } from './interface.js';
 import { messageErreur } from './messages-erreur.js';
 
-const VERSION_APP = '0.12.0';
+const VERSION_APP = '0.13.0';
+
+// Écrans où s'affichent la barre de navigation et le bouton ⚙ (décision 74).
+// Ils sont cachés dans les formulaires, pour ne pas quitter une saisie par
+// mégarde.
+const VUES_NAVIGATION = ['vue-accueil', 'vue-historique', 'vue-fournisseurs', 'vue-clients'];
 
 // Message affiché sur l'écran de connexion après « Effacer les données de cet
 // appareil » (décision 67), qui recharge la page.
@@ -106,6 +112,7 @@ let arreterEcouteEntrepot = null;
 let memoireHorsLigneVerifiee = false;
 let premierEtatConnu = false;
 let stockagePersistantDemande = false;
+let entrepotCharge = false;       // un compte est connecté et son entrepôt est affiché
 
 // ---------- Affichage ----------
 
@@ -180,6 +187,35 @@ function demanderStockagePersistant() {
   }
 }
 
+// Barre de navigation et bouton ⚙ (décision 74) : visibles seulement sur les
+// quatre écrans principaux d'un compte dont l'entrepôt est affiché.
+function mettreAJourNavigation() {
+  const vue = vueActuelle();
+  const visible = entrepotCharge && VUES_NAVIGATION.includes(vue);
+  element('barre-navigation').hidden = !visible;
+  element('bouton-parametres').hidden = !visible;
+  document.body.classList.toggle('avec-navigation', visible);
+  document.body.classList.toggle('connecte', entrepotCharge);
+  for (const bouton of document.querySelectorAll('[data-nav]')) {
+    if (bouton.dataset.nav === vue) {
+      bouton.setAttribute('aria-current', 'page');
+    } else {
+      bouton.removeAttribute('aria-current');
+    }
+  }
+}
+
+// Quitter un carnet (fournisseurs, clients) pour un autre écran arrête
+// l'écoute de sa liste (décision 52).
+function quitterLesCarnets(cible) {
+  if (cible !== 'vue-fournisseurs') {
+    quitterEcranFournisseurs();
+  }
+  if (cible !== 'vue-clients') {
+    quitterEcranClients();
+  }
+}
+
 // Arrête les écoutes des écrans de travail (déconnexion, suppression du compte).
 function arreterEcransDeTravail() {
   arreterEcranProduits();
@@ -188,6 +224,8 @@ function arreterEcransDeTravail() {
   arreterEcranFournisseurs();
   arreterEcranClients();
   arreterIndicateur();
+  entrepotCharge = false;
+  mettreAJourNavigation();
 }
 
 function surEtatEntrepot(etat) {
@@ -218,8 +256,8 @@ function surEtatEntrepot(etat) {
 
   if (etat.existe) {
     element('accueil-entrepot').textContent = etat.donnees.nomEntrepot;
-    element('accueil-devise').textContent = nomDevise(etat.donnees.devise);
-    element('accueil-compte').textContent = utilisateur.email || 'Compte sans adresse e-mail';
+    // L'adresse du compte est affichée dans Paramètres (décision 74).
+    element('parametres-compte').textContent = utilisateur.email || 'compte sans adresse e-mail';
     demarrerIndicateur(firebase.db, utilisateur.uid);
     signalerEcoute('entrepot', etat.depuisCache);
     demanderStockagePersistant();
@@ -228,9 +266,11 @@ function surEtatEntrepot(etat) {
     demarrerEcranParametres(firebase.db, utilisateur.uid, etat.donnees);
     demarrerEcranFournisseurs(firebase.db, utilisateur.uid);
     demarrerEcranClients(firebase.db, utilisateur.uid);
+    entrepotCharge = true;
     if (!VUES_DE_TRAVAIL.includes(vueActuelle())) {
       afficherVue('vue-accueil');
     }
+    mettreAJourNavigation();
     return;
   }
 
@@ -561,6 +601,24 @@ function brancherNavigation() {
   }
   element('bouton-effacer-appareil').addEventListener('click', effacerDonneesAppareil);
 
+  // Barre de navigation (décision 74). « Mouvements », « Fournisseurs » et
+  // « Clients » sont aussi ouverts par leurs propres écrans (mêmes
+  // identifiants que les anciens boutons de l'accueil).
+  for (const bouton of document.querySelectorAll('[data-nav]')) {
+    bouton.addEventListener('click', () => {
+      if (!utilisateur) {
+        return;
+      }
+      quitterLesCarnets(bouton.dataset.nav);
+      if (bouton.dataset.nav === 'vue-accueil') {
+        afficherVue('vue-accueil');
+      }
+    });
+  }
+  // Le bouton ⚙ ouvre Paramètres (js/ecran-parametres.js).
+  element('bouton-parametres').addEventListener('click', () => quitterLesCarnets('vue-parametres'));
+  document.addEventListener('vue-changee', mettreAJourNavigation);
+
   for (const caseACocher of document.querySelectorAll('input[data-afficher-mdp]')) {
     caseACocher.addEventListener('change', () => {
       element(caseACocher.dataset.afficherMdp).type = caseACocher.checked ? 'text' : 'password';
@@ -577,6 +635,7 @@ function brancherNavigation() {
 async function demarrer() {
   element('version').textContent =
     `Version ${VERSION_APP} — SDK Firebase ${VERSION_SDK_FIREBASE}`;
+  element('parametres-version').textContent = element('version').textContent;
 
   try {
     firebase = await demarrerFirebase();

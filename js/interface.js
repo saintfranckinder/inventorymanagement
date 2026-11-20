@@ -25,6 +25,8 @@ export function afficherVue(id) {
   for (const vue of document.querySelectorAll('[data-vue]')) {
     vue.hidden = vue.id !== id;
   }
+  // Prévient la barre de navigation et le bouton ⚙ (décision 74).
+  document.dispatchEvent(new CustomEvent('vue-changee', { detail: id }));
   effacerMessages();
   // Place le lecteur d'écran et le clavier au début du nouvel écran.
   const titre = element(id).querySelector('h2');

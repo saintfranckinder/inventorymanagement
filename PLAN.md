@@ -23,6 +23,7 @@ Dépôt GitHub : `saintfranckinder/minstock`, renommé par le propriétaire le 2
 | — | Identité visuelle MinStock (décisions 55 à 58) et compteurs cliquables (décision 59) | **Terminée le 2026-11-18** (validées sur smartphone par le propriétaire) |
 | 7 | Suppression du compte (décisions 60 à 63) | **Terminée le 2026-11-18** (règles version 7 publiées par le propriétaire ; test sur smartphone réussi avec un compte jetable) |
 | 6c | Carnet de clients (décisions 72 et 73) | **Terminée le 2026-11-20** (règles version 8 publiées par le propriétaire ; test sur smartphone réussi) |
+| — | Accueil épuré (décision 74) | **Fait le 2026-11-20** ; test sur smartphone à faire |
 | 8 | Hors ligne et indicateur de synchronisation (décisions 64 à 68) | **Terminée le 2026-11-19** (essai en mode avion réussi sur smartphone, selon les captures du propriétaire) |
 | 8b | Code SKU, type de stock, quantité à commander, prix de vente (décision 69) | À faire, après la phase 6c (règles version 9) |
 | 9 | Export Excel | À faire |
@@ -713,6 +714,52 @@ Constats :
 
 **Phase terminée le 2026-11-20.**
 
+### Étape intermédiaire : accueil épuré
+
+Demandée par le propriétaire le 2026-11-20, avec sa maquette « MinStock, accueil épuré » (PDF de 2 pages : accueil, fiche d'un produit). Consigne : garder l'identité visuelle exactement. Décision 74 (ajustements acceptés : boutons de 48 pixels, nom sur deux lignes, « Achat » devant le prix, alertes et « En attente » sans faire bouger la ligne, barre en bas ; modifie la décision 56).
+
+**Compte rendu (2026-11-20)**
+
+Ce qui a été fait :
+
+- En-tête : bouton ⚙ (Paramètres) à droite de l'indicateur ; libellés courts de l'indicateur (« Synchronisé », « En attente », « Hors ligne » / « À envoyer », « Erreur ») pour garder 48 pixels de haut à 360 pixels de large ; noms complets dans l'explication et pour les lecteurs d'écran.
+- Accueil : carte de valeur avec ⓘ (explication repliée), recherche avec loupe, une ligne par produit dans une seule carte, bouton rond « + », barre de navigation en bas. Devise, adresse, version et « Se déconnecter » retirés de l'accueil ; adresse, « Se déconnecter » et version ajoutés dans Paramètres (bloc « Compte »).
+- Fiche du produit : `<dialog>` qui monte du bas (`−1` / `+1`, alertes, seuil, prix d'achat, valeur, « Mouvement de stock », « Modifier ») ; fermeture par ✕, le fond, Échap ; le focus revient sur la ligne du produit. **Pas d'animation** : dans un onglet en arrière-plan, l'animation restait bloquée au départ et le panneau restait hors de l'écran.
+- Navigation : les boutons de la barre reprennent les identifiants des anciens boutons de l'accueil (`bouton-historique`, `bouton-fournisseurs`, `bouton-clients`), le bouton ⚙ celui de `bouton-parametres` : les écrans s'ouvrent comme avant. Quitter les fournisseurs ou les clients par la barre ou par ⚙ arrête l'écoute de leur liste (nouvelles fonctions `quitterEcranFournisseurs` et `quitterEcranClients`). `afficherVue` prévient la barre par un événement `vue-changee`.
+- Icônes dessinées en SVG dans `index.html` (aucune bibliothèque).
+- Les écrans Mouvements, Fournisseurs, Clients et Paramètres gardent leur bouton « Retour aux produits ».
+- Version `0.13.0`. Aucun changement des données ni des règles Firestore.
+
+Tests exécutés par l'assistant, dans le navigateur intégré, sur `http://localhost:8080/`, avec le compte de test, à 360 pixels de large :
+
+| Test | Résultat |
+|---|---|
+| En-tête : 48 pixels de haut pour les cinq affichages de l'indicateur (dont « Hors ligne » + « À envoyer ») ; ⚙ de 48 × 48 ; aucun défilement horizontal | Réussi (corrigé pendant les essais : « Envoi en attente » passait sur deux lignes et faisait descendre la page de 6 pixels) |
+| Accueil : 4 produits sur une page (85 à 106 pixels par ligne au lieu d'environ 320) ; `−1` / `+1` de 48 × 48 ; recherche de 48 pixels ; barre de 4 boutons de 88 × 60 ; bouton rond de 56 × 56 ; dernière ligne visible au-dessus du bouton rond et de la barre en bas de page | Réussi |
+| `+1` sans réseau : « En attente de synchronisation » à la place de « Achat … » ; positions et hauteurs de **toutes** les lignes et des boutons **identiques au pixel près** | Réussi |
+| Indicateur : « Hors ligne » à 3 s, « À envoyer » ensuite, « Synchronisé » au retour du réseau | Réussi |
+| Fiche : ouverture, contenu (titre, quantité, « sac en stock », seuil, prix, valeur) ; `+1` dans la fiche : « pièce · en attente », la ligne derrière se met à jour, les boutons de la fiche ne bougent pas ; `−1` : retour à la valeur de départ | Réussi |
+| Fermeture par ✕ (focus sur la ligne, même reconstruite), par le fond gris, par Échap ; un toucher dans le panneau ne le ferme pas | Réussi |
+| 5 appuis rapides sur `+1` puis 5 sur `−1` : de 7 à 12 puis 7 ; focus resté sur le bouton ; sur le serveur, 7 000 millièmes | Réussi |
+| Alerte « Stock bas » (7 → 5) : fond orangé, trait à gauche, étiquette « Stock bas », compteur à 1 ; les boutons de la ligne ne bougent pas, la ligne s'agrandit vers le bas ; quantité remise à 7 | Réussi |
+| ⓘ : explication ouverte puis fermée (`aria-expanded`) ; filtres « Ruptures » et « Produits » ; recherche `cim` et `zzz` | Réussi |
+| Bouton rond : formulaire « Ajouter un produit », barre et ⚙ cachés ; « Annuler » : retour à l'accueil | Réussi |
+| Barre : Fournisseurs → Clients (la liste des fournisseurs est vidée : écoute arrêtée) → Mouvements → Stock ; bouton actif mis en évidence | Réussi |
+| ⚙ : Paramètres avec l'adresse du compte, « Se déconnecter », la version ; barre et ⚙ cachés ; pied de page caché une fois connecté | Réussi |
+| « Se déconnecter » (Paramètres) avec une modification non envoyée : question de la décision 66 ; « Annuler » : toujours connecté | Réussi |
+| Non-régression : `tests-nombres.html` 104 sur 104 ; console d'une page neuve sans erreur | Réussi |
+
+Tests non exécutés :
+
+- Smartphone (après **Push origin**) : notamment le bouton retour du téléphone pour fermer la fiche (Chrome sur Android le gère pour les `<dialog>`, non vérifié ici).
+- `tests-regles.html` : inutile, aucune règle ni donnée ne change.
+- Lecteur d'écran réel.
+
+Constats :
+
+- Le bouton rond passe par-dessus la droite de la liste (comme dans la maquette) : une ligne juste derrière lui a son `+1` caché ; faire défiler un peu. Noté dans le README.
+- Dans un onglet en arrière-plan du navigateur intégré, les minuteries et les événements sont ralentis : les essais doivent se faire dans l'onglet au premier plan.
+
 ### Phase 8b : code SKU, type de stock, quantité à commander, prix de vente
 - **Demandée par le propriétaire le 2026-11-19** (décision 69). Fonctions écartées de la première version : décision 70. Prix d'achat inchangé, toujours saisi à la main, sans coût moyen (décision 71) : le prix de vente ne sert jamais à la valeur du stock.
 - **Résultat :** quatre champs facultatifs dans la fiche produit, affichés sur la carte ; recherche par code SKU ; filtre par type de stock (sans lecture de plus) ; règles Firestore version 9 (la version 8 sert au carnet de clients, phase 6c) qui contrôlent ces champs et acceptent aussi les produits qui ne les ont pas ; `CLAUDE.md` mis à jour (sections 4 et 5).
@@ -812,8 +859,9 @@ Règles de conception retenues pour le code :
 
 ### 8.1 Phase actuelle
 
+- **Accueil épuré (décision 74) fait le 2026-11-20**, tests sur l'ordinateur réussis ; reste le test sur smartphone. Version `0.13.0`.
 - **Phase 6c (carnet de clients) terminée le 2026-11-20**, tests sur l'ordinateur et sur smartphone réussis. Phase 8 terminée le 2026-11-19. Prochaine étape : **phase 8b** (code SKU, type de stock, quantité à commander, prix de vente : décision 69, règles version 9), à commencer par les questions de détail de la section 2.
-- Version de l'application : `0.12.0`. Règles Firestore : **version 8**, publiée dans la console par le propriétaire le 2026-11-20 ; `tests-regles.html` 105 sur 105 (série habituelle) et 22 sur 22 (série « suppression ») le même jour.
+- Version de l'application : `0.13.0`. Règles Firestore : **version 8**, publiée dans la console par le propriétaire le 2026-11-20 ; `tests-regles.html` 105 sur 105 (série habituelle) et 22 sur 22 (série « suppression ») le même jour.
 - Dépôt GitHub : `saintfranckinder/minstock`, **public**. Site : `https://saintfranckinder.github.io/minstock/` (GitHub Pages, branche `main`, dossier racine).
 - Dépôt Git, branche `main` : `cecf8d3` (phases 0 et 1), `48d55b3` (phase 2), `f09bf30` (phase 3), `96f2a3d` (phase 4a), `d8f1b5b` (phase 4b), `2f53da4` (note de passation), `b26abb6` (dépôt renommé), `e166a30` (recherche de secrets), `d5a7808` (décisions 40 et 41), `86d4eb4` (mise en ligne), `e1a5c70` (fin de l'étape « dépôt public »), `e202b2a` (décisions 42 et 43), `7e156a3` (phase 5), `eb40c59` (test sur smartphone de la phase 5), `456dff6` (phase 6), `de2ef92` (test sur smartphone de la phase 6), `14e00c9` (phase 6b), `36f5d20` (test sur smartphone de la phase 6b), `6eeb438` (identité visuelle), `c95d942` (compteurs cliquables), `f60525d` (test sur smartphone des compteurs), `d952342` (phase 7), `b2cc014` (test sur smartphone de la phase 7), `84b6e87` (note de passation), puis le commit de la phase 8. Le propriétaire envoie chaque commit avec **Push origin** dans GitHub Desktop ; le site se met à jour quelques minutes après.
 - **État de l'envoi sur GitHub (vu dans la copie locale le 2026-11-19, sans interroger GitHub) :** le propriétaire a envoyé jusqu'à `e6e178b` (phase 8, version `0.11.0`). Restent à envoyer : `44567e0` (décision 71) et ce point de la note (documentation seulement).
@@ -835,6 +883,7 @@ Règles de conception retenues pour le code :
 | 6b | Carnet de fournisseurs : liste, recherche, « Appeler » / « WhatsApp » / « E-mail », ajout, modification, suppression ; règles version 6 | `tests-regles.html` : 90 sur 90 ; compte rendu de la phase 6b ; test sur smartphone réussi |
 | Identité | Nom MinStock, symbole SVG, police Montserrat, couleurs et style de la maquette, compteurs de la carte de valeur (cliquables) | compte rendu de l'étape « identité visuelle » ; tests sur smartphone réussis |
 | 7 | Suppression du compte et de toutes ses données : double confirmation, reconnexion, effacement par paquets, reprise automatique, effacement de la copie locale ; règles version 7 | `tests-regles.html` : 88 sur 88 et 20 sur 20 (compte jetable) ; suppressions complète et interrompue réussies ; compte rendu de la phase 7 |
+| Accueil épuré | Une ligne par produit, fiche dans un panneau, bouton rond, barre en bas, ⚙ ; aucune donnée ni règle changée | compte rendu de l'étape « accueil épuré » ; smartphone à faire |
 | 6c | Carnet de clients (copie du carnet de fournisseurs, sans case VIP) ; règles version 8 ; clients effacés avec le compte | `tests-regles.html` : 105 sur 105 et 22 sur 22 ; compte rendu de la phase 6c ; test sur smartphone réussi |
 | 8 | Indicateur de synchronisation, « En attente » à la place de « Quantité », avertissement de déconnexion, « Effacer les données de cet appareil », stockage durable demandé | `tests-nombres.html` : 104 sur 104 ; `tests-regles.html` : 88 sur 88 ; coupures simulées (compte rendu de la phase 8) ; mode avion sur smartphone réussi |
 
@@ -883,7 +932,7 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 
 | Fichier | Rôle | Phases |
 |---|---|---|
-| `index.html`, `css/style.css` | Tous les écrans de l'application ; identité visuelle (couleurs en variables au début de `style.css`) ; indicateur de synchronisation dans l'en-tête | 2, 3, 4a, 4b, 5, 6, 6b, identité, 7, 8 |
+| `index.html`, `css/style.css` | Tous les écrans de l'application ; identité visuelle (couleurs en variables au début de `style.css`) ; indicateur de synchronisation et ⚙ dans l'en-tête ; accueil épuré : lignes de produits, panneau de la fiche (`<dialog>`), bouton rond, barre de navigation, icônes SVG | 2, 3, 4a, 4b, 5, 6, 6b, identité, 7, 8, 6c, accueil épuré |
 | `images/logo-minstock.svg` | Symbole du logo MinStock, aussi icône d'onglet | identité |
 | `js/app.js` | Démarrage, enchaînement des écrans, connexion ; reprise de la suppression du compte ; avertissement de déconnexion, « Effacer les données de cet appareil », stockage durable ; numéro de version (`VERSION_APP`) | 2, 3, 4a, 4b, 5, 6, 6b, identité, 7, 8 |
 | `js/indicateur-synchro.js` | Indicateur de synchronisation (quatre états, approximatif) ; « des modifications attendent-elles ? » pour la déconnexion et l'effacement | 8 |
@@ -913,7 +962,7 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 | `.gitignore`, `.gitattributes` | Fichiers exclus de Git ; `vendor/*.js` jamais modifiés par Git ; `*.woff2` en binaire | 0, 2, identité |
 | `.nojekyll` | Fichier vide : GitHub Pages publie tout tel quel (décision 41) | dépôt public |
 | `CLAUDE.md`, `DEMARRAGE.md` | Cahier des charges et méthode de travail ; modifiés avec l'accord du propriétaire (fournisseurs, annulation, suppression au lieu d'archivage des fournisseurs : section 6 de ce fichier) | 1, évolutions 42 et 43, 6b |
-| `PLAN.md`, `DECISIONS.md`, `README.md` | Suivi, décisions 1 à 73, documentation | Toutes |
+| `PLAN.md`, `DECISIONS.md`, `README.md` | Suivi, décisions 1 à 74, documentation | Toutes |
 
 **Hors Git :** `.env.test` contient l'adresse et le mot de passe des deux comptes de test et des comptes jetables `test-suppression-1` à `-3@example.com` (2 et 3 supprimés par les essais de la phase 7 ; 1 actif, entrepôt d'essai vide, réservé à la série « suppression » de `tests-regles.html`). Il est ignoré par Git et n'apparaît dans aucun commit (vérifié le 2026-11-18).
 
@@ -938,7 +987,7 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 
 ### 8.6 Décisions prises
 
-Toutes sont dans `DECISIONS.md` (73 décisions, aucune effacée) :
+Toutes sont dans `DECISIONS.md` (74 décisions, aucune effacée) :
 
 - **1 à 7 (choix initiaux) :** Firestore en plan Spark ; connexion Google et e-mail ; quantités et prix en entiers ; `dernierMouvementId` ; GitHub Pages ; publication du code par le propriétaire.
 - **8 à 15 (audit) :** page `tests-regles.html` à la place du simulateur ; règles tolérantes au hors-ligne et suivi local des opérations ; dépôt public dès la fin de la phase 4b ; SDK local corrigé et serveur local ; règles produit-mouvement complétées ; suppression du compte avec reconnexion d'abord ; phase 4 coupée en deux ; dossier de travail.
@@ -957,13 +1006,14 @@ Toutes sont dans `DECISIONS.md` (73 décisions, aucune effacée) :
 - **64 à 68 (phase 8) :** indicateur de synchronisation à quatre états dans l'en-tête, approximatif ; « En attente » à la place de « Quantité » ; avertissement avant « Se déconnecter » ; « Effacer les données de cet appareil et me déconnecter » ; stockage durable demandé au navigateur.
 - **69 à 71 (demandes du propriétaire du 2026-11-19) :** phase 8b (code SKU, type de stock, quantité à commander, prix de vente, tous facultatifs ; règles version 9 depuis la décision 72) ; PEPS par lots, rotation, EOQ et notifications écartés de la première version ; prix d'achat saisi à la main conservé, sans coût moyen pondéré (option A ; prix de l'arrivage noté dans le motif).
 - **72 et 73 (demande du propriétaire du 2026-11-20) :** carnet de clients en phase 6c, copie du carnet de fournisseurs sans case VIP (« VIP » dans les notes), règles version 8 ; carnet indépendant du stock, sans gestion des ventes.
+- **74 (demande du propriétaire du 2026-11-20) :** accueil épuré d'après sa maquette, identité inchangée : lignes de produits, fiche dans un panneau, bouton rond, barre de navigation en bas (modifie la décision 56), ⚙ vers Paramètres, libellés courts de l'indicateur.
 
 Les règles de conception de la section 7 restent à respecter dans toute la suite.
 
 ### 8.7 Prochaine action précise
 
-*(Phase 6c terminée le 2026-11-20, test sur smartphone compris. Les cinq questions de la phase 8b ont été posées au propriétaire le même jour, avec les recommandations de l'assistant.)*
+*(Accueil épuré fait le 2026-11-20, tests sur l'ordinateur réussis, commit local fait. Les cinq questions de la phase 8b ont été posées au propriétaire le même jour, avec les recommandations de l'assistant ; réponse en attente.)*
 
-1. **Propriétaire :** répondre aux cinq questions de la phase 8b. **Push origin** pour le commit de cette note quand il le souhaite. Toujours en attente : les deux tests de la phase 3 et le message d'aide quand la fenêtre Google est bloquée. Conseillé : activer la validation en deux étapes du compte Google qui gère la console Firebase.
+1. **Propriétaire :** **Push origin** (aucune règle à publier) ; vérifier « Version 0.13.0 » dans Paramètres (⚙) sur le téléphone ; essayer l'accueil au doigt (lignes, `−1` / `+1`, fiche et sa fermeture par le bouton retour, bouton rond, barre en bas, ⚙). Puis répondre aux cinq questions de la phase 8b. Toujours en attente : les deux tests de la phase 3 et le message d'aide quand la fenêtre Google est bloquée. Conseillé : activer la validation en deux étapes du compte Google qui gère la console Firebase.
 2. **Assistant, au début de la prochaine session :** lire `CLAUDE.md`, `PLAN.md` et `DECISIONS.md`. Phase 8b : poser au propriétaire les cinq questions de détail (section 2, phase 8b), attendre ses réponses, mettre à jour `CLAUDE.md` (sections 4 et 5) avec son accord, noter les décisions 72 et suivantes, écrire les règles version 9 (nouveaux champs facultatifs : un produit qui ne les a pas reste accepté), compléter `tests-regles.html`, faire publier les règles par le propriétaire **avant** d'envoyer le code.
 3. **Rappels pour la suite :** ne jamais faire de `git push` ; ne jamais essayer la suppression du compte avec un vrai compte ; ne jamais ajouter d'essai touchant à `suppressionDemandee` dans la série habituelle de `tests-regles.html` ; après la mise en service, ne publier que des règles compatibles avec les versions de l'application déjà ouvertes sur les téléphones (section 7).

@@ -19,8 +19,15 @@
         <span class="synchro-pastille" aria-hidden="true"></span>
         <span class="synchro-textes">
           <span id="synchro-etat" class="synchro-etat"></span>
-          <span id="synchro-detail" class="synchro-detail" hidden>Envoi en attente</span>
+          <span id="synchro-detail" class="synchro-detail" hidden>À envoyer</span>
         </span>
+      </button>
+      <!-- Paramètres (décision 74) -->
+      <button type="button" id="bouton-parametres" class="bouton-icone" aria-label="Paramètres" hidden>
+        <svg class="icone" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="3.2"/>
+          <path d="M12 2.5l1.6 2.3 2.7-.8.7 2.7 2.7.7-.8 2.7 2.3 1.6-2.3 1.6.8 2.7-2.7.7-.7 2.7-2.7-.8L12 21.5l-1.6-2.3-2.7.8-.7-2.7-2.7-.7.8-2.7L2.8 12l2.3-1.6-.8-2.7 2.7-.7.7-2.7 2.7.8z"/>
+        </svg>
       </button>
     </div>
     <div id="synchro-explication" class="synchro-explication" hidden>
@@ -209,13 +216,10 @@
       </nav>
     </section>
 
-    <!-- Tableau de bord : valeur du stock, recherche, produits (phase 5) -->
+    <!-- Tableau de bord : valeur du stock, recherche, produits (phase 5),
+         disposition « accueil épuré » (décision 74) -->
     <section id="vue-accueil" data-vue hidden>
       <h2 id="accueil-entrepot"></h2>
-      <p class="aide">
-        <span id="accueil-devise"></span><br>
-        <span id="accueil-compte"></span>
-      </p>
 
       <p id="erreur-accueil" class="message-erreur" role="alert" hidden></p>
       <p id="info-accueil" class="message-info" role="status" hidden></p>
@@ -232,7 +236,16 @@
 
       <!-- Valeur de tout l'entrepôt (décision 45) -->
       <div id="bloc-valeur" class="valeur-stock" hidden>
-        <p class="valeur-stock-titre">Valeur du stock (indicative)</p>
+        <div class="valeur-stock-entete">
+          <p class="valeur-stock-titre">Valeur du stock (indicative)</p>
+          <button type="button" id="bouton-info-valeur" class="bouton-icone bouton-icone-clair" aria-label="Comment la valeur est calculée" aria-expanded="false" aria-controls="valeur-stock-aide">
+            <svg class="icone" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <circle cx="12" cy="12" r="9.5"/>
+              <path d="M12 11v6"/>
+              <path d="M12 7.5v.01"/>
+            </svg>
+          </button>
+        </div>
         <p id="valeur-stock-total" class="valeur-stock-montant"></p>
         <!-- Compteurs calculés sur l'appareil, sans lecture de plus (décision 58).
              Ce sont aussi des filtres de la liste des produits (décision 59). -->
@@ -253,36 +266,43 @@
             </button>
           </li>
         </ul>
-        <p class="valeur-stock-aide">
+        <p id="valeur-stock-aide" class="valeur-stock-aide" hidden>
           Calculée avec le prix d'achat actuel de chaque produit : modifier un
           prix change la valeur de tout le stock de ce produit. Un stock
           négatif compte en négatif. Les produits archivés ne comptent pas.
         </p>
       </div>
 
-      <button type="button" id="bouton-ajouter-produit" class="bouton bouton-principal">Ajouter un produit</button>
-      <button type="button" id="bouton-historique" class="bouton bouton-secondaire">Historique des mouvements</button>
-      <button type="button" id="bouton-fournisseurs" class="bouton bouton-secondaire">Fournisseurs</button>
-      <button type="button" id="bouton-clients" class="bouton bouton-secondaire">Clients</button>
-
-      <h3 id="titre-produits" tabindex="-1">Produits</h3>
+      <h3 id="titre-produits" class="titre-produits" tabindex="-1">Produits</h3>
       <!-- Filtre choisi avec les compteurs (décision 59) -->
       <div id="bloc-filtre" class="filtre-actif" hidden>
         <p id="filtre-texte" class="filtre-texte" tabindex="-1"></p>
         <button type="button" id="bouton-tout-afficher" class="bouton bouton-secondaire">Tout afficher</button>
       </div>
-      <div id="bloc-recherche" hidden>
-        <label for="recherche-produit">Rechercher un produit</label>
-        <input id="recherche-produit" type="search" autocomplete="off" enterkeyhint="search" placeholder="Nom du produit">
+      <div id="bloc-recherche" class="recherche" hidden>
+        <label for="recherche-produit" class="lecteur-ecran">Rechercher un produit</label>
+        <svg class="icone recherche-icone" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <circle cx="11" cy="11" r="7"/>
+          <path d="M16.2 16.2L21 21"/>
+        </svg>
+        <input id="recherche-produit" type="search" autocomplete="off" enterkeyhint="search" placeholder="Rechercher un produit">
       </div>
-      <p id="produits-vide" class="aide" hidden>Aucun produit pour l'instant.</p>
+      <p id="produits-vide" class="aide" hidden>
+        Aucun produit pour l'instant. Touchez le bouton « + » en bas à droite
+        pour ajouter votre premier produit.
+      </p>
       <p id="recherche-aucun" class="aide" role="status" hidden></p>
-      <ul id="liste-produits" class="liste-produits"></ul>
+      <ul id="liste-produits" class="liste-produits liste-compacte"></ul>
       <!-- Annonces des boutons « +1 » / « −1 » pour les lecteurs d'écran -->
       <p id="annonce-produits" class="lecteur-ecran" role="status" aria-live="polite"></p>
 
-      <button type="button" id="bouton-parametres" class="bouton bouton-secondaire">Paramètres</button>
-      <button type="button" class="bouton bouton-secondaire" data-deconnexion>Se déconnecter</button>
+      <!-- Ajouter un produit : bouton rond en bas à droite (décision 74) -->
+      <button type="button" id="bouton-ajouter-produit" class="bouton-flottant" aria-label="Ajouter un produit">
+        <svg class="icone" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M12 5v14"/>
+          <path d="M5 12h14"/>
+        </svg>
+      </button>
     </section>
 
     <!-- Carnet de fournisseurs (phase 6b, décisions 42 et 50 à 54) -->
@@ -444,6 +464,13 @@
         <button type="button" id="bouton-verifier-devise" class="bouton bouton-secondaire" hidden>Vérifier de nouveau</button>
       </form>
 
+      <!-- Compte (décision 74) : adresse et déconnexion, auparavant sur l'accueil -->
+      <div class="bloc-parametres">
+        <h3>Compte</h3>
+        <p class="aide">Connecté avec : <span id="parametres-compte"></span></p>
+        <button type="button" class="bouton bouton-secondaire" data-deconnexion>Se déconnecter</button>
+      </div>
+
       <!-- Appareil partagé (phase 8, décision 67) -->
       <div class="bloc-parametres">
         <h3>Appareil partagé</h3>
@@ -465,6 +492,8 @@
         </p>
         <button type="button" id="bouton-supprimer-compte" class="bouton bouton-danger">Supprimer mon compte et mes données</button>
       </div>
+
+      <p id="parametres-version" class="aide parametres-version"></p>
     </section>
 
     <!-- Supprimer mon compte : explication et double confirmation (phase 7) -->
@@ -669,6 +698,87 @@
       <button type="button" id="bouton-deconnexion-probleme" class="bouton bouton-secondaire" data-deconnexion>Se déconnecter</button>
     </section>
   </main>
+
+  <!-- Barre de navigation (décision 74), seulement sur les quatre écrans
+       principaux. Les identifiants des trois derniers boutons sont ceux des
+       anciens boutons de l'accueil : les écrans les ouvrent comme avant. -->
+  <nav id="barre-navigation" class="barre-navigation" aria-label="Navigation principale" hidden>
+    <button type="button" id="nav-stock" class="nav-bouton" data-nav="vue-accueil">
+      <svg class="icone" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M12 2.8l8 4.2v10l-8 4.2-8-4.2V7z"/>
+        <path d="M4 7l8 4.2L20 7"/>
+        <path d="M12 11.2v10"/>
+      </svg>
+      <span>Stock</span>
+    </button>
+    <button type="button" id="bouton-historique" class="nav-bouton" data-nav="vue-historique">
+      <svg class="icone" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M17 3l4 4-4 4"/>
+        <path d="M3 11V9.5A2.5 2.5 0 0 1 5.5 7H21"/>
+        <path d="M7 21l-4-4 4-4"/>
+        <path d="M21 13v1.5a2.5 2.5 0 0 1-2.5 2.5H3"/>
+      </svg>
+      <span>Mouvements</span>
+    </button>
+    <button type="button" id="bouton-fournisseurs" class="nav-bouton" data-nav="vue-fournisseurs">
+      <svg class="icone" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M2 6h12v10H2z"/>
+        <path d="M14 9.5h4l3.5 3.5v3H14z"/>
+        <circle cx="6" cy="18" r="2"/>
+        <circle cx="17.5" cy="18" r="2"/>
+      </svg>
+      <span>Fournisseurs</span>
+    </button>
+    <button type="button" id="bouton-clients" class="nav-bouton" data-nav="vue-clients">
+      <svg class="icone" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <circle cx="9" cy="8" r="3.5"/>
+        <path d="M2.5 20.5v-1a6.5 6.5 0 0 1 13 0v1"/>
+        <path d="M16 4.6a3.5 3.5 0 0 1 0 6.8"/>
+        <path d="M18.5 14.5a6 6 0 0 1 3 5.2v.8"/>
+      </svg>
+      <span>Clients</span>
+    </button>
+  </nav>
+
+  <!-- Fiche d'un produit : panneau qui monte du bas (décision 74) -->
+  <dialog id="fiche-produit" class="panneau" aria-labelledby="fiche-titre">
+    <div class="panneau-poignee" aria-hidden="true"></div>
+    <div class="panneau-entete">
+      <h2 id="fiche-titre"></h2>
+      <button type="button" id="bouton-fermer-fiche" class="bouton-icone" aria-label="Fermer" autofocus>
+        <svg class="icone" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M6 6l12 12"/>
+          <path d="M18 6L6 18"/>
+        </svg>
+      </button>
+    </div>
+    <p id="fiche-etiquettes" class="fiche-etiquettes" hidden></p>
+    <div class="fiche-quantite">
+      <button type="button" id="fiche-moins" class="bouton-rapide" data-action="moins">−1</button>
+      <p class="quantite">
+        <span id="fiche-quantite" class="quantite-valeur"></span>
+        <span id="fiche-unite" class="quantite-libelle"></span>
+      </p>
+      <button type="button" id="fiche-plus" class="bouton-rapide" data-action="plus">+1</button>
+    </div>
+    <p id="fiche-negatif" class="produit-negatif" hidden>Stock négatif : à vérifier</p>
+    <dl class="fiche-details">
+      <div>
+        <dt>Seuil d'alerte</dt>
+        <dd id="fiche-seuil"></dd>
+      </div>
+      <div>
+        <dt>Prix d'achat</dt>
+        <dd id="fiche-prix"></dd>
+      </div>
+      <div>
+        <dt>Valeur (indicative)</dt>
+        <dd id="fiche-valeur"></dd>
+      </div>
+    </dl>
+    <button type="button" id="bouton-fiche-mouvement" class="bouton bouton-principal">Mouvement de stock</button>
+    <button type="button" id="bouton-fiche-modifier" class="bouton bouton-secondaire">Modifier</button>
+  </dialog>
 
   <footer class="pied">
     <p id="version"></p>

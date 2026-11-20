@@ -431,6 +431,12 @@ export function brancherEcranClients() {
   });
 }
 
+// Quitter le carnet par la barre de navigation ou par ⚙ (décision 74) :
+// l'écoute de la liste s'arrête, comme avec « Retour aux produits ».
+export function quitterEcranClients() {
+  arreterLEcoute();
+}
+
 // À appeler quand l'entrepôt du compte connecté est connu.
 export function demarrerEcranClients(db, uid) {
   if (contexte && contexte.uid === uid) {

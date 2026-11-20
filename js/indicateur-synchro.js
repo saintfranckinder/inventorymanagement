@@ -42,14 +42,19 @@ const INTERVALLE_VERIFICATION_MS = 3000;
 // de ce délai sans confirmation du serveur, des modifications attendent.
 const DELAI_VERIFICATION_MS = 2000;
 
+// `court` : libellé affiché dans l'en-tête, où la place manque à côté du
+// bouton ⚙ ; `texte` : nom complet, lu par les lecteurs d'écran et repris
+// dans l'explication (décision 74, qui précise la décision 64).
 const ETATS = {
   synchronise: {
+    court: 'Synchronisé',
     texte: 'Synchronisé',
     explication:
       'Synchronisé : le serveur a reçu les modifications faites sur cet appareil, ' +
       'et les données affichées viennent du serveur.'
   },
   attente: {
+    court: 'En attente',
     texte: 'En attente de synchronisation',
     explication:
       'En attente de synchronisation : des modifications faites sur cet appareil ' +
@@ -57,6 +62,7 @@ const ETATS = {
       'avec Internet : elles partiront toutes seules.'
   },
   horsLigne: {
+    court: 'Hors ligne',
     texte: 'Hors ligne',
     explication:
       'Hors ligne : pas de connexion au serveur. Vous pouvez continuer à travailler : ' +
@@ -64,6 +70,7 @@ const ETATS = {
       'modifications sont gardées sur cet appareil jusqu’au retour d’Internet.'
   },
   erreur: {
+    court: 'Erreur',
     texte: 'Erreur de synchronisation',
     explication: ''
   }
@@ -143,7 +150,7 @@ function afficher(etat, detail, cle) {
   cleAffichee = cle;
   const bouton = element('indicateur-synchro');
   bouton.dataset.etat = etat;
-  element('synchro-etat').textContent = ETATS[etat].texte;
+  element('synchro-etat').textContent = ETATS[etat].court;
   element('synchro-detail').hidden = !detail;
   bouton.setAttribute(
     'aria-label',

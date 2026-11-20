@@ -206,6 +206,48 @@ li[tabindex="-1"]:focus:not(:focus-visible) {
   background: var(--erreur-bordure);
 }
 
+/* Icônes dessinées en ligne (décision 74) : aucune bibliothèque, aucun
+   fichier chargé depuis Internet. */
+.icone {
+  display: block;
+  width: 1.5rem;
+  height: 1.5rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Bouton avec une seule icône (⚙, ⓘ, ✕) : zone tactile de 48 × 48. */
+.bouton-icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 48px;
+  height: 48px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--principal);
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.bouton-icone:hover {
+  background: rgba(33, 53, 71, 0.08);
+}
+
+.bouton-icone-clair {
+  color: #ffffff;
+}
+
+.bouton-icone-clair:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
 .synchro-explication {
   max-width: 26rem;
   margin: 0.5rem auto 0;
@@ -561,6 +603,15 @@ select:disabled {
   font-weight: 600;
 }
 
+/* Titre et icône ⓘ sur la même ligne (décision 74). */
+.valeur-stock-entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: -0.625rem -0.625rem 0 0;
+}
+
 .valeur-stock-montant {
   margin: 0.125rem 0 0.875rem;
   font-family: var(--police-titres);
@@ -643,6 +694,33 @@ select:disabled {
 
 .compteur-rupture .compteur-nombre {
   color: #f4b2a9;
+}
+
+/* Titre « Produits » lu par les lecteurs d'écran, sans place à l'écran
+   (décision 74) ; il reste dans le flux pour que l'écran puisse y descendre. */
+.titre-produits {
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Recherche avec une loupe (décision 74). */
+.recherche {
+  position: relative;
+}
+
+.recherche-icone {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.875rem;
+  color: var(--texte-discret);
+  pointer-events: none;
+}
+
+.recherche input {
+  padding-left: 2.875rem;
 }
 
 /* Ligne qui rappelle le filtre choisi, au-dessus de la liste. */
@@ -780,6 +858,332 @@ select:disabled {
 
 .bouton-rapide[data-action="plus"]:active {
   background: #26557d;
+}
+
+/* ---------- Accueil épuré : une ligne par produit (décision 74) ---------- */
+
+.liste-compacte {
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--carte) 0%, var(--carte-bas) 100%);
+  border: 1px solid rgba(33, 53, 71, 0.08);
+  border-radius: var(--rayon-carte);
+  box-shadow: var(--ombre-carte);
+}
+
+.liste-compacte:empty {
+  display: none;
+}
+
+.produit-ligne {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--bordure-legere);
+}
+
+.produit-ligne:last-child {
+  border-bottom: 0;
+}
+
+/* Alertes : fond teinté, trait de couleur à gauche ET étiquette écrite. */
+.produit-ligne-bas {
+  background: linear-gradient(90deg, var(--fond-alerte) 0%, #fff7ec 100%);
+  box-shadow: inset 4px 0 0 var(--alerte-bordure);
+}
+
+.produit-ligne-rupture {
+  background: linear-gradient(90deg, var(--fond-erreur) 0%, #fdf0ee 100%);
+  box-shadow: inset 4px 0 0 var(--erreur-bordure);
+}
+
+.produit-ligne-bas .quantite-valeur,
+.quantite-valeur.quantite-bas {
+  color: var(--alerte);
+}
+
+.produit-ligne-rupture .quantite-valeur,
+.quantite-valeur.quantite-rupture {
+  color: var(--erreur);
+}
+
+/* Partie gauche de la ligne : un bouton qui ouvre la fiche du produit. */
+.produit-infos {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  margin: 0;
+  padding: 0.125rem 0;
+  background: none;
+  color: var(--texte);
+  border: 0;
+  border-radius: 0.5rem;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Nom : deux lignes au plus ; le nom complet est dans la fiche. */
+.produit-nom {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--texte);
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* « Achat … · seuil … », ou « En attente de synchronisation » : toujours la
+   place de deux lignes, pour que la ligne ne change pas de hauteur. */
+.produit-meta {
+  display: -webkit-box;
+  overflow: hidden;
+  min-height: 2.6em;
+  margin-top: 0.125rem;
+  color: var(--texte-discret);
+  font-size: 0.8125rem;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.produit-meta-attente {
+  color: var(--or-texte);
+  font-weight: 700;
+}
+
+.produit-alertes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.375rem;
+}
+
+.produit-alertes .etiquette {
+  margin: 0;
+  font-size: 0.8125rem;
+}
+
+.produit-ligne .ligne-quantite {
+  gap: 0.375rem;
+  margin: 0;
+}
+
+.produit-ligne .quantite {
+  flex: none;
+  width: 3.75rem;
+}
+
+.produit-ligne .quantite-valeur {
+  font-size: 1.25rem;
+}
+
+.produit-ligne .quantite-libelle {
+  overflow-wrap: anywhere;
+}
+
+.produit-ligne .bouton-rapide {
+  width: 48px;
+  min-width: 48px;
+  padding: 0;
+}
+
+/* Bouton rond « Ajouter un produit », en bas à droite, au-dessus de la barre. */
+.bouton-flottant {
+  position: fixed;
+  right: max(1rem, calc((100vw - 28rem) / 2 + 1rem));
+  bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px));
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(180deg, var(--principal-haut) 0%, var(--principal) 55%, var(--principal-fonce) 100%);
+  color: #ffffff;
+  border: 1px solid var(--principal-fonce);
+  border-radius: 1.125rem;
+  box-shadow: 0 8px 18px rgba(23, 38, 52, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  cursor: pointer;
+}
+
+.bouton-flottant .icone {
+  width: 1.75rem;
+  height: 1.75rem;
+  stroke-width: 2.4;
+}
+
+/* Barre de navigation en bas (décision 74). */
+.barre-navigation {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: center;
+  padding: 0.25rem max(0.25rem, calc((100vw - 28rem) / 2)) calc(0.25rem + env(safe-area-inset-bottom, 0px));
+  background: var(--carte-bas);
+  border-top: 1px solid var(--bordure-legere);
+  box-shadow: 0 -4px 14px rgba(33, 53, 71, 0.07);
+}
+
+.nav-bouton {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.125rem;
+  min-width: 0;
+  min-height: 56px;
+  margin: 0;
+  padding: 0.25rem 0.125rem;
+  background: none;
+  color: var(--texte-discret);
+  border: 0;
+  border-radius: var(--rayon);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.nav-bouton .icone {
+  box-sizing: content-box;
+  padding: 0.25rem 1.125rem;
+  border-radius: 999px;
+}
+
+.nav-bouton[aria-current="page"] {
+  color: var(--accent);
+}
+
+.nav-bouton[aria-current="page"] .icone {
+  background: #dce6f0;
+}
+
+/* Place en bas de l'écran pour la barre et le bouton rond. */
+body.avec-navigation main {
+  padding-bottom: 10rem;
+}
+
+/* Une fois connecté, la version est dans Paramètres (décision 74). */
+body.connecte .pied {
+  display: none;
+}
+
+.parametres-version {
+  margin-top: 1.5rem;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+/* Fiche d'un produit : panneau qui monte du bas (décision 74). */
+.panneau {
+  position: fixed;
+  top: auto;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  max-width: 28rem;
+  max-height: 92vh;
+  margin: 0 auto;
+  padding: 0.5rem 1rem calc(1rem + env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  background: var(--carte-bas);
+  color: var(--texte);
+  border: 0;
+  border-radius: 1.5rem 1.5rem 0 0;
+  box-shadow: 0 -10px 30px rgba(23, 38, 52, 0.25);
+}
+
+/* Pas d'animation d'ouverture : si le navigateur la mettait en pause (onglet
+   en arrière-plan, économie d'énergie), le panneau resterait hors de l'écran. */
+.panneau::backdrop {
+  background: rgba(23, 38, 52, 0.5);
+}
+
+.panneau-poignee {
+  width: 3rem;
+  height: 0.3rem;
+  margin: 0 auto 0.5rem;
+  background: #d6d0c7;
+  border-radius: 999px;
+}
+
+.panneau-entete {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.panneau-entete h2 {
+  margin: 0.375rem 0 0.75rem;
+}
+
+.fiche-etiquettes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin: -0.25rem 0 0.75rem;
+}
+
+.fiche-etiquettes .etiquette {
+  margin: 0;
+}
+
+.fiche-quantite {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0 0 1rem;
+  padding: 0.75rem;
+  background: #f1eee9;
+  border-radius: var(--rayon-carte);
+}
+
+.fiche-quantite .quantite-valeur {
+  font-size: 2rem;
+}
+
+.fiche-quantite .bouton-rapide {
+  min-width: 4rem;
+  min-height: 56px;
+}
+
+.fiche-details {
+  margin: 0 0 1rem;
+}
+
+.fiche-details > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--bordure-legere);
+}
+
+.fiche-details dt {
+  color: var(--texte-discret);
+}
+
+.fiche-details dd {
+  margin: 0;
+  font-weight: 700;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.panneau .produit-negatif {
+  margin: -0.5rem 0 0.75rem;
 }
 
 /* ---------- Mouvements ---------- */
