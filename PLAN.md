@@ -24,6 +24,7 @@ Dépôt GitHub : `saintfranckinder/minstock`, renommé par le propriétaire le 2
 | 7 | Suppression du compte (décisions 60 à 63) | **Terminée le 2026-11-18** (règles version 7 publiées par le propriétaire ; test sur smartphone réussi avec un compte jetable) |
 | 6c | Carnet de clients (décisions 72 et 73) | **Terminée le 2026-11-20** (règles version 8 publiées par le propriétaire ; test sur smartphone réussi) |
 | — | Accueil épuré (décision 74), haut figé et bouton retour (décision 75), partie figée réduite (décision 76) | **Terminé le 2026-11-20** (version 0.15.0 essayée sur smartphone par le propriétaire : réussi) |
+| — | Boutons de contact en icônes, avec leur nom dessous (décision 77) | **Fait le 2026-11-21** (version 0.15.1, tests sur l'ordinateur réussis) ; test sur smartphone à faire par le propriétaire |
 | 8 | Hors ligne et indicateur de synchronisation (décisions 64 à 68) | **Terminée le 2026-11-19** (essai en mode avion réussi sur smartphone, selon les captures du propriétaire) |
 | 8b | Code SKU, type de stock, quantité à commander, prix de vente (décision 69) | **Prochaine étape** (règles version 9) : cinq questions posées le 2026-11-20, réponse attendue (section 8.7) |
 | 9 | Export Excel | À faire |
@@ -809,6 +810,38 @@ Tests exécutés par l'assistant (412 × 800, puis 360 × 780) :
 
 **Étape terminée le 2026-11-20** (accueil épuré, haut figé, bouton retour, partie figée réduite : décisions 74 à 76).
 
+### Étape intermédiaire : boutons de contact en icônes (décision 77)
+
+Demande du propriétaire du 2026-11-21, avant la phase 8b : remplacer les mots « Appeler », « WhatsApp » et « E-mail » des carnets de fournisseurs et de clients par des icônes, avec le nom écrit dessous, dans un style minimaliste et épuré fidèle à l'identité visuelle.
+
+**Compte rendu (2026-11-21)**
+
+Ce qui a été fait :
+
+- `index.html` : une réserve d'icônes invisible (`<svg class="sprite-icones">`, au début de `<body>`) avec trois dessins faits pour l'application, dans le style des autres icônes (traits arrondis) : combiné de téléphone (`icone-appeler`), bulle avec un combiné (`icone-whatsapp`), enveloppe (`icone-email`). Rien n'est chargé depuis Internet.
+- `js/ecran-fournisseurs.js` et `js/ecran-clients.js` : seule la fonction `lienContact` change (icône + nom dessous, classe `lien-contact`). Inchangés : adresses des liens (`tel:`, `https://wa.me/`, `mailto:`), règle du bouton WhatsApp (indicatif du pays), noms complets pour les lecteurs d'écran (`aria-label`), ouverture de WhatsApp dans un nouvel onglet.
+- `css/style.css` : icône bleue (`--accent`) dans une pastille bleu clair, comme l'écran actif de la barre de navigation ; nom en bleu nuit, 13 pixels, gras ; boutons alignés à gauche, sans bordure.
+- Version `0.15.1`. Aucune donnée, aucune règle Firestore, aucun autre écran touché.
+- Libellés gardés tels qu'ils étaient : « Appeler », « WhatsApp », « E-mail » (le propriétaire avait écrit « Appelez » et « Email » ; l'assistant a gardé les mots déjà utilisés dans l'application, modifiables en une ligne si le propriétaire préfère).
+
+Tests exécutés par l'assistant, dans le navigateur intégré, sur `http://localhost:8080/`, avec le compte de test, à 360 × 780 puis sur grand écran :
+
+| Test | Résultat |
+|---|---|
+| Fournisseur existant (téléphone et WhatsApp) : icônes « Appeler » et « WhatsApp » avec leur nom | Réussi |
+| Client d'essai avec téléphone, WhatsApp `+509…` et e-mail : trois boutons côte à côte, chacun de 93 × 72 pixels (pastille de 64 × 40) | Réussi |
+| Adresses des liens identiques à avant : `tel:37000000`, `https://wa.me/50937000000` (nouvel onglet, `noopener noreferrer`), `mailto:essai@example.com` ; noms complets pour les lecteurs d'écran conservés | Réussi |
+| WhatsApp sans indicatif : bouton absent et phrase d'aide affichée ; « Appeler » et « E-mail » restent | Réussi |
+| Contour de focus visible au clavier (touche Tab) | Réussi |
+| Contraste : icône `#2E618D` sur pastille `#E4EBF2` : 5,4 (au moins 3 pour un dessin) ; nom en `#213547` sur fond blanc | Réussi |
+| Aucun défilement horizontal ; en-tête toujours en haut ; réserve d'icônes de 0 × 0 pixel ; console sans erreur | Réussi |
+| Client d'essai « Essai icônes (à supprimer) » supprimé ensuite : le compte de test n'a toujours aucun client | Réussi |
+
+Tests non exécutés :
+
+- Smartphone : à faire par le propriétaire (toucher chaque icône ouvre Téléphone, WhatsApp, E-mail).
+- Lecteur d'écran réel : noms vérifiés par programme seulement.
+
 ### Phase 8b : code SKU, type de stock, quantité à commander, prix de vente
 - **Demandée par le propriétaire le 2026-11-19** (décision 69). Fonctions écartées de la première version : décision 70. Prix d'achat inchangé, toujours saisi à la main, sans coût moyen (décision 71) : le prix de vente ne sert jamais à la valeur du stock.
 - **Résultat :** quatre champs facultatifs dans la fiche produit, affichés sur la carte ; recherche par code SKU ; filtre par type de stock (sans lecture de plus) ; règles Firestore version 9 (la version 8 sert au carnet de clients, phase 6c) qui contrôlent ces champs et acceptent aussi les produits qui ne les ont pas ; `CLAUDE.md` mis à jour (sections 4 et 5).
@@ -904,17 +937,18 @@ Règles de conception retenues pour le code :
 
 ## 8. Note de passation
 
-*Mise à jour le 2026-11-20, après l'étape « accueil épuré » (décisions 74 à 76) et avant la phase 8b. Elle remplace la note du 2026-11-18. Ne pas recommencer le projet ni réécrire le code qui fonctionne : reprendre à la section 8.7.*
+*Mise à jour le 2026-11-21, après l'étape « boutons de contact en icônes » (décision 77) et avant la phase 8b. Elle remplace la note du 2026-11-18. Ne pas recommencer le projet ni réécrire le code qui fonctionne : reprendre à la section 8.7.*
 
 ### 8.1 Phase actuelle
 
+- **Étape « boutons de contact en icônes » faite le 2026-11-21** (décision 77 : « Appeler », « WhatsApp », « E-mail » deviennent une icône avec son nom dessous). Tests sur l'ordinateur réussis ; **test sur smartphone à faire par le propriétaire**.
 - **Étape « accueil épuré » terminée le 2026-11-20** (décisions 74 à 76 : une ligne par produit, fiche dans un panneau, bouton rond, barre de navigation, ⚙ ; haut des écrans figé ; bouton retour du téléphone ; partie figée réduite). Tests sur l'ordinateur réussis ; version `0.15.0` essayée sur smartphone par le propriétaire : réussi.
 - Déjà terminées le 2026-11-19 et le 2026-11-20 : **phase 8** (hors ligne et indicateur de synchronisation, mode avion réussi sur smartphone) et **phase 6c** (carnet de clients, smartphone réussi).
 - **Prochaine étape : phase 8b** (code SKU, type de stock, quantité à commander, prix de vente : décision 69 ; règles version 9). **Rien n'est codé.** Les cinq questions de détail ont été posées au propriétaire le 2026-11-20 avec les recommandations de l'assistant (section 8.7) ; **sa réponse est attendue**.
-- Version de l'application : `0.15.0`. Règles Firestore : **version 8**, publiée dans la console par le propriétaire le 2026-11-20 ; `tests-regles.html` 105 sur 105 (série habituelle) et 22 sur 22 (série « suppression ») le même jour. Aucune règle n'a changé depuis.
+- Version de l'application : `0.15.1`. Règles Firestore : **version 8**, publiée dans la console par le propriétaire le 2026-11-20 ; `tests-regles.html` 105 sur 105 (série habituelle) et 22 sur 22 (série « suppression ») le même jour. Aucune règle n'a changé depuis.
 - Dépôt GitHub : `saintfranckinder/minstock`, **public**. Site : `https://saintfranckinder.github.io/minstock/` (GitHub Pages, branche `main`, dossier racine).
-- Dépôt Git, branche `main` : `cecf8d3` (phases 0 et 1), `48d55b3` (phase 2), `f09bf30` (phase 3), `96f2a3d` (phase 4a), `d8f1b5b` (phase 4b), `2f53da4` (note de passation), `b26abb6` (dépôt renommé), `e166a30` (recherche de secrets), `d5a7808` (décisions 40 et 41), `86d4eb4` (mise en ligne), `e1a5c70` (fin de l'étape « dépôt public »), `e202b2a` (décisions 42 et 43), `7e156a3` (phase 5), `eb40c59` (test sur smartphone de la phase 5), `456dff6` (phase 6), `de2ef92` (test sur smartphone de la phase 6), `14e00c9` (phase 6b), `36f5d20` (test sur smartphone de la phase 6b), `6eeb438` (identité visuelle), `c95d942` (compteurs cliquables), `f60525d` (test sur smartphone des compteurs), `d952342` (phase 7), `b2cc014` (test sur smartphone de la phase 7), `84b6e87` (note de passation), `e6e178b` (phase 8, version 0.11.0), `44567e0` (décision 71), `3ca1084` (note), `83ac5be` (phase 8 terminée), `7dc5476` (téléphone du propriétaire), `d6ce5a1` (phase 6c, version 0.12.0), `50e206b` (phase 6c terminée), `2367763` (accueil épuré, version 0.13.0), `5e33443` (décision 75, version 0.14.0), `dcb2a30` (décision 76, version 0.15.0), `ad63621` (accueil épuré terminé), puis cette note de passation. Le propriétaire envoie chaque commit avec **Push origin** dans GitHub Desktop ; le site se met à jour quelques minutes après.
-- **État de l'envoi sur GitHub (vu dans la copie locale le 2026-11-20, sans interroger GitHub) :** le propriétaire a envoyé jusqu'à `dcb2a30` (version `0.15.0` en ligne, identique au code). Restent à envoyer : `ad63621` et cette note (documentation seulement).
+- Dépôt Git, branche `main` : `cecf8d3` (phases 0 et 1), `48d55b3` (phase 2), `f09bf30` (phase 3), `96f2a3d` (phase 4a), `d8f1b5b` (phase 4b), `2f53da4` (note de passation), `b26abb6` (dépôt renommé), `e166a30` (recherche de secrets), `d5a7808` (décisions 40 et 41), `86d4eb4` (mise en ligne), `e1a5c70` (fin de l'étape « dépôt public »), `e202b2a` (décisions 42 et 43), `7e156a3` (phase 5), `eb40c59` (test sur smartphone de la phase 5), `456dff6` (phase 6), `de2ef92` (test sur smartphone de la phase 6), `14e00c9` (phase 6b), `36f5d20` (test sur smartphone de la phase 6b), `6eeb438` (identité visuelle), `c95d942` (compteurs cliquables), `f60525d` (test sur smartphone des compteurs), `d952342` (phase 7), `b2cc014` (test sur smartphone de la phase 7), `84b6e87` (note de passation), `e6e178b` (phase 8, version 0.11.0), `44567e0` (décision 71), `3ca1084` (note), `83ac5be` (phase 8 terminée), `7dc5476` (téléphone du propriétaire), `d6ce5a1` (phase 6c, version 0.12.0), `50e206b` (phase 6c terminée), `2367763` (accueil épuré, version 0.13.0), `5e33443` (décision 75, version 0.14.0), `dcb2a30` (décision 76, version 0.15.0), `ad63621` (accueil épuré terminé), une note de passation, puis le commit des icônes de contact (décision 77, version 0.15.1, avec cette note). Le propriétaire envoie chaque commit avec **Push origin** dans GitHub Desktop ; le site se met à jour quelques minutes après.
+- **État de l'envoi sur GitHub (vu dans la copie locale le 2026-11-20, sans interroger GitHub) :** le propriétaire a envoyé jusqu'à `dcb2a30` (version `0.15.0` en ligne, identique au code). Restent à envoyer : `ad63621` et la note de passation (documentation seulement), puis le commit des icônes de contact (**code** : version 0.15.1, aucune règle à publier).
 - **Dossier de la session :** l'outil de travail peut s'ouvrir sur le dossier parent `C:\GitHub\Inventory Management` ; le dépôt reste `C:\GitHub\Inventory Management\inventorymanagement` (utiliser des chemins complets, et `git -C <dépôt>`).
 
 ### 8.2 Travail terminé
@@ -936,6 +970,7 @@ Règles de conception retenues pour le code :
 | 8 | Indicateur de synchronisation, « En attente » à la place de « Quantité », avertissement de déconnexion, « Effacer les données de cet appareil », stockage durable demandé | `tests-nombres.html` : 104 sur 104 ; `tests-regles.html` : 88 sur 88 ; coupures simulées (compte rendu de la phase 8) ; mode avion sur smartphone réussi |
 | 6c | Carnet de clients (copie du carnet de fournisseurs, sans case VIP) ; règles version 8 ; clients effacés avec le compte | `tests-regles.html` : 105 sur 105 et 22 sur 22 ; compte rendu de la phase 6c ; test sur smartphone réussi |
 | Accueil épuré | Une ligne par produit, fiche dans un panneau, bouton rond, barre en bas, ⚙ ; haut figé, bouton retour du téléphone, partie figée réduite (décisions 74 à 76) ; aucune donnée ni règle changée | compte rendu de l'étape « accueil épuré » ; test sur smartphone réussi (version 0.15.0) |
+| Icônes de contact | « Appeler », « WhatsApp », « E-mail » : une icône et son nom dessous (décision 77) ; aucune donnée ni règle changée | compte rendu de l'étape « boutons de contact en icônes » ; smartphone à faire |
 
 Les tests des phases 2 à 8, 6c et de l'accueil épuré ont été exécutés par l'assistant dans le navigateur intégré, sur `http://localhost:8080/`, avec les comptes de test (et des comptes jetables pour la phase 7). Tests sur smartphone faits par le propriétaire (Moto G Stylus 2024, Chrome), sur le site en ligne, tous réussis : le 2026-11-18, étape « dépôt public », phases 5, 6 et 6b, identité visuelle, compteurs cliquables, phase 7 (avec un compte jetable) ; le 2026-11-19, phase 8 en mode avion ; le 2026-11-20, phase 6c et accueil épuré (versions 0.13.0 à 0.15.0).
 
@@ -990,7 +1025,7 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 
 | Fichier | Rôle | Phases |
 |---|---|---|
-| `index.html`, `css/style.css` | Tous les écrans de l'application ; identité visuelle (couleurs en variables au début de `style.css`) ; indicateur de synchronisation et ⚙ dans l'en-tête ; accueil épuré : lignes de produits, panneau de la fiche (`<dialog>`), bouton rond, barre de navigation, icônes SVG | 2, 3, 4a, 4b, 5, 6, 6b, identité, 7, 8, 6c, accueil épuré |
+| `index.html`, `css/style.css` | Tous les écrans de l'application ; identité visuelle (couleurs en variables au début de `style.css`) ; indicateur de synchronisation et ⚙ dans l'en-tête ; accueil épuré : lignes de produits, panneau de la fiche (`<dialog>`), bouton rond, barre de navigation, icônes SVG ; réserve d'icônes des boutons de contact (`sprite-icones`, décision 77) | 2, 3, 4a, 4b, 5, 6, 6b, identité, 7, 8, 6c, accueil épuré, icônes de contact |
 | `images/logo-minstock.svg` | Symbole du logo MinStock, aussi icône d'onglet | identité |
 | `js/app.js` | Démarrage, enchaînement des écrans, connexion ; reprise de la suppression du compte ; avertissement de déconnexion, « Effacer les données de cet appareil », stockage durable ; barre de navigation et ⚙ (`mettreAJourNavigation`, `quitterLesCarnets`) ; **bouton retour du téléphone** (`BOUTONS_RETOUR`, niveaux d'écran, `ajusterHistorique`, `surRetourDuTelephone`) ; hauteur de l'en-tête figé (`--hauteur-entete`) ; numéro de version (`VERSION_APP`) | 2, 3, 4a, 4b, 5, 6, 6b, identité, 7, 8, 6c, accueil épuré |
 | `js/indicateur-synchro.js` | Indicateur de synchronisation (quatre états, approximatif, libellés courts dans l'en-tête) ; « des modifications attendent-elles ? » pour la déconnexion et l'effacement | 8, accueil épuré |
@@ -1020,7 +1055,7 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 | `.gitignore`, `.gitattributes` | Fichiers exclus de Git ; `vendor/*.js` jamais modifiés par Git ; `*.woff2` en binaire | 0, 2, identité |
 | `.nojekyll` | Fichier vide : GitHub Pages publie tout tel quel (décision 41) | dépôt public |
 | `CLAUDE.md`, `DEMARRAGE.md` | Cahier des charges et méthode de travail ; modifiés avec l'accord du propriétaire (fournisseurs, annulation, suppression au lieu d'archivage des fournisseurs : section 6 de ce fichier ; carnet de clients dans `CLAUDE.md`, phase 6c). `DEMARRAGE.md` n'a pas été mis à jour depuis la phase 6b | 1, évolutions 42 et 43, 6b, 6c |
-| `PLAN.md`, `DECISIONS.md`, `README.md` | Suivi, décisions 1 à 76, documentation | Toutes |
+| `PLAN.md`, `DECISIONS.md`, `README.md` | Suivi, décisions 1 à 77, documentation | Toutes |
 
 **Hors Git :** `.env.test` contient l'adresse et le mot de passe des deux comptes de test et des comptes jetables `test-suppression-1` à `-3@example.com` (2 et 3 supprimés par les essais de la phase 7 ; 1 actif, sans entrepôt, réservé à la série « suppression » de `tests-regles.html`). Il est ignoré par Git et n'apparaît dans aucun commit (vérifié le 2026-11-18). Également hors Git : `C:\GitHub\Inventory Management\.claude\launch.json` (serveur local pour l'outil de travail, section 8.5 point 13).
 
@@ -1051,7 +1086,7 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 
 ### 8.6 Décisions prises
 
-Toutes sont dans `DECISIONS.md` (76 décisions, aucune effacée) :
+Toutes sont dans `DECISIONS.md` (77 décisions, aucune effacée) :
 
 - **1 à 7 (choix initiaux) :** Firestore en plan Spark ; connexion Google et e-mail ; quantités et prix en entiers ; `dernierMouvementId` ; GitHub Pages ; publication du code par le propriétaire.
 - **8 à 15 (audit) :** page `tests-regles.html` à la place du simulateur ; règles tolérantes au hors-ligne et suivi local des opérations ; dépôt public dès la fin de la phase 4b ; SDK local corrigé et serveur local ; règles produit-mouvement complétées ; suppression du compte avec reconnexion d'abord ; phase 4 coupée en deux ; dossier de travail.
@@ -1073,12 +1108,13 @@ Toutes sont dans `DECISIONS.md` (76 décisions, aucune effacée) :
 - **74 (demande du propriétaire du 2026-11-20) :** accueil épuré d'après sa maquette, identité inchangée : lignes de produits, fiche dans un panneau, bouton rond, barre de navigation en bas (modifie la décision 56), ⚙ vers Paramètres, libellés courts de l'indicateur.
 - **75 (demande du propriétaire du 2026-11-20) :** en-tête et haut des écrans figés (sur l'accueil : nom, carte, recherche) ; flèche ← à la place de « Retour aux produits » ; bouton retour du téléphone dans l'application.
 - **76 (demande du propriétaire du 2026-11-20) :** partie figée réduite : espaces resserrés, carte repliée tant que la recherche contient du texte, bouton rond « + » sur Fournisseurs et Clients.
+- **77 (demande du propriétaire du 2026-11-21) :** boutons « Appeler », « WhatsApp », « E-mail » des fournisseurs et des clients affichés comme une icône avec son nom dessous (précise la décision 53).
 
 Les règles de conception de la section 7 restent à respecter dans toute la suite.
 
 ### 8.7 Prochaine action précise
 
-*(Accueil épuré terminé le 2026-11-20, smartphone compris. Phase 8b pas commencée : les cinq questions de détail ont été posées au propriétaire le 2026-11-20 ; sa réponse est attendue.)*
+*(Accueil épuré terminé le 2026-11-20, smartphone compris. Icônes de contact faites le 2026-11-21 (décision 77) : test sur smartphone à faire par le propriétaire. Phase 8b pas commencée : les cinq questions de détail ont été posées au propriétaire le 2026-11-20 et rappelées le 2026-11-21 ; sa réponse est attendue.)*
 
 **Les cinq questions de la phase 8b et les recommandations de l'assistant** (déjà présentées au propriétaire, à lui rappeler si sa réponse n'est pas notée ici) :
 
@@ -1092,9 +1128,9 @@ Les règles de conception de la section 7 restent à respecter dans toute la sui
 
 Par défaut, sauf avis contraire : « quantité à commander » affichée seulement quand le produit est en « Stock bas » ou « Rupture » ; code, type, prix de vente et marge dans la fiche du produit, pour garder les lignes de l'accueil compactes ; prix de vente en centimes, comme le prix d'achat (décision 4).
 
-1. **Propriétaire :** répondre aux cinq questions (« Oui, d'accord » ou ses changements). **Push origin** pour `ad63621` et cette note quand il le souhaite (documentation seulement). Toujours en attente : les deux tests de la phase 3 et le message d'aide quand la fenêtre Google est bloquée. Conseillé : activer la validation en deux étapes du compte Google qui gère la console Firebase.
+1. **Propriétaire :** **Push origin** pour les commits en attente (dont les icônes de contact, version 0.15.1), puis essai sur le téléphone : ouvrir Fournisseurs et Clients, toucher chaque icône (Téléphone, WhatsApp, E-mail s'ouvrent) et vérifier « Version 0.15.1 » dans Paramètres. Répondre aux cinq questions de la phase 8b (« Oui, d'accord » ou ses changements). Toujours en attente : les deux tests de la phase 3 et le message d'aide quand la fenêtre Google est bloquée. Conseillé : activer la validation en deux étapes du compte Google qui gère la console Firebase.
 2. **Assistant, au début de la prochaine session** (ouverte dans `C:\GitHub\Inventory Management\inventorymanagement` ou dans son dossier parent) : lire `CLAUDE.md`, `PLAN.md` et `DECISIONS.md`. Si la réponse du propriétaire n'est pas notée ici, lui rappeler en quelques lignes le tableau ci-dessus et attendre. Après son accord :
-   1. noter les **décisions 77 et suivantes** à la fin de `DECISIONS.md` ; mettre à jour `CLAUDE.md` (sections 4, 5, 8, 10 et 12) avec son accord ;
+   1. noter les **décisions 78 et suivantes** à la fin de `DECISIONS.md` (la 77 est prise par les icônes de contact) ; mettre à jour `CLAUDE.md` (sections 4, 5, 8, 10 et 12) avec son accord ;
    2. écrire les **règles version 9** : quatre champs facultatifs dans `produitValide` (dans `hasOnly`, **pas** dans `hasAll`), pour qu'un produit qui ne les a pas, ou une opération faite hors ligne par une ancienne version, reste accepté ; ne rien changer au lien produit-mouvement ;
    3. compléter `tests-regles.html` (types, longueurs, liste des types, produit sans les nouveaux champs accepté, modification d'un ancien produit) et, si un calcul est ajouté (marge), `tests-nombres.html` ;
    4. coder par petites étapes (`js/produits.js`, `js/ecran-produits.js`, formulaire et fiche dans `index.html`, styles), tester sur `http://localhost:8080/` avec `test-phase3@example.com` (mot de passe servi par le script du point 12 de la section 8.5, jamais dans la conversation) ;

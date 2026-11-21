@@ -77,12 +77,23 @@ function numeroPourWhatsApp(numero) {
   return chiffres.length >= 8 ? chiffres : null;
 }
 
-function lienContact(texte, adresse, etiquette, nouvelOnglet) {
+// Bouton de contact : une icône et son nom dessous (décision 77). L'icône
+// est dessinée une seule fois dans index.html (« icone-appeler »…).
+function lienContact(icone, texte, adresse, etiquette, nouvelOnglet) {
   const lien = document.createElement('a');
-  lien.className = 'bouton bouton-secondaire';
+  lien.className = 'lien-contact';
   lien.href = adresse;
-  lien.textContent = texte;
   lien.setAttribute('aria-label', etiquette);
+  const dessin = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  dessin.setAttribute('class', 'icone');
+  dessin.setAttribute('aria-hidden', 'true');
+  dessin.setAttribute('focusable', 'false');
+  const reprise = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+  reprise.setAttribute('href', '#icone-' + icone);
+  dessin.append(reprise);
+  const nom = document.createElement('span');
+  nom.textContent = texte;
+  lien.append(dessin, nom);
   if (nouvelOnglet) {
     lien.target = '_blank';
     lien.rel = 'noopener noreferrer';
@@ -147,15 +158,19 @@ function carteFournisseur(fournisseur) {
     const liens = document.createElement('div');
     liens.className = 'liens-contact';
     if (appel) {
-      liens.append(lienContact('Appeler', 'tel:' + appel, `Appeler ${fournisseur.nom}`, false));
+      liens.append(lienContact(
+        'appeler', 'Appeler', 'tel:' + appel, `Appeler ${fournisseur.nom}`, false
+      ));
     }
     if (whatsapp) {
       liens.append(lienContact(
-        'WhatsApp', 'https://wa.me/' + whatsapp, `Écrire sur WhatsApp à ${fournisseur.nom}`, true
+        'whatsapp', 'WhatsApp', 'https://wa.me/' + whatsapp, `Écrire sur WhatsApp à ${fournisseur.nom}`, true
       ));
     }
     if (email) {
-      liens.append(lienContact('E-mail', 'mailto:' + email, `Envoyer un e-mail à ${fournisseur.nom}`, false));
+      liens.append(lienContact(
+        'email', 'E-mail', 'mailto:' + email, `Envoyer un e-mail à ${fournisseur.nom}`, false
+      ));
     }
     carte.append(liens);
   }

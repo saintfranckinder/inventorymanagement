@@ -127,7 +127,7 @@ Le bouton « Fournisseurs », sur l'écran des produits, ouvre le carnet. Il est
 - **Fiche d'un fournisseur :** nom (obligatoire), téléphone, WhatsApp, e-mail, adresse, produits fournis (texte libre, par exemple « ciment, fer ») et notes.
 - **Limites :** nom 100 caractères ; téléphone et WhatsApp 30 caractères, seulement des chiffres, des espaces et `+ - ( ) .` ; e-mail 254 caractères, de la forme `nom@exemple.com` ; adresse 200 ; produits fournis 500 ; notes 1 000.
 - **Recherche :** par nom ou par produit fourni (`ciment` montre qui vend du ciment), sans tenir compte des majuscules ni des accents.
-- **Boutons « Appeler », « WhatsApp » et « E-mail » :** ils ouvrent l'application correspondante du téléphone ; l'application de stock n'envoie rien elle-même. Le bouton WhatsApp n'apparaît que si le numéro commence par l'indicatif du pays (`+509…` ou `00509…`).
+- **Boutons « Appeler », « WhatsApp » et « E-mail »** (une icône avec son nom dessous) **:** ils ouvrent l'application correspondante du téléphone ; l'application de stock n'envoie rien elle-même. Le bouton WhatsApp n'apparaît que si le numéro commence par l'indicatif du pays (`+509…` ou `00509…`).
 - **Même nom :** deux fournisseurs peuvent porter le même nom ; l'application demande d'abord « Enregistrer quand même ? ».
 - **Supprimer :** depuis le formulaire « Modifier », après confirmation. La suppression est définitive : les coordonnées sont effacées et ne peuvent pas être récupérées.
 - **Lecture de la liste :** elle n'est chargée que pendant que l'écran « Fournisseurs » est ouvert, pour économiser le quota gratuit. Sans Internet, la liste déjà vue sur l'appareil reste affichée ; la toute première fois sur un appareil, Internet est nécessaire.
