@@ -81,7 +81,7 @@ function numeroPourWhatsApp(numero) {
 // est dessinée une seule fois dans index.html (« icone-appeler »…).
 function lienContact(icone, texte, adresse, etiquette, nouvelOnglet) {
   const lien = document.createElement('a');
-  lien.className = 'lien-contact lien-contact-' + icone;
+  lien.className = 'lien-contact';
   lien.href = adresse;
   lien.setAttribute('aria-label', etiquette);
   const dessin = document.createElementNS('http://www.w3.org/2000/svg', 'svg');

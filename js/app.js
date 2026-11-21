@@ -64,7 +64,7 @@ import { demarrerFirebase, VERSION_SDK_FIREBASE } from './firebase-init.js';
 import { afficherMessage, afficherVue, effacerMessages, element, vueActuelle } from './interface.js';
 import { messageErreur } from './messages-erreur.js';
 
-const VERSION_APP = '0.15.2';
+const VERSION_APP = '0.15.3';
 
 // Bouton retour du téléphone (décision 75) : pour chaque écran secondaire, le
 // bouton de l'écran qui fait déjà « revenir » (flèche ←, « Annuler »…). Le

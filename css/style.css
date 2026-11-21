@@ -1394,27 +1394,17 @@ body.connecte .pied {
 
 /* « Appeler », « WhatsApp », « E-mail » (décision 77) : une icône dans une
    pastille bleu clair et son nom dessous, comme dans la barre de navigation.
-   Grille de trois colonnes égales, centrée et de largeur limitée ; chaque
-   bouton garde sa colonne, même quand un autre est absent (pas de WhatsApp,
-   par exemple). Zone de toucher d'au moins 64 × 64 pixels. */
+   Une colonne par bouton présent (1, 2 ou 3), toutes de la même largeur
+   (6rem au plus) et le groupe centré dans la carte : avec deux boutons,
+   même écart et même équilibre qu'avec trois. Zone de toucher d'au moins
+   64 × 64 pixels. */
 .liens-contact {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 6rem);
+  justify-content: center;
   gap: clamp(0.5rem, 4vw, 1.5rem);
-  max-width: 20rem;
-  margin: 0.75rem auto 0;
-}
-
-.lien-contact-appeler {
-  grid-column: 1;
-}
-
-.lien-contact-whatsapp {
-  grid-column: 2;
-}
-
-.lien-contact-email {
-  grid-column: 3;
+  margin: 0.75rem 0 0;
 }
 
 .lien-contact {
