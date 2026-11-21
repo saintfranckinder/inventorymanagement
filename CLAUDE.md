@@ -95,7 +95,7 @@ L'application gère un seul entrepôt par compte utilisateur.
 6. Action permettant de saisir une quantité précise, par exemple `+10` ou `-2,5`, avec motif facultatif.
 7. Formulaire simple pour ajouter ou modifier un produit. Phase 8b (décisions 78 à 82) : code SKU (champ toujours présent, facultatif à remplir, unique quand il est rempli), type de stock (liste fixe, « Non classé » par défaut), quantité à commander et prix de vente facultatifs ; avertissement si le prix de vente est plus bas que le prix d'achat. La fiche du produit affiche ces informations et la marge par unité.
 8. Historique des entrées, sorties et ajustements, avec date, heure, produit, quantité et motif (50 derniers, puis « Voir plus »). Chaque ligne propose « Annuler cette opération » (section 6, règle 12). Recherche par produit, type ou motif dans les mouvements déjà chargés, sans lecture de plus (décision 84).
-9. Export Excel en un clic, avec quatre feuilles : `Stock`, `Historique`, `Fournisseurs` et `Clients`.
+9. Export Excel en un clic, avec quatre feuilles : `Stock`, `Historique`, `Fournisseurs` et `Clients` ; toujours complet (produits archivés compris), avec les boutons de filtre d'Excel ; bouton dans Paramètres (bloc « Sauvegarde ») et sur l'écran « Supprimer mon compte » (phase 9, décisions 85 à 88).
 10. Données de démonstration, uniquement lorsque l'entrepôt est vide.
 11. Indicateur de l'état de connexion et de synchronisation (voir section 7).
 12. Paramètres : modifier le nom de l'entrepôt. La devise n'est modifiable que si l'entrepôt ne contient encore aucun produit (changer la devise ne convertit pas les montants).

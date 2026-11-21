@@ -46,6 +46,7 @@ import {
   suppressionPriseEnMain
 } from './ecran-suppression.js';
 import { effacerDonneesLocales, suppressionCommenceeIci } from './suppression-compte.js';
+import { arreterExport, brancherExport, demarrerExport } from './export-excel.js';
 import {
   arreterIndicateur,
   brancherIndicateur,
@@ -64,7 +65,7 @@ import { demarrerFirebase, VERSION_SDK_FIREBASE } from './firebase-init.js';
 import { afficherMessage, afficherVue, effacerMessages, element, vueActuelle } from './interface.js';
 import { messageErreur } from './messages-erreur.js';
 
-const VERSION_APP = '0.17.0';
+const VERSION_APP = '0.18.0';
 
 // Bouton retour du téléphone (décision 75) : pour chaque écran secondaire, le
 // bouton de l'écran qui fait déjà « revenir » (flèche ←, « Annuler »…). Le
@@ -323,6 +324,7 @@ function arreterEcransDeTravail() {
   arreterEcranProduits();
   arreterEcranMouvements();
   arreterEcranParametres();
+  arreterExport();
   arreterEcranFournisseurs();
   arreterEcranClients();
   arreterIndicateur();
@@ -366,6 +368,7 @@ function surEtatEntrepot(etat) {
     demarrerEcranProduits(firebase.db, utilisateur.uid, etat.donnees);
     demarrerEcranMouvements(firebase.db, utilisateur.uid);
     demarrerEcranParametres(firebase.db, utilisateur.uid, etat.donnees);
+    demarrerExport(firebase.db, utilisateur.uid, etat.donnees);
     demarrerEcranFournisseurs(firebase.db, utilisateur.uid);
     demarrerEcranClients(firebase.db, utilisateur.uid);
     entrepotCharge = true;
@@ -766,6 +769,7 @@ async function demarrer() {
   brancherEcranProduits();
   brancherEcranMouvements();
   brancherEcranParametres();
+  brancherExport();
   brancherEcranFournisseurs();
   brancherEcranClients();
   brancherEcranSuppression();

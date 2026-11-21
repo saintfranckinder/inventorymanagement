@@ -158,6 +158,30 @@ export function calculerValeurTotaleCentimes(lignes) {
   return total;
 }
 
+// ---------- Conversions pour l'export Excel (phase 9, décision 87) ----------
+
+// Millièmes -> nombre décimal : 2500 donne 2,5 (CLAUDE.md, section 5).
+export function milliemesVersNombre(milliemes) {
+  return milliemes / 1000;
+}
+
+// Centimes -> nombre décimal : 12550 donne 125,5. Accepte aussi un BigInt
+// (valeur d'une ligne de stock).
+export function centimesVersNombre(centimes) {
+  return (typeof centimes === 'bigint' ? Number(centimes) : centimes) / 100;
+}
+
+// Date -> numéro de série Excel (jours depuis le 30/12/1899), à l'heure
+// affichée par l'appareil : Excel affiche la même date et la même heure que
+// l'application.
+export function dateVersSerieExcel(date) {
+  const enUtc = Date.UTC(
+    date.getFullYear(), date.getMonth(), date.getDate(),
+    date.getHours(), date.getMinutes(), date.getSeconds()
+  );
+  return (enUtc - Date.UTC(1899, 11, 30)) / 86400000;
+}
+
 // Marge par unité, en centimes (décision 82) : prix de vente moins prix
 // d'achat ; négative si le produit est vendu à perte. Les deux prix sont des
 // entiers d'au plus 10^12 : la soustraction reste exacte.

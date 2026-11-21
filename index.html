@@ -522,6 +522,21 @@
         </div>
       </div>
 
+      <!-- Sauvegarde : export Excel (phase 9, décisions 85 à 88) -->
+      <div class="bloc-parametres">
+        <h3>Sauvegarde</h3>
+        <p class="aide">
+          Crée un fichier Excel avec tout votre stock, l'historique complet, vos
+          fournisseurs et vos clients. <strong>C'est la seule sauvegarde de vos
+          données</strong> : exportez régulièrement et gardez une copie ailleurs
+          (e-mail, Google Drive, ordinateur). Dans Excel, les flèches de la ligne
+          de titres permettent de filtrer, par exemple par produit.
+        </p>
+        <p id="erreur-export" class="message-erreur" role="alert" hidden></p>
+        <p id="info-export" class="message-info" role="status" hidden></p>
+        <button type="button" id="bouton-exporter" class="bouton bouton-principal">Exporter le stock (Excel)</button>
+      </div>
+
       <form id="formulaire-nom-entrepot" class="bloc-parametres" novalidate>
         <h3>Nom de l'entrepôt</h3>
         <label for="parametres-nom">Nouveau nom</label>
@@ -588,9 +603,11 @@
       </ul>
       <p class="avertissement">
         Rien ne pourra être récupéré. Si vous voulez garder vos données,
-        exportez-les d'abord (l'export Excel sera ajouté dans une prochaine
-        version).
+        exportez-les d'abord dans un fichier Excel.
       </p>
+      <p id="erreur-export-suppression" class="message-erreur" role="alert" hidden></p>
+      <p id="info-export-suppression" class="message-info" role="status" hidden></p>
+      <button type="button" id="bouton-exporter-suppression" class="bouton bouton-secondaire">Exporter mes données (Excel)</button>
 
       <form id="formulaire-suppression" novalidate>
         <label class="case case-confirmation">

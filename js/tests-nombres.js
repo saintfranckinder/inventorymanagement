@@ -7,8 +7,11 @@ import {
   calculerMargeCentimes,
   calculerValeurCentimes,
   calculerValeurTotaleCentimes,
+  centimesVersNombre,
+  dateVersSerieExcel,
   formaterMontant,
   formaterQuantite,
+  milliemesVersNombre,
   prixPourSaisie,
   quantitePourSaisie
 } from './nombres.js';
@@ -190,7 +193,28 @@ const ESSAIS = [
   ['Marge 0,01 − 0,00', () => calculerMargeCentimes(1, 0), 1],
   ['Marge maximale exacte', () => calculerMargeCentimes(1000000000000, 0), 1000000000000],
   ['Marge minimale exacte', () => calculerMargeCentimes(0, 1000000000000), -1000000000000],
-  ['Affichage d’une marge négative', () => formaterMontant(calculerMargeCentimes(10000, 12550), 'HTG'), '-25,50 HTG']
+  ['Affichage d’une marge négative', () => formaterMontant(calculerMargeCentimes(10000, 12550), 'HTG'), '-25,50 HTG'],
+
+  // ----- Conversions pour l'export Excel (phase 9, décision 87) -----
+  ['Excel : 2500 millièmes donnent 2,5', () => milliemesVersNombre(2500), 2.5],
+  ['Excel : 1 millième donne 0,001', () => milliemesVersNombre(1), 0.001],
+  ['Excel : 1005 millièmes donnent 1,005', () => milliemesVersNombre(1005), 1.005],
+  ['Excel : -2500 millièmes donnent -2,5', () => milliemesVersNombre(-2500), -2.5],
+  ['Excel : 0 millième donne 0', () => milliemesVersNombre(0), 0],
+  ['Excel : 1 milliard d’unités', () => milliemesVersNombre(1000000000000), 1000000000],
+  ['Excel : 12550 centimes donnent 125,5', () => centimesVersNombre(12550), 125.5],
+  ['Excel : 7 centimes donnent 0,07', () => centimesVersNombre(7), 0.07],
+  ['Excel : 435 centimes donnent 4,35', () => centimesVersNombre(435), 4.35],
+  ['Excel : -2550 centimes donnent -25,5', () => centimesVersNombre(-2550), -25.5],
+  ['Excel : valeur en grand entier 31375 donne 313,75', () => centimesVersNombre(31375n), 313.75],
+  ['Excel : date du 01/01/2026 à 0 h', () => dateVersSerieExcel(new Date(2026, 0, 1, 0, 0, 0)), 46023],
+  ['Excel : date du 01/01/2026 à 12 h (demi-journée)', () => dateVersSerieExcel(new Date(2026, 0, 1, 12, 0, 0)), 46023.5],
+  [
+    'Excel : 07/11/2026 21:23:41 (comme le fichier du propriétaire)',
+    () => Math.round(dateVersSerieExcel(new Date(2026, 10, 7, 21, 23, 41)) * 1000000) / 1000000,
+    46333.891447
+  ],
+  ['Excel : 29/02/2028 (année bissextile)', () => dateVersSerieExcel(new Date(2028, 1, 29)), 46812]
 ];
 
 function lancer() {

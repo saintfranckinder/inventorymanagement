@@ -12,7 +12,8 @@ Le projet est en cours de construction. L'avancement est suivi dans `PLAN.md`.
 - Afficher le texte de confidentialité depuis l'écran de connexion.
 - Ajouter, modifier et archiver un produit : nom, unité, seuil d'alerte, prix d'achat, stock de départ ; et, facultatifs, code SKU, type de stock, quantité à commander, prix de vente (phase 8b).
 - Enregistrer des mouvements de stock : entrée, sortie, ajustement, avec un motif facultatif.
-- Consulter l'historique : les 50 derniers mouvements, puis « Voir plus » ; y chercher par produit, par type d'opération (« sortie »…) ou par motif. La recherche porte sur les mouvements déjà chargés : pour chercher plus loin, touchez « Voir plus » (décision 84). Pour tout l'historique, utilisez l'export Excel (phase 9).
+- Consulter l'historique : les 50 derniers mouvements, puis « Voir plus » ; y chercher par produit, par type d'opération (« sortie »…) ou par motif. La recherche porte sur les mouvements déjà chargés : pour chercher plus loin, touchez « Voir plus » (décision 84). Pour tout l'historique, utilisez l'export Excel.
+- Exporter tout le stock, l'historique, les fournisseurs et les clients dans un fichier Excel (Paramètres > Sauvegarde) : c'est la seule sauvegarde.
 - Annuler une opération faite par erreur, depuis l'historique.
 - Signaler les opérations que le serveur a refusées, même après fermeture de l'application.
 - Tableau de bord : valeur du stock (indicative), recherche par nom, alertes « Stock bas » et « Rupture », boutons rapides `−1` et `+1`.
@@ -130,7 +131,7 @@ Dans **Paramètres**, « Effacer les données de cet appareil et me déconnecter
 
 ### Stockage durable
 
-Une fois l'entrepôt chargé, l'application demande au navigateur de ne pas effacer ses données de lui-même quand l'appareil manque de place. Le navigateur peut refuser sans le dire (Firefox, lui, pose la question). Ce n'est pas une sauvegarde : seul l'export (phase 9) en sera une.
+Une fois l'entrepôt chargé, l'application demande au navigateur de ne pas effacer ses données de lui-même quand l'appareil manque de place. Le navigateur peut refuser sans le dire (Firefox, lui, pose la question). Ce n'est pas une sauvegarde : seul l'export Excel en est une.
 
 ## Carnet de fournisseurs
 
@@ -158,11 +159,29 @@ Le bouton « Clients », sur l'écran des produits, ouvre un carnet qui fonction
 
 Ce sont des informations sur d'autres personnes : n'enregistrer que ce qui est utile, et supprimer un client dont on n'a plus besoin.
 
+## Sauvegarde : export Excel (phase 9)
+
+**L'export est la seule sauvegarde de vos données** : l'offre gratuite de Firebase ne fait aucune sauvegarde du serveur, et la copie gardée par le navigateur n'en est pas une.
+
+1. Touchez ⚙ (Paramètres), puis **Exporter le stock (Excel)**, dans le bloc « Sauvegarde » en haut. Le même export est proposé sur l'écran « Supprimer mon compte ».
+2. Le fichier `stock_AAAA-MM-JJ.xlsx` (date du jour) est créé. Sur un téléphone Android, il se trouve dans **Téléchargements** ; sur un ordinateur, dans le dossier des téléchargements du navigateur.
+3. **Gardez une copie ailleurs**, par exemple : envoyez-le-vous par e-mail, ou mettez-le dans Google Drive, ou copiez-le sur un ordinateur ou une clé USB. Gardez plusieurs exports datés, pas seulement le dernier.
+
+Contenu (décisions 85 à 88), toujours complet :
+
+- **Stock** : tous les produits, actifs puis archivés (colonne « Archivé ») ; code SKU, type, unité, quantité, seuil, alerte, quantité à commander, prix d'achat, prix de vente, marge, valeur indicative.
+- **Historique** : tous les mouvements, du plus récent au plus ancien ; date de l'opération, date de réception par le serveur, produit, code SKU, type, quantité (avec son signe), unité, motif, statut (« Terminé », « Annulé », « En attente d'envoi »).
+- **Fournisseurs** et **Clients** : leurs coordonnées et notes.
+
+Dans Excel, la ligne de titres de chaque feuille a des **flèches de filtre** : par exemple, dans « Historique », touchez la flèche de « Produit » et ne cochez que « Riz » pour ne voir que ses mouvements. Les quantités et les montants sont de vrais nombres : Excel peut les additionner.
+
+Sans Internet, l'application prévient et propose de créer le fichier avec la copie gardée sur l'appareil, qui peut être incomplète. Chaque export lit toutes les données du compte (une lecture par produit, mouvement, fournisseur et client, sur la limite gratuite de 50 000 par jour).
+
 ## Supprimer son compte
 
 Dans **Paramètres**, le bouton « Supprimer mon compte et mes données » efface **définitivement** l'entrepôt, tous les produits (même archivés), tout l'historique, les carnets de fournisseurs et de clients, et le compte de connexion.
 
-1. Un écran explique ce qui sera effacé et rappelle d'exporter ses données avant (l'export Excel arrivera en phase 9).
+1. Un écran explique ce qui sera effacé et propose d'exporter ses données avant (bouton « Exporter mes données (Excel) »).
 2. Double confirmation : cocher « Je comprends que tout sera supprimé définitivement » et taper `SUPPRIMER`.
 3. Reconnexion : mot de passe, ou fenêtre Google pour un compte Google. Sans Internet, rien n'est fait.
 4. L'écran « Suppression en cours » montre l'avancement. Si l'application se ferme ou si Internet coupe, la suppression reprend toute seule à la prochaine connexion (une demande de suppression ne s'annule pas).
@@ -244,6 +263,7 @@ Une adresse e-mail correspond toujours à un seul compte et aux mêmes données.
 | `firestore.rules` | Règles de sécurité de la base de données |
 | `tests-regles.html` | Page de test des règles de sécurité |
 | `tests-nombres.html` | Page de test des conversions de nombres |
+| `js/export-excel.js` | Export Excel (phase 9) : lit les données et crée le fichier, avec SheetJS chargé seulement au moment de l'export |
 | `demarrer.bat`, `outils/` | Serveur local pour tester sur cet ordinateur |
 | `.nojekyll` | Fichier vide, à garder : demande à GitHub Pages de publier tous les fichiers tels quels (décision 41) |
 | `CLAUDE.md` | Cahier des charges |
@@ -280,7 +300,10 @@ Sur GitHub Pages, le fichier vide `.nojekyll` doit rester à la racine : sans lu
 - **Changement de devise :** la vérification « aucun produit » est faite par l'application, pas par les règles de sécurité. Un produit ajouté sans Internet sur un autre appareil, au moment même où la devise change, ne serait pas détecté. Le risque est faible avec un seul utilisateur.
 - **Produit renommé :** l'historique garde le nom du produit au moment de chaque opération.
 - **Fournisseurs modifiés sans Internet :** ils ne sont pas suivis par la liste des « Opérations refusées ». Le formulaire vérifie exactement les mêmes limites que les règles, donc un refus ne devrait pas arriver. Si un fournisseur est supprimé sur un appareil pendant qu'un autre, hors ligne, le modifie, la modification est perdue et le fournisseur reste supprimé. Pour le même fournisseur modifié sur deux appareils, la dernière modification arrivée au serveur l'emporte.
-- **Fournisseur supprimé :** aucun retour en arrière possible. L'export Excel (phase 9) servira de sauvegarde.
+- **Fournisseur supprimé :** aucun retour en arrière possible, sauf à retrouver ses coordonnées dans un export Excel fait avant.
+- **Export Excel sans Internet :** jusqu'à la phase 10 (application installable), il peut échouer si la bibliothèque Excel n'a jamais été chargée sur l'appareil, ou n'est plus dans la mémoire du navigateur. Fait sans Internet, le fichier peut aussi être incomplet (l'application prévient).
+- **Export Excel, mise en forme :** pas de titres en gras ni de couleurs (la version gratuite de la bibliothèque SheetJS ne les écrit pas) ; les largeurs de colonnes et les flèches de filtre sont présentes.
+- **Export Excel sur iPhone :** non essayé ; sur Safari, le téléchargement d'un fichier peut s'ouvrir dans un aperçu au lieu d'aller dans « Fichiers ».
 - **Appareil partagé :** pour permettre l'utilisation sans Internet, le navigateur garde une copie des données déjà consultées (produits, mouvements, fournisseurs), **même après « Se déconnecter »**. L'application ne les montre plus, mais une personne qui sait fouiller dans le navigateur pourrait les lire. Utiliser l'application seulement sur ses propres appareils, verrouillés par un code ; sur un appareil partagé, utiliser « Effacer les données de cet appareil et me déconnecter » dans Paramètres.
 - **Indicateur de synchronisation :** il est approximatif (voir plus haut). Une modification refusée qui n'est pas un mouvement ni une création de produit (nom, prix, archivage, fournisseur) s'affiche en message d'erreur, mais ne fait pas passer l'indicateur sur « Erreur de synchronisation ».
 - **Accueil épuré :** le bouton rond `+` (ajouter un produit) passe par-dessus la droite de la liste ; quand une ligne est juste derrière lui, faire défiler un peu avant de toucher son `+1`. Une ligne qui passe en « Stock bas » ou « Rupture » s'agrandit vers le bas (ses propres boutons ne bougent pas). L'unité s'affiche telle qu'elle a été saisie, sans pluriel automatique (« 7 sac »).
