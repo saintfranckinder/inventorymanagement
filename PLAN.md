@@ -26,7 +26,7 @@ Dépôt GitHub : `saintfranckinder/minstock`, renommé par le propriétaire le 2
 | — | Accueil épuré (décision 74), haut figé et bouton retour (décision 75), partie figée réduite (décision 76) | **Terminé le 2026-11-20** (version 0.15.0 essayée sur smartphone par le propriétaire : réussi) |
 | — | Boutons de contact en icônes, avec leur nom dessous (décision 77), puis grille centrée (une colonne égale par bouton) | **Fait le 2026-11-21** (version 0.15.3, tests sur l'ordinateur réussis) ; test de la version 0.15.3 sur smartphone à faire par le propriétaire |
 | 8 | Hors ligne et indicateur de synchronisation (décisions 64 à 68) | **Terminée le 2026-11-19** (essai en mode avion réussi sur smartphone, selon les captures du propriétaire) |
-| 8b | Code SKU, type de stock, quantité à commander, prix de vente (décision 69) | **Prochaine étape** (règles version 9) : cinq questions posées le 2026-11-20, réponse attendue (section 8.7) |
+| 8b | Code SKU, type de stock, quantité à commander, prix de vente (décisions 69 et 78 à 83) | **En cours** : réponses du propriétaire notées le 2026-11-21 (code SKU obligatoire) ; règles version 9 et essais écrits ; **publication des règles version 9 par le propriétaire attendue**, puis code de l'application |
 | 9 | Export Excel | À faire |
 | 10 | Application installable (PWA) | À faire |
 | 11 | Données de démonstration | À faire |
@@ -896,6 +896,18 @@ Tests non exécutés : smartphone (version 0.15.3), à faire par le propriétair
 - **Avant de coder :** trancher avec le propriétaire : code SKU obligatoire ou non ; liste exacte des types ; affichage de la marge par unité ; avertissement si le prix de vente est plus bas que le prix d'achat ; valeur du stock au prix de vente (indicative).
 - **Tests :** `tests-regles.html` complété (types, longueurs, liste des types, produit sans les nouveaux champs accepté, modification d'un produit ancien) ; `tests-nombres.html` si un calcul est ajouté (marge, valeur au prix de vente) ; code SKU en double signalé ; produits existants affichés sans erreur ; ordre de publication : règles d'abord, code ensuite ; smartphone.
 
+**Compte rendu partiel de la phase 8b (2026-11-21) : étape 1, décisions et règles**
+
+Réponse du propriétaire aux questions de détail : « Oui, mais le SKU est obligatoire ». Décisions 78 à 83 notées ; `CLAUDE.md` mis à jour (sections 4, 5, 8, 10 et 12). Écart avec le plan de départ : pas de filtre par type, la recherche trouve aussi le type (décision 79, question 6 ajoutée le 2026-11-21).
+
+Ce qui a été fait :
+
+- `firestore.rules`, **version 9** : fonctions `typeStockValide` et `champsPhase8bValides` ; les quatre champs ajoutés à la liste des champs permis d'un produit (pas à celle des champs obligatoires) ; rien d'autre ne change.
+- `js/tests-regles.js` : série « phase 8b » (17 essais au premier passage, 16 ensuite) sur un troisième produit d'essai, `essai-regles-sku`, créé une seule fois puis archivé ; le premier produit d'essai garde la forme ancienne (sans les nouveaux champs), pour que les essais habituels vérifient qu'un produit ancien reste accepté. Série habituelle attendue : 122 essais au premier passage, 121 ensuite.
+- La page `tests-regles.html` s'ouvre sans erreur avec le compte de test (vérifié le 2026-11-21) ; les essais ne sont pas encore lancés : ils exigent les règles version 9 publiées.
+
+Reste à faire : publication des règles version 9 par le propriétaire, passage complet de `tests-regles.html`, puis code de l'application (formulaire, fiche, ligne de l'accueil, recherche, marge dans `js/nombres.js` et `tests-nombres.html`), essais, commit, guide d'essai sur smartphone.
+
 ### Phase 9 : export Excel
 - **Résultat :** `stock_AAAA-MM-JJ.xlsx`, feuilles `Stock`, `Historique` et `Fournisseurs` (décision 42), SheetJS local (pris sur le site officiel de l'éditeur, version fixe), avertissements hors ligne / en attente.
 - **Tests :** ouverture dans Excel, décimales correctes ; export hors ligne avec avertissement ; téléchargement sur smartphone.
@@ -989,6 +1001,7 @@ Règles de conception retenues pour le code :
 
 ### 8.1 Phase actuelle
 
+- **Phase 8b en cours (2026-11-21).** Réponses du propriétaire notées (décisions 78 à 83 : code SKU obligatoire dans le formulaire, recherche par type au lieu d'un filtre). Règles version 9 et essais écrits ; **le propriétaire doit publier les règles version 9 dans la console** ; ensuite : passage de `tests-regles.html`, puis code de l'application.
 - **Étape « boutons de contact en icônes » faite le 2026-11-21** (décision 77 : « Appeler », « WhatsApp », « E-mail » deviennent une icône avec son nom dessous). Tests sur l'ordinateur réussis ; **test sur smartphone à faire par le propriétaire**.
 - **Étape « accueil épuré » terminée le 2026-11-20** (décisions 74 à 76 : une ligne par produit, fiche dans un panneau, bouton rond, barre de navigation, ⚙ ; haut des écrans figé ; bouton retour du téléphone ; partie figée réduite). Tests sur l'ordinateur réussis ; version `0.15.0` essayée sur smartphone par le propriétaire : réussi.
 - Déjà terminées le 2026-11-19 et le 2026-11-20 : **phase 8** (hors ligne et indicateur de synchronisation, mode avion réussi sur smartphone) et **phase 6c** (carnet de clients, smartphone réussi).
@@ -1103,7 +1116,7 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 | `.gitignore`, `.gitattributes` | Fichiers exclus de Git ; `vendor/*.js` jamais modifiés par Git ; `*.woff2` en binaire | 0, 2, identité |
 | `.nojekyll` | Fichier vide : GitHub Pages publie tout tel quel (décision 41) | dépôt public |
 | `CLAUDE.md`, `DEMARRAGE.md` | Cahier des charges et méthode de travail ; modifiés avec l'accord du propriétaire (fournisseurs, annulation, suppression au lieu d'archivage des fournisseurs : section 6 de ce fichier ; carnet de clients dans `CLAUDE.md`, phase 6c). `DEMARRAGE.md` n'a pas été mis à jour depuis la phase 6b | 1, évolutions 42 et 43, 6b, 6c |
-| `PLAN.md`, `DECISIONS.md`, `README.md` | Suivi, décisions 1 à 77, documentation | Toutes |
+| `PLAN.md`, `DECISIONS.md`, `README.md` | Suivi, décisions 1 à 83, documentation | Toutes |
 
 **Hors Git :** `.env.test` contient l'adresse et le mot de passe des deux comptes de test et des comptes jetables `test-suppression-1` à `-3@example.com` (2 et 3 supprimés par les essais de la phase 7 ; 1 actif, sans entrepôt, réservé à la série « suppression » de `tests-regles.html`). Il est ignoré par Git et n'apparaît dans aucun commit (vérifié le 2026-11-18). Également hors Git : `C:\GitHub\Inventory Management\.claude\launch.json` (serveur local pour l'outil de travail, section 8.5 point 13).
 
@@ -1134,7 +1147,7 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 
 ### 8.6 Décisions prises
 
-Toutes sont dans `DECISIONS.md` (77 décisions, aucune effacée) :
+Toutes sont dans `DECISIONS.md` (83 décisions, aucune effacée) :
 
 - **1 à 7 (choix initiaux) :** Firestore en plan Spark ; connexion Google et e-mail ; quantités et prix en entiers ; `dernierMouvementId` ; GitHub Pages ; publication du code par le propriétaire.
 - **8 à 15 (audit) :** page `tests-regles.html` à la place du simulateur ; règles tolérantes au hors-ligne et suivi local des opérations ; dépôt public dès la fin de la phase 4b ; SDK local corrigé et serveur local ; règles produit-mouvement complétées ; suppression du compte avec reconnexion d'abord ; phase 4 coupée en deux ; dossier de travail.
@@ -1157,12 +1170,15 @@ Toutes sont dans `DECISIONS.md` (77 décisions, aucune effacée) :
 - **75 (demande du propriétaire du 2026-11-20) :** en-tête et haut des écrans figés (sur l'accueil : nom, carte, recherche) ; flèche ← à la place de « Retour aux produits » ; bouton retour du téléphone dans l'application.
 - **76 (demande du propriétaire du 2026-11-20) :** partie figée réduite : espaces resserrés, carte repliée tant que la recherche contient du texte, bouton rond « + » sur Fournisseurs et Clients.
 - **77 (demande du propriétaire du 2026-11-21) :** boutons « Appeler », « WhatsApp », « E-mail » des fournisseurs et des clients affichés comme une icône avec son nom dessous (précise la décision 53).
+- **78 à 83 (phase 8b, réponses du propriétaire du 2026-11-21) :** code SKU obligatoire dans le formulaire, unique, non exigé par les règles ; types de stock (liste fixe, « Non classé » par défaut), recherche par type au lieu d'un filtre ; quantité à commander facultative, affichée en « Stock bas » ou « Rupture » ; prix de vente facultatif avec avertissement s'il est plus bas que le prix d'achat, jamais dans la valeur du stock ; marge par unité dans la fiche ; règles version 9.
 
 Les règles de conception de la section 7 restent à respecter dans toute la suite.
 
 ### 8.7 Prochaine action précise
 
-*(Accueil épuré terminé le 2026-11-20, smartphone compris. Icônes de contact faites le 2026-11-21 (décision 77) : test sur smartphone à faire par le propriétaire. Phase 8b pas commencée : les cinq questions de détail ont été posées au propriétaire le 2026-11-20 et rappelées le 2026-11-21 ; sa réponse est attendue.)*
+*(Accueil épuré terminé le 2026-11-20, smartphone compris. Icônes de contact faites le 2026-11-21 (décision 77) : test sur smartphone à faire par le propriétaire. Phase 8b commencée le 2026-11-21 : réponses notées (décisions 78 à 83), règles version 9 et essais écrits, publication des règles par le propriétaire attendue.)*
+
+**Prochaine action de la phase 8b :** quand le propriétaire confirme avoir publié la version 9 (ligne « Version des regles : 9 (phase 8b) » dans la console), lancer `tests-regles.html` avec `test-phase3@example.com` (122 essais attendus au premier passage) ; puis coder l'application (voir le compte rendu partiel de la phase 8b, section 2).
 
 **Les cinq questions de la phase 8b et les recommandations de l'assistant** (déjà présentées au propriétaire, à lui rappeler si sa réponse n'est pas notée ici) :
 
@@ -1176,7 +1192,7 @@ Les règles de conception de la section 7 restent à respecter dans toute la sui
 
 Par défaut, sauf avis contraire : « quantité à commander » affichée seulement quand le produit est en « Stock bas » ou « Rupture » ; code, type, prix de vente et marge dans la fiche du produit, pour garder les lignes de l'accueil compactes ; prix de vente en centimes, comme le prix d'achat (décision 4).
 
-1. **Propriétaire :** **Push origin** pour les commits en attente (version 0.15.3), puis essai sur le téléphone : vérifier « Version 0.15.3 » dans Paramètres, ouvrir Fournisseurs et Clients, vérifier que les boutons sont bien centrés avec trois boutons et avec deux (par exemple un contact sans WhatsApp), et toucher chaque icône (Téléphone, WhatsApp, E-mail s'ouvrent). Répondre aux cinq questions de la phase 8b (« Oui, d'accord » ou ses changements). Toujours en attente : les deux tests de la phase 3 et le message d'aide quand la fenêtre Google est bloquée. Conseillé : activer la validation en deux étapes du compte Google qui gère la console Firebase.
+1. **Propriétaire :** **Push origin** pour les commits en attente (version 0.15.3), puis essai sur le téléphone : vérifier « Version 0.15.3 » dans Paramètres, ouvrir Fournisseurs et Clients, vérifier que les boutons sont bien centrés avec trois boutons et avec deux (par exemple un contact sans WhatsApp), et toucher chaque icône (Téléphone, WhatsApp, E-mail s'ouvrent). *(Réponse aux questions de la phase 8b donnée le 2026-11-21 : décisions 78 à 83.)* Publier les règles version 9 dans la console Firebase (`README.md`, « Publier les règles de sécurité »). Toujours en attente : les deux tests de la phase 3 et le message d'aide quand la fenêtre Google est bloquée. Conseillé : activer la validation en deux étapes du compte Google qui gère la console Firebase.
 2. **Assistant, au début de la prochaine session** (ouverte dans `C:\GitHub\Inventory Management\inventorymanagement` ou dans son dossier parent) : lire `CLAUDE.md`, `PLAN.md` et `DECISIONS.md`. Si la réponse du propriétaire n'est pas notée ici, lui rappeler en quelques lignes le tableau ci-dessus et attendre. Après son accord :
    1. noter les **décisions 78 et suivantes** à la fin de `DECISIONS.md` (la 77 est prise par les icônes de contact) ; mettre à jour `CLAUDE.md` (sections 4, 5, 8, 10 et 12) avec son accord ;
    2. écrire les **règles version 9** : quatre champs facultatifs dans `produitValide` (dans `hasOnly`, **pas** dans `hasAll`), pour qu'un produit qui ne les a pas, ou une opération faite hors ligne par une ancienne version, reste accepté ; ne rien changer au lien produit-mouvement ;

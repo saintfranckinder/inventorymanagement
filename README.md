@@ -202,7 +202,7 @@ Tant que les règles publiées sont en retard sur le fichier, l'application affi
 
 À refaire après chaque publication des règles.
 
-Ces essais créent dans le compte de test deux produits « Produit d'essai (règles) ». Ils sont archivés à la fin de chaque passage et n'apparaissent donc pas dans la liste. Chaque passage ajoute aussi cinq mouvements à l'historique du compte de test, dont une opération et son annulation (impossibles à supprimer, par conception) ; leur somme est nulle. Un fournisseur d'essai et un client d'essai sont créés puis supprimés : il ne reste rien. Un passage dure environ une minute.
+Ces essais créent dans le compte de test deux produits « Produit d'essai (règles) » et, depuis la phase 8b, un produit « Produit d'essai (code SKU) ». Ils sont archivés à la fin de chaque passage et n'apparaissent donc pas dans la liste. Chaque passage ajoute aussi cinq mouvements à l'historique du compte de test, dont une opération et son annulation (impossibles à supprimer, par conception) ; leur somme est nulle. Un fournisseur d'essai et un client d'essai sont créés puis supprimés : il ne reste rien. Un passage dure environ une minute.
 
 **Essais de la suppression du compte :** connecté avec un compte jetable `test-suppression-…@example.com`, la même page lance à la place 22 essais des règles de suppression. Ils créent leurs propres données, demandent la suppression, vérifient les refus et les autorisations, puis effacent tout sauf le compte de connexion, qui peut resservir. Ces essais ne se lancent jamais avec un autre compte, et la série habituelle refuse de tourner sur un compte en cours de suppression.
 

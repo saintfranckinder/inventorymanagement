@@ -9,6 +9,10 @@
 // Phase 6b : carnet de fournisseurs (règles version 6). Le fournisseur
 // d'essai est créé puis supprimé à chaque passage : il ne reste rien.
 // Phase 6c : carnet de clients (règles version 8), même principe.
+// Phase 8b : code SKU, type de stock, quantité à commander, prix de vente
+// (règles version 9, décisions 78 à 83). Un troisième produit d'essai, créé
+// une seule fois puis archivé, porte ces champs ; le premier produit d'essai
+// ne les a pas, pour vérifier qu'un produit ancien reste accepté.
 // Phase 7 : suppression du compte (règles version 7, décision 63). Ces essais
 // ne se lancent QU'AVEC un compte jetable test-suppression…@example.com : ils
 // créent leurs propres données, demandent la suppression, vérifient les
@@ -30,6 +34,7 @@ import {
   Timestamp,
   collection,
   deleteDoc,
+  deleteField,
   doc,
   getDocFromServer,
   getDocsFromServer,
@@ -49,6 +54,7 @@ const DELAI_MAX_MS = 15000;
 const AUTRE_COMPTE = 'compte-de-quelqu-un-d-autre';
 const ID_PRODUIT_ESSAI = 'essai-regles';
 const ID_PRODUIT_AVEC_STOCK = 'essai-regles-stock';
+const ID_PRODUIT_SKU = 'essai-regles-sku';
 const ID_FOURNISSEUR_ESSAI = 'essai-regles-fournisseur';
 const ID_CLIENT_ESSAI = 'essai-regles-client';
 const FIN_ADRESSE_COMPTE_DE_TEST = '@example.com';
@@ -405,6 +411,126 @@ function essaisProduits(db, uid, produitEssaiExiste) {
       nom: 'Archiver un produit',
       attendu: 'autorise',
       operation: () => updateDoc(produitEssai, { archive: true, updatedAt: serverTimestamp() })
+    }
+  );
+
+  return essais;
+}
+
+// Phase 8b (règles version 9, décisions 78 à 83) : les quatre champs
+// facultatifs d'un produit. Le produit d'essai qui les porte n'est créé
+// qu'une fois (un produit ne peut pas être supprimé), puis archivé à chaque
+// passage pour ne pas apparaître dans la liste.
+function essaisPhase8b(db, uid, produitSkuExiste) {
+  const mesProduits = collection(db, 'users', uid, 'products');
+  const produitSku = doc(mesProduits, ID_PRODUIT_SKU);
+  const nouveau = () => doc(mesProduits);
+  const modifier = (champs) => updateDoc(produitSku, { ...champs, updatedAt: serverTimestamp() });
+
+  const essais = [];
+
+  if (!produitSkuExiste) {
+    essais.push({
+      nom: 'Créer un produit avec code SKU, type, quantité à commander et prix de vente',
+      attendu: 'autorise',
+      operation: () => setDoc(produitSku, produitValide({
+        nom: 'Produit d’essai (code SKU)',
+        codeSku: 'ESSAI-REGLES-1',
+        typeStock: 'produit-fini',
+        quantiteACommanderMilliemes: 10000,
+        prixVenteCentimes: 15000
+      }))
+    });
+  }
+
+  essais.push(
+    {
+      nom: 'Modifier le code SKU, le type, la quantité à commander et le prix de vente',
+      attendu: 'autorise',
+      operation: () => modifier({
+        codeSku: 'essai-regles-2',
+        typeStock: 'consommable',
+        quantiteACommanderMilliemes: 2500,
+        prixVenteCentimes: 9999
+      })
+    },
+    {
+      nom: 'Effacer la quantité à commander et le prix de vente (champs vidés)',
+      attendu: 'autorise',
+      operation: () => modifier({
+        quantiteACommanderMilliemes: deleteField(),
+        prixVenteCentimes: deleteField()
+      })
+    },
+    {
+      nom: 'Code SKU vide',
+      attendu: 'refuse',
+      operation: () => modifier({ codeSku: '' })
+    },
+    {
+      nom: 'Code SKU de 51 caractères',
+      attendu: 'refuse',
+      operation: () => modifier({ codeSku: 'A'.repeat(51) })
+    },
+    {
+      nom: 'Code SKU avec un espace',
+      attendu: 'refuse',
+      operation: () => modifier({ codeSku: 'RIZ 25' })
+    },
+    {
+      nom: 'Code SKU avec une lettre accentuée',
+      attendu: 'refuse',
+      operation: () => modifier({ codeSku: 'CAFÉ-1' })
+    },
+    {
+      nom: 'Code SKU enregistré comme un nombre',
+      attendu: 'refuse',
+      operation: () => modifier({ codeSku: 12345 })
+    },
+    {
+      nom: 'Type de stock inconnu',
+      attendu: 'refuse',
+      operation: () => modifier({ typeStock: 'autre' })
+    },
+    {
+      nom: 'Quantité à commander négative',
+      attendu: 'refuse',
+      operation: () => modifier({ quantiteACommanderMilliemes: -1000 })
+    },
+    {
+      nom: 'Quantité à commander à virgule (non entière)',
+      attendu: 'refuse',
+      operation: () => modifier({ quantiteACommanderMilliemes: 1.5 })
+    },
+    {
+      nom: 'Prix de vente négatif',
+      attendu: 'refuse',
+      operation: () => modifier({ prixVenteCentimes: -1 })
+    },
+    {
+      nom: 'Prix de vente à virgule (non entier)',
+      attendu: 'refuse',
+      operation: () => modifier({ prixVenteCentimes: 12.5 })
+    },
+    {
+      nom: 'Prix de vente enregistré comme du texte',
+      attendu: 'refuse',
+      operation: () => modifier({ prixVenteCentimes: '150' })
+    },
+    {
+      nom: 'Créer un produit avec un code SKU vide',
+      attendu: 'refuse',
+      operation: () => setDoc(nouveau(), produitValide({ codeSku: '' }))
+    },
+    {
+      nom: 'Créer un produit avec un type de stock inconnu',
+      attendu: 'refuse',
+      operation: () => setDoc(nouveau(), produitValide({ codeSku: 'ESSAI-X', typeStock: 'autre' }))
+    },
+    {
+      nom: 'Archiver le produit d’essai (code SKU)',
+      attendu: 'autorise',
+      operation: () => modifier({ archive: true })
     }
   );
 
@@ -1225,6 +1351,7 @@ async function lancerLesTests(db, utilisateur) {
   let entrepot;
   let produitEssaiExiste;
   let produitAvecStockExiste;
+  let produitSkuExiste;
   try {
     const instantane = await getDocFromServer(doc(db, 'users', utilisateur.uid));
     if (!instantane.exists()) {
@@ -1255,6 +1382,10 @@ async function lancerLesTests(db, utilisateur) {
       doc(db, 'users', utilisateur.uid, 'products', ID_PRODUIT_AVEC_STOCK)
     );
     produitAvecStockExiste = second.exists();
+    const troisieme = await getDocFromServer(
+      doc(db, 'users', utilisateur.uid, 'products', ID_PRODUIT_SKU)
+    );
+    produitSkuExiste = troisieme.exists();
   } catch (erreur) {
     afficherMessage(
       'Impossible de lire les produits de ce compte (' + (erreur.code || 'erreur') + '). ' +
@@ -1267,6 +1398,7 @@ async function lancerLesTests(db, utilisateur) {
   const essais = [
     ...essaisEntrepot(db, utilisateur.uid, entrepot),
     ...essaisProduits(db, utilisateur.uid, produitEssaiExiste),
+    ...essaisPhase8b(db, utilisateur.uid, produitSkuExiste),
     ...essaisMouvements(db, utilisateur.uid, produitAvecStockExiste),
     ...essaisFournisseurs(db, utilisateur.uid),
     ...essaisClients(db, utilisateur.uid)
@@ -1281,7 +1413,7 @@ async function lancerLesTests(db, utilisateur) {
 
   const bilan = element('bilan');
   bilan.textContent = `${reussis} essais réussis sur ${essais.length}.` +
-    (produitEssaiExiste || produitAvecStockExiste
+    (produitEssaiExiste || produitAvecStockExiste || produitSkuExiste
       ? ' (La création des produits d’essai n’est pas rejouée : ils existent déjà.)'
       : '');
   bilan.className = reussis === essais.length ? 'message-info' : 'message-erreur';

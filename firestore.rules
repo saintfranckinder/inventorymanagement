@@ -1,10 +1,13 @@
 rules_version = '2';
 
 // Regles de securite de la base Firestore.
-// Version des regles : 8 (phase 6c).
+// Version des regles : 9 (phase 8b).
 //
 // Phase 4b : chaque utilisateur accede a son document users/{uid}, a ses
 // produits et a ses mouvements de stock.
+// Phase 8b : quatre champs facultatifs sur un produit (code SKU, type de
+// stock, quantite a commander, prix de vente ; decisions 78 a 83). Un produit
+// qui ne les a pas reste accepte. Le reste est identique a la version 8.
 // Phase 6b : ajout du carnet de fournisseurs (users/{uid}/suppliers),
 // independant du stock.
 // Phase 6c : ajout du carnet de clients (users/{uid}/clients), independant du
@@ -66,14 +69,41 @@ service cloud.firestore {
         && d.suppressionDemandee is bool;
     }
 
-    // Controle des champs d'un produit : uniquement les neuf champs prevus.
+    // Cette liste doit rester identique a celle de js/produits.js (decision 79).
+    function typeStockValide(t) {
+      return t in ['matiere-premiere', 'en-cours', 'produit-fini', 'consommable', 'non-classe'];
+    }
+
+    // Champs facultatifs de la phase 8b (decisions 78 a 83) : verifies
+    // seulement s'ils sont presents. Les regles n'exigent pas le code SKU
+    // (obligatoire dans le formulaire seulement) : un produit cree ou modifie
+    // hors ligne par une ancienne version de l'application doit rester accepte.
+    function champsPhase8bValides(d) {
+      return (!('codeSku' in d)
+          || (d.codeSku is string && d.codeSku.matches('^[A-Za-z0-9-]{1,50}$')))
+        && (!('typeStock' in d)
+          || (d.typeStock is string && typeStockValide(d.typeStock)))
+        && (!('quantiteACommanderMilliemes' in d)
+          || (d.quantiteACommanderMilliemes is int
+            && d.quantiteACommanderMilliemes >= 0
+            && d.quantiteACommanderMilliemes <= 1000000000000))
+        && (!('prixVenteCentimes' in d)
+          || (d.prixVenteCentimes is int
+            && d.prixVenteCentimes >= 0
+            && d.prixVenteCentimes <= 1000000000000));
+    }
+
+    // Controle des champs d'un produit : les neuf champs obligatoires, et les
+    // quatre champs facultatifs de la phase 8b.
     // Quantites en milliemes et prix en centimes, toujours des entiers.
     // Les bornes sont plus larges que celles du formulaire, pour ne jamais
     // refuser une operation legitime faite hors ligne.
     function produitValide(d) {
       return d.keys().hasOnly(['nom', 'unite', 'quantiteMilliemes', 'seuilAlerteMilliemes',
                                'prixAchatCentimes', 'archive', 'dernierMouvementId',
-                               'createdAt', 'updatedAt'])
+                               'createdAt', 'updatedAt',
+                               'codeSku', 'typeStock', 'quantiteACommanderMilliemes',
+                               'prixVenteCentimes'])
         && d.keys().hasAll(['nom', 'unite', 'quantiteMilliemes', 'seuilAlerteMilliemes',
                             'prixAchatCentimes', 'archive', 'dernierMouvementId',
                             'createdAt', 'updatedAt'])
@@ -95,7 +125,8 @@ service cloud.firestore {
         && d.archive is bool
         && (d.dernierMouvementId == null || identifiantValide(d.dernierMouvementId))
         && d.createdAt is timestamp
-        && d.updatedAt is timestamp;
+        && d.updatedAt is timestamp
+        && champsPhase8bValides(d);
     }
 
     // Controle des champs d'un mouvement : uniquement les neuf champs prevus.
@@ -280,7 +311,8 @@ service cloud.firestore {
           );
 
         // Modification :
-        //   - soit la fiche seule (nom, unite, seuil, prix, archivage) : la
+        //   - soit la fiche seule (nom, unite, seuil, prix, archivage, et les
+        //     champs de la phase 8b) : la
         //     quantite et le dernier mouvement ne changent pas ;
         //   - soit une operation de stock : la quantite change, et le produit
         //     designe un mouvement nouveau de la meme valeur.
