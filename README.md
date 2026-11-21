@@ -10,7 +10,7 @@ Le projet est en cours de construction. L'avancement est suivi dans `PLAN.md`.
 - Demander un nouveau mot de passe (« Mot de passe oublié »).
 - Créer son entrepôt au premier lancement : nom et devise.
 - Afficher le texte de confidentialité depuis l'écran de connexion.
-- Ajouter, modifier et archiver un produit : nom, unité, seuil d'alerte, prix d'achat, stock de départ.
+- Ajouter, modifier et archiver un produit : nom, unité, seuil d'alerte, prix d'achat, stock de départ ; et, facultatifs, code SKU, type de stock, quantité à commander, prix de vente (phase 8b).
 - Enregistrer des mouvements de stock : entrée, sortie, ajustement, avec un motif facultatif.
 - Consulter l'historique : les 50 derniers mouvements, puis « Voir plus ».
 - Annuler une opération faite par erreur, depuis l'historique.
@@ -38,7 +38,7 @@ Disposition « accueil épuré » (décision 74), d'après la maquette du propri
 - **En haut :** le nom MinStock, l'indicateur de synchronisation et l'icône ⚙ (Paramètres : nom de l'entrepôt, devise, compte, « Se déconnecter », version).
 - **Carte bleu nuit :** valeur du stock et compteurs ; l'icône ⓘ affiche l'explication du calcul.
 - **Une ligne par produit :** nom (deux lignes au plus), « Achat … · seuil … », alertes écrites, puis `−1`, la quantité avec son unité, `+1`. Tant que le serveur n'a pas confirmé, « En attente de synchronisation » remplace « Achat … » sans changer la hauteur de la ligne.
-- **Toucher le nom d'un produit** ouvre sa fiche dans un panneau qui monte du bas : `−1` / `+1`, seuil, prix d'achat, valeur, « Mouvement de stock », « Modifier ». Il se ferme avec ✕, en touchant le fond gris, avec Échap ou avec le bouton retour du téléphone.
+- **Toucher le nom d'un produit** ouvre sa fiche dans un panneau qui monte du bas : `−1` / `+1`, code SKU, type de stock, seuil, quantité à commander, prix d'achat, prix de vente et marge, valeur, « Mouvement de stock », « Modifier » (les lignes vides ne sont pas affichées). Il se ferme avec ✕, en touchant le fond gris, avec Échap ou avec le bouton retour du téléphone.
 - **Bouton rond `+`** en bas à droite : ajouter un produit (à ne pas confondre avec `+1` sur une ligne, qui ajoute une unité).
 - **Barre en bas :** Stock, Mouvements, Fournisseurs, Clients. Elle n'apparaît que sur ces quatre écrans, pas dans les formulaires ni dans Paramètres.
 - **Haut figé (décisions 75 et 76) :** l'en-tête reste toujours en haut. Sur l'accueil, le nom de l'entrepôt, la carte de valeur et la recherche restent aussi en haut : seule la liste défile (environ 5 produits visibles à la fois sur un téléphone moyen). **Pendant une recherche** (dès qu'une lettre est tapée), la carte de valeur se replie pour laisser voir les produits trouvés au-dessus du clavier ; elle revient quand le champ est vidé. Sur Fournisseurs et Clients, le titre et la recherche restent en haut, et « Ajouter » est le bouton rond « + » en bas à droite ; sur Mouvements et Paramètres, le titre reste en haut.
@@ -46,11 +46,23 @@ Disposition « accueil épuré » (décision 74), d'après la maquette du propri
 
 - **Valeur du stock (indicative)** : pour chaque produit, quantité × prix d'achat **actuel** ; en haut de l'écran, le total de l'entrepôt, égal à la somme des lignes, avec trois compteurs (nombre de produits, « Stock bas », « Ruptures ») calculés sur l'appareil.
 - **Compteurs cliquables** : toucher « Stock bas » ou « Ruptures » n'affiche que les produits concernés (l'écran descend jusqu'à la liste) ; « Produits » ou « Tout afficher » montrent de nouveau tout. Un produit qui sort de l'alerte pendant que vous travaillez reste affiché jusqu'au prochain choix de filtre, pour que la liste ne bouge pas sous le doigt. Choisir un filtre vide la recherche ; le filtre s'enlève en ajoutant un produit et à la déconnexion. Modifier un prix d'achat change la valeur de tout le stock de ce produit. Un stock négatif compte en négatif. Les produits archivés ne comptent pas.
-- **Recherche** : par nom de produit, sans tenir compte des majuscules ni des accents (`cimént` trouve « Ciment »). Elle ne porte que sur les produits de la liste et ne consomme aucune lecture du quota gratuit. Le total reste celui de tout l'entrepôt.
+- **Recherche** : par nom de produit, par code SKU ou par type de stock (taper « fini » affiche les produits finis), sans tenir compte des majuscules ni des accents (`cimént` trouve « Ciment »). Elle ne porte que sur les produits de la liste et ne consomme aucune lecture du quota gratuit. Le total reste celui de tout l'entrepôt.
 - **Alertes**, toujours écrites et pas seulement colorées :
   - « Stock bas » (orange) quand la quantité est inférieure ou égale au seuil d'alerte ;
   - « Rupture » (rouge) quand la quantité est à 0 ou en dessous.
 - **Boutons `+1` et `−1`** : chaque appui enregistre aussitôt une entrée ou une sortie d'une unité du produit (un sac, un kg…), sans motif, exactement comme un mouvement saisi dans le formulaire. Chaque appui laisse une ligne dans l'historique et coûte deux écritures du quota gratuit : pour une grande quantité, utiliser « Mouvement de stock ». Si un `−1` rendait le stock négatif, le formulaire s'ouvre déjà rempli, avec l'avertissement : rien n'est envoyé sans confirmation.
+
+### Code SKU, type de stock, quantité à commander, prix de vente (phase 8b)
+
+Dans le formulaire d'un produit (décisions 78 à 82) :
+
+- **Code SKU (facultatif)** : la référence du produit, tapée au clavier (pas de lecteur de codes-barres). Lettres sans accent, chiffres et tirets, sans espace, 50 caractères au plus, par exemple `RIZ-25KG`. Deux produits de la liste ne peuvent pas avoir le même code (majuscules ignorées). Une variante (taille, couleur…) est un produit à part, avec son propre code.
+- **Type de stock** : Matière première / composant, En-cours de fabrication, Produit fini, Consommable, ou Non classé (par défaut). C'est une simple étiquette. Les produits créés avant la phase 8b sont « Non classé ».
+- **Quantité à commander (facultatif)** : un rappel que vous choisissez ; il s'affiche sur la ligne du produit (« À commander : 20 sac ») seulement en « Stock bas » ou « Rupture ». L'application ne la calcule pas. 0 ou un champ vide = pas de rappel.
+- **Prix de vente unitaire (facultatif)** : une information sur le produit. S'il est plus bas que le prix d'achat, l'application demande « Enregistrer quand même ? ». Il n'entre jamais dans la valeur du stock, toujours calculée au prix d'achat, et l'application ne gère pas les ventes.
+- **Fiche du produit** : elle affiche le code (s'il existe), le type, la quantité à commander, le prix de vente et la **marge par unité** (prix de vente moins prix d'achat ; négative en cas de vente à perte).
+
+Limite : deux téléphones hors ligne peuvent donner le même code à deux produits (comme pour les noms) ; un produit archivé n'est pas vérifié.
 
 ## Mouvements de stock
 

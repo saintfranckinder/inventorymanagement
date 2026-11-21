@@ -1,7 +1,9 @@
 // Les produits d'un entrepôt : documents users/{uid}/products/{productId}.
 // Champs (CLAUDE.md, section 5) : nom, unite, quantiteMilliemes,
 // seuilAlerteMilliemes, prixAchatCentimes, archive, dernierMouvementId,
-// createdAt, updatedAt.
+// createdAt, updatedAt ; depuis la phase 8b (décisions 78 à 83), codeSku,
+// typeStock, quantiteACommanderMilliemes et prixVenteCentimes, facultatifs :
+// un produit plus ancien ne les a pas, et un champ non rempli est absent.
 //
 // Règle essentielle : après sa création, la quantité d'un produit ne change
 // JAMAIS depuis ce fichier. Toute variation passe par un mouvement de stock
@@ -9,6 +11,7 @@
 
 import {
   collection,
+  deleteField,
   doc,
   getDocsFromCache,
   getDocsFromServer,
@@ -26,6 +29,29 @@ import { contenuMouvement, referenceMouvement } from './mouvements.js';
 export const LONGUEUR_MAX_NOM_PRODUIT = 100;
 export const LONGUEUR_MAX_UNITE = 30;
 export const MOTIF_STOCK_INITIAL = 'Stock initial';
+
+// Code SKU (décision 78) : facultatif ; quand il est rempli, lettres sans
+// accent, chiffres et tirets, 50 caractères au plus (comme firestore.rules).
+export const LONGUEUR_MAX_CODE_SKU = 50;
+export const FORME_CODE_SKU = /^[A-Za-z0-9-]+$/;
+
+// Types de stock (décision 79). Cette liste doit rester identique à celle de
+// firestore.rules (fonction typeStockValide).
+export const TYPES_STOCK = [
+  { cle: 'matiere-premiere', libelle: 'Matière première / composant' },
+  { cle: 'en-cours', libelle: 'En-cours de fabrication' },
+  { cle: 'produit-fini', libelle: 'Produit fini' },
+  { cle: 'consommable', libelle: 'Consommable' },
+  { cle: 'non-classe', libelle: 'Non classé' }
+];
+export const TYPE_STOCK_PAR_DEFAUT = 'non-classe';
+
+// Nom affiché d'un type ; un produit sans type (créé avant la phase 8b) est
+// « Non classé ».
+export function libelleTypeStock(cle) {
+  const type = TYPES_STOCK.find((element_) => element_.cle === cle);
+  return type ? type.libelle : 'Non classé';
+}
 
 function collectionProduits(db, uid) {
   return collection(db, 'users', uid, 'products');
@@ -98,8 +124,19 @@ export function ajouterProduit(db, uid, creation) {
     archive: false,
     dernierMouvementId: avecStock ? creation.idMouvement : null,
     createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp()
+    updatedAt: serverTimestamp(),
+    typeStock: creation.fiche.typeStock
   };
+  // Champs facultatifs de la phase 8b : absents quand ils ne sont pas remplis.
+  if (creation.fiche.codeSku !== null) {
+    contenu.codeSku = creation.fiche.codeSku;
+  }
+  if (creation.fiche.quantiteACommanderMilliemes !== null) {
+    contenu.quantiteACommanderMilliemes = creation.fiche.quantiteACommanderMilliemes;
+  }
+  if (creation.fiche.prixVenteCentimes !== null) {
+    contenu.prixVenteCentimes = creation.fiche.prixVenteCentimes;
+  }
 
   if (!avecStock) {
     return setDoc(reference, contenu);
@@ -122,14 +159,20 @@ export function ajouterProduit(db, uid, creation) {
   return lot.commit();
 }
 
-// Modifie uniquement la fiche : nom, unité, seuil, prix. Seuls ces champs
-// sont envoyés, pour ne jamais écraser une quantité modifiée ailleurs.
+// Modifie uniquement la fiche : nom, unité, seuil, prix, et les champs de la
+// phase 8b. Seuls ces champs sont envoyés, pour ne jamais écraser une
+// quantité modifiée ailleurs. Un champ facultatif vidé est retiré du document.
 export function modifierProduit(db, uid, idProduit, fiche) {
+  const facultatif = (valeur) => (valeur === null ? deleteField() : valeur);
   return updateDoc(doc(collectionProduits(db, uid), idProduit), {
     nom: fiche.nom,
     unite: fiche.unite,
     seuilAlerteMilliemes: fiche.seuilAlerteMilliemes,
     prixAchatCentimes: fiche.prixAchatCentimes,
+    typeStock: fiche.typeStock,
+    codeSku: facultatif(fiche.codeSku),
+    quantiteACommanderMilliemes: facultatif(fiche.quantiteACommanderMilliemes),
+    prixVenteCentimes: facultatif(fiche.prixVenteCentimes),
     updatedAt: serverTimestamp()
   });
 }

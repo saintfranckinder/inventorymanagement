@@ -5,6 +5,9 @@
 // (décisions 44 à 46).
 // Disposition « accueil épuré » (décision 74) : une ligne par produit ;
 // toucher la ligne ouvre la fiche du produit, un panneau qui monte du bas.
+// Phase 8b (décisions 78 à 82) : code SKU, type de stock, quantité à
+// commander, prix de vente et marge ; la recherche porte aussi sur le code et
+// le type.
 
 import {
   envoyerMouvement,
@@ -30,6 +33,7 @@ import {
   DECIMALES_QUANTITE,
   analyserPrix,
   analyserQuantite,
+  calculerMargeCentimes,
   calculerValeurCentimes,
   calculerValeurTotaleCentimes,
   formaterMontant,
@@ -39,10 +43,15 @@ import {
   quantitePourSaisie
 } from './nombres.js';
 import {
+  FORME_CODE_SKU,
+  LONGUEUR_MAX_CODE_SKU,
   LONGUEUR_MAX_NOM_PRODUIT,
   LONGUEUR_MAX_UNITE,
+  TYPES_STOCK,
+  TYPE_STOCK_PAR_DEFAUT,
   ajouterProduit,
   archiverProduit,
+  libelleTypeStock,
   modifierProduit,
   nouvelIdProduit,
   surveillerProduits
@@ -161,6 +170,20 @@ function etiquettesAlerte(produit) {
   return etiquettes;
 }
 
+// Champs facultatifs de la phase 8b : absents sur un produit plus ancien ou
+// quand ils n'ont pas été remplis.
+function aUneQuantiteACommander(produit) {
+  return Number.isInteger(produit.quantiteACommanderMilliemes) && produit.quantiteACommanderMilliemes > 0;
+}
+
+function aUnPrixDeVente(produit) {
+  return Number.isInteger(produit.prixVenteCentimes);
+}
+
+function aUnCodeSku(produit) {
+  return typeof produit.codeSku === 'string' && produit.codeSku !== '';
+}
+
 // Une ligne par produit (décision 74) : nom, « Achat … · seuil … »,
 // alertes, puis « −1 », quantité, « +1 ». Toucher le nom ouvre la fiche.
 function carteProduit(produit) {
@@ -198,6 +221,16 @@ function carteProduit(produit) {
     const bloc = document.createElement('span');
     bloc.className = 'produit-alertes';
     bloc.append(...alertes);
+    // Quantité à commander : rappelée seulement en « Stock bas » ou
+    // « Rupture » (décision 80).
+    if (aUneQuantiteACommander(produit)) {
+      const commander = document.createElement('span');
+      commander.className = 'produit-a-commander';
+      // Espaces insécables : le nombre et l'unité restent sur la même ligne.
+      commander.textContent =
+        `À commander : ${formaterQuantite(produit.quantiteACommanderMilliemes)} ${produit.unite}`;
+      bloc.append(commander);
+    }
     infos.append(bloc);
   }
   infos.append(voir);
@@ -256,6 +289,26 @@ function remplirFiche() {
   element('fiche-seuil').textContent =
     `${formaterQuantite(produit.seuilAlerteMilliemes)} ${produit.unite}`;
   element('fiche-prix').textContent = formaterMontant(produit.prixAchatCentimes, contexte.devise);
+
+  // Phase 8b : une ligne vide n'est pas affichée ; le type l'est toujours
+  // (« Non classé » pour un produit plus ancien).
+  element('fiche-code-ligne').hidden = !aUnCodeSku(produit);
+  element('fiche-code').textContent = aUnCodeSku(produit) ? produit.codeSku : '';
+  element('fiche-type').textContent = libelleTypeStock(produit.typeStock);
+  element('fiche-commander-ligne').hidden = !aUneQuantiteACommander(produit);
+  element('fiche-commander').textContent = aUneQuantiteACommander(produit)
+    ? `${formaterQuantite(produit.quantiteACommanderMilliemes)} ${produit.unite}`
+    : '';
+  const avecPrixDeVente = aUnPrixDeVente(produit);
+  element('fiche-prix-vente-ligne').hidden = !avecPrixDeVente;
+  element('fiche-marge-ligne').hidden = !avecPrixDeVente;
+  element('fiche-prix-vente').textContent = avecPrixDeVente
+    ? formaterMontant(produit.prixVenteCentimes, contexte.devise)
+    : '';
+  element('fiche-marge').textContent = avecPrixDeVente
+    ? formaterMontant(calculerMargeCentimes(produit.prixVenteCentimes, produit.prixAchatCentimes), contexte.devise)
+    : '';
+
   element('fiche-valeur').textContent = formaterMontant(
     calculerValeurCentimes(produit.quantiteMilliemes, produit.prixAchatCentimes),
     contexte.devise
@@ -420,8 +473,13 @@ function afficherListe() {
   // (décision 76). Elle ne dépend ni du clavier ni du focus : la liste ne
   // bouge pas au moment d'un appui sur « +1 » / « −1 ».
   element('vue-accueil').classList.toggle('recherche-active', recherche !== '');
+  // Recherche dans le nom, le code SKU et le type de stock (décisions 78 et
+  // 79) : taper « fini » affiche les produits finis.
   const visibles = recherche
-    ? filtres.filter((produit) => normaliserPourRecherche(produit.nom).includes(recherche))
+    ? filtres.filter((produit) =>
+      normaliserPourRecherche(produit.nom).includes(recherche) ||
+      (aUnCodeSku(produit) && normaliserPourRecherche(produit.codeSku).includes(recherche)) ||
+      normaliserPourRecherche(libelleTypeStock(produit.typeStock)).includes(recherche))
     : filtres;
 
   const aucun = element('recherche-aucun');
@@ -525,6 +583,15 @@ function mettreAJourAides() {
     analyserPrix, (centimes) => formaterMontant(centimes, contexte.devise),
     'Prix d’achat', DECIMALES_PRIX
   );
+  mettreAJourAide(
+    'produit-commander', 'aide-produit-commander',
+    analyserQuantite, formaterQuantite, 'Quantité à commander', DECIMALES_QUANTITE
+  );
+  mettreAJourAide(
+    'produit-prix-vente', 'aide-produit-prix-vente',
+    analyserPrix, (centimes) => formaterMontant(centimes, contexte.devise),
+    'Prix de vente', DECIMALES_PRIX
+  );
 }
 
 function ouvrirFormulaire(idProduit) {
@@ -537,6 +604,17 @@ function ouvrirFormulaire(idProduit) {
   element('produit-unite').value = modification ? produit.unite : '';
   element('produit-seuil').value = modification ? quantitePourSaisie(produit.seuilAlerteMilliemes) : '0';
   element('produit-prix').value = modification ? prixPourSaisie(produit.prixAchatCentimes) : '0';
+  // Phase 8b : un produit plus ancien n'a pas ces champs.
+  element('produit-code').value = modification && aUnCodeSku(produit) ? produit.codeSku : '';
+  element('produit-type').value = modification && TYPES_STOCK.some((type) => type.cle === produit.typeStock)
+    ? produit.typeStock
+    : TYPE_STOCK_PAR_DEFAUT;
+  element('produit-commander').value = modification && aUneQuantiteACommander(produit)
+    ? quantitePourSaisie(produit.quantiteACommanderMilliemes)
+    : '';
+  element('produit-prix-vente').value = modification && aUnPrixDeVente(produit)
+    ? prixPourSaisie(produit.prixVenteCentimes)
+    : '';
 
   element('produit-stock').value = '0';
   element('produit-stock-bloc').hidden = modification;
@@ -585,6 +663,38 @@ function lireFormulaire() {
     return null;
   }
 
+  // Code SKU facultatif (décision 78) : unique parmi les produits de la
+  // liste, sans tenir compte des majuscules.
+  const code = element('produit-code').value.trim();
+  if (code.length > LONGUEUR_MAX_CODE_SKU) {
+    afficherMessage('erreur-produit', `Le code SKU ne doit pas dépasser ${LONGUEUR_MAX_CODE_SKU} caractères.`);
+    return null;
+  }
+  if (code && !FORME_CODE_SKU.test(code)) {
+    afficherMessage(
+      'erreur-produit',
+      'Le code SKU ne peut contenir que des lettres sans accent, des chiffres et des tirets, sans espace. Exemple : RIZ-25KG.'
+    );
+    return null;
+  }
+  const memeCode = code
+    ? produits.find((produit) => produit.id !== idProduitEnCours && aUnCodeSku(produit) &&
+      produit.codeSku.toLowerCase() === code.toLowerCase())
+    : null;
+  if (memeCode) {
+    afficherMessage(
+      'erreur-produit',
+      `Le code SKU « ${code} » est déjà utilisé par « ${memeCode.nom} ». Choisissez un code différent.`
+    );
+    return null;
+  }
+
+  const typeStock = element('produit-type').value;
+  if (!TYPES_STOCK.some((type) => type.cle === typeStock)) {
+    afficherMessage('erreur-produit', 'Choisissez un type de stock dans la liste.');
+    return null;
+  }
+
   const seuil = analyserQuantite(element('produit-seuil').value);
   if (!seuil.ok) {
     afficherMessage('erreur-produit', messageNombreRefuse(seuil, 'Seuil d’alerte', DECIMALES_QUANTITE));
@@ -594,6 +704,28 @@ function lireFormulaire() {
   if (!prix.ok) {
     afficherMessage('erreur-produit', messageNombreRefuse(prix, 'Prix d’achat', DECIMALES_PRIX));
     return null;
+  }
+
+  // Quantité à commander et prix de vente, facultatifs (décisions 80 et 81) :
+  // un champ vide donne null (champ absent du document). Une quantité à
+  // commander de 0 est comprise comme « rien à commander ».
+  let quantiteACommanderMilliemes = null;
+  if (element('produit-commander').value.trim() !== '') {
+    const commander = analyserQuantite(element('produit-commander').value);
+    if (!commander.ok) {
+      afficherMessage('erreur-produit', messageNombreRefuse(commander, 'Quantité à commander', DECIMALES_QUANTITE));
+      return null;
+    }
+    quantiteACommanderMilliemes = commander.valeur > 0 ? commander.valeur : null;
+  }
+  let prixVenteCentimes = null;
+  if (element('produit-prix-vente').value.trim() !== '') {
+    const prixVente = analyserPrix(element('produit-prix-vente').value);
+    if (!prixVente.ok) {
+      afficherMessage('erreur-produit', messageNombreRefuse(prixVente, 'Prix de vente', DECIMALES_PRIX));
+      return null;
+    }
+    prixVenteCentimes = prixVente.valeur;
   }
 
   // Le stock de départ n'existe qu'à la création d'un produit.
@@ -613,9 +745,31 @@ function lireFormulaire() {
       nom,
       unite,
       seuilAlerteMilliemes: seuil.valeur,
-      prixAchatCentimes: prix.valeur
+      prixAchatCentimes: prix.valeur,
+      codeSku: code || null,
+      typeStock,
+      quantiteACommanderMilliemes,
+      prixVenteCentimes
     }
   };
+}
+
+// Prix de vente plus bas que le prix d'achat : une question, jamais un refus
+// (décision 81). Posée à la création, ou quand l'un des deux prix change.
+function confirmerPrixDeVente(fiche) {
+  if (fiche.prixVenteCentimes === null || fiche.prixVenteCentimes >= fiche.prixAchatCentimes) {
+    return true;
+  }
+  const produit = produitEnCours();
+  if (produit && produit.prixAchatCentimes === fiche.prixAchatCentimes &&
+      produit.prixVenteCentimes === fiche.prixVenteCentimes) {
+    return true;
+  }
+  return window.confirm(
+    `Le prix de vente (${formaterMontant(fiche.prixVenteCentimes, contexte.devise)}) est plus bas ` +
+    `que le prix d’achat (${formaterMontant(fiche.prixAchatCentimes, contexte.devise)}).\n\n` +
+    'Enregistrer quand même ?'
+  );
 }
 
 // Ajoute un produit. Avec un stock de départ, le produit et son mouvement
@@ -654,6 +808,9 @@ function enregistrer() {
     return;
   }
   const fiche = saisie.fiche;
+  if (!confirmerPrixDeVente(fiche)) {
+    return;
+  }
   // Pas d'attente : la liste se met à jour dès l'enregistrement local, même
   // sans Internet. Un refus du serveur est signalé sur l'écran des produits.
   if (idProduitEnCours === null) {
@@ -690,6 +847,15 @@ function archiver() {
 export function brancherEcranProduits() {
   element('produit-nom').maxLength = LONGUEUR_MAX_NOM_PRODUIT;
   element('produit-unite').maxLength = LONGUEUR_MAX_UNITE;
+  element('produit-code').maxLength = LONGUEUR_MAX_CODE_SKU;
+  // Liste des types de stock : une seule source, js/produits.js (décision 79).
+  const listeTypes = element('produit-type');
+  for (const type of TYPES_STOCK) {
+    const option = document.createElement('option');
+    option.value = type.cle;
+    option.textContent = type.libelle;
+    listeTypes.append(option);
+  }
 
   element('recherche-produit').addEventListener('input', () => {
     if (contexte) {
@@ -769,6 +935,8 @@ export function brancherEcranProduits() {
   element('produit-stock').addEventListener('input', mettreAJourAides);
   element('produit-seuil').addEventListener('input', mettreAJourAides);
   element('produit-prix').addEventListener('input', mettreAJourAides);
+  element('produit-commander').addEventListener('input', mettreAJourAides);
+  element('produit-prix-vente').addEventListener('input', mettreAJourAides);
   // Dès qu'un champ est corrigé, l'ancien message d'erreur disparaît.
   element('formulaire-produit').addEventListener('input', () => {
     element('erreur-produit').hidden = true;

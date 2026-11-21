@@ -4,6 +4,7 @@
 import {
   analyserPrix,
   analyserQuantite,
+  calculerMargeCentimes,
   calculerValeurCentimes,
   calculerValeurTotaleCentimes,
   formaterMontant,
@@ -180,7 +181,16 @@ const ESSAIS = [
       { quantiteMilliemes: -2500, prixAchatCentimes: 95000 }
     ]), 'HTG'),
     '-2 375,00 HTG'
-  ]
+  ],
+
+  // ----- Marge par unité (phase 8b, décision 82) -----
+  ['Marge 150,00 − 125,50', () => calculerMargeCentimes(15000, 12550), 2450],
+  ['Marge nulle (même prix)', () => calculerMargeCentimes(12550, 12550), 0],
+  ['Marge négative (vente à perte) 100,00 − 125,50', () => calculerMargeCentimes(10000, 12550), -2550],
+  ['Marge 0,01 − 0,00', () => calculerMargeCentimes(1, 0), 1],
+  ['Marge maximale exacte', () => calculerMargeCentimes(1000000000000, 0), 1000000000000],
+  ['Marge minimale exacte', () => calculerMargeCentimes(0, 1000000000000), -1000000000000],
+  ['Affichage d’une marge négative', () => formaterMontant(calculerMargeCentimes(10000, 12550), 'HTG'), '-25,50 HTG']
 ];
 
 function lancer() {

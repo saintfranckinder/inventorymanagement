@@ -279,12 +279,12 @@
       </div>
 
       <div id="bloc-recherche" class="recherche" hidden>
-        <label for="recherche-produit" class="lecteur-ecran">Rechercher un produit</label>
+        <label for="recherche-produit" class="lecteur-ecran">Rechercher un produit par nom, code SKU ou type</label>
         <svg class="icone recherche-icone" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
           <circle cx="11" cy="11" r="7"/>
           <path d="M16.2 16.2L21 21"/>
         </svg>
-        <input id="recherche-produit" type="search" autocomplete="off" enterkeyhint="search" placeholder="Rechercher un produit">
+        <input id="recherche-produit" type="search" autocomplete="off" enterkeyhint="search" placeholder="Nom, code ou type">
       </div>
       </div>
 
@@ -653,9 +653,18 @@
         <label for="produit-nom">Nom du produit</label>
         <input id="produit-nom" type="text" autocomplete="off">
 
+        <!-- Phase 8b (décisions 78 à 81) : code SKU, type de stock, quantité
+             à commander et prix de vente. -->
+        <label for="produit-code">Code SKU (facultatif)</label>
+        <input id="produit-code" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="aide-produit-code">
+        <p id="aide-produit-code" class="aide-champ">Lettres sans accent, chiffres et tirets, sans espace. Exemple : RIZ-25KG.</p>
+
         <label for="produit-unite">Unité</label>
         <input id="produit-unite" type="text" autocomplete="off" autocapitalize="none" aria-describedby="aide-produit-unite">
         <p id="aide-produit-unite" class="aide-champ">Exemples : sac, kg, pièce, carton.</p>
+
+        <label for="produit-type">Type de stock</label>
+        <select id="produit-type"></select>
 
         <div id="produit-stock-bloc">
           <label for="produit-stock">Stock de départ</label>
@@ -671,9 +680,18 @@
         <input id="produit-seuil" type="text" inputmode="decimal" autocomplete="off" aria-describedby="aide-produit-seuil">
         <p id="aide-produit-seuil" class="aide-champ" aria-live="polite"></p>
 
+        <label for="produit-commander">Quantité à commander (facultatif)</label>
+        <input id="produit-commander" type="text" inputmode="decimal" autocomplete="off" aria-describedby="aide-produit-commander note-produit-commander">
+        <p id="aide-produit-commander" class="aide-champ" aria-live="polite"></p>
+        <p id="note-produit-commander" class="aide-champ">Rappel affiché quand le produit est en stock bas ou en rupture.</p>
+
         <label for="produit-prix">Prix d'achat unitaire</label>
         <input id="produit-prix" type="text" inputmode="decimal" autocomplete="off" aria-describedby="aide-produit-prix">
         <p id="aide-produit-prix" class="aide-champ" aria-live="polite"></p>
+
+        <label for="produit-prix-vente">Prix de vente unitaire (facultatif)</label>
+        <input id="produit-prix-vente" type="text" inputmode="decimal" autocomplete="off" aria-describedby="aide-produit-prix-vente">
+        <p id="aide-produit-prix-vente" class="aide-champ" aria-live="polite"></p>
 
         <dl id="produit-quantite-bloc" class="fiche" hidden>
           <div>
@@ -851,13 +869,33 @@
     </div>
     <p id="fiche-negatif" class="produit-negatif" hidden>Stock négatif : à vérifier</p>
     <dl class="fiche-details">
+      <div id="fiche-code-ligne" hidden>
+        <dt>Code SKU</dt>
+        <dd id="fiche-code"></dd>
+      </div>
+      <div>
+        <dt>Type de stock</dt>
+        <dd id="fiche-type"></dd>
+      </div>
       <div>
         <dt>Seuil d'alerte</dt>
         <dd id="fiche-seuil"></dd>
       </div>
+      <div id="fiche-commander-ligne" hidden>
+        <dt>À commander</dt>
+        <dd id="fiche-commander"></dd>
+      </div>
       <div>
         <dt>Prix d'achat</dt>
         <dd id="fiche-prix"></dd>
+      </div>
+      <div id="fiche-prix-vente-ligne" hidden>
+        <dt>Prix de vente</dt>
+        <dd id="fiche-prix-vente"></dd>
+      </div>
+      <div id="fiche-marge-ligne" hidden>
+        <dt>Marge par unité</dt>
+        <dd id="fiche-marge"></dd>
       </div>
       <div>
         <dt>Valeur (indicative)</dt>

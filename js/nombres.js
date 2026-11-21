@@ -158,6 +158,13 @@ export function calculerValeurTotaleCentimes(lignes) {
   return total;
 }
 
+// Marge par unité, en centimes (décision 82) : prix de vente moins prix
+// d'achat ; négative si le produit est vendu à perte. Les deux prix sont des
+// entiers d'au plus 10^12 : la soustraction reste exacte.
+export function calculerMargeCentimes(prixVenteCentimes, prixAchatCentimes) {
+  return prixVenteCentimes - prixAchatCentimes;
+}
+
 // Message d'erreur en français pour un résultat d'analyse refusé.
 // `sujet` complète la phrase, par exemple « Le seuil d'alerte ».
 export function messageNombreRefuse(resultat, sujet, nombreDecimales) {
