@@ -93,7 +93,7 @@ L'application gère un seul entrepôt par compte utilisateur.
 4. Recherche de produits par nom, code SKU ou type de stock (phase 8b, décisions 78 et 79).
 5. Actions rapides `-1` et `+1`, avec zones tactiles d'au moins 48 × 48 pixels.
 6. Action permettant de saisir une quantité précise, par exemple `+10` ou `-2,5`, avec motif facultatif.
-7. Formulaire simple pour ajouter ou modifier un produit. Phase 8b (décisions 78 à 82) : code SKU obligatoire et unique ; type de stock (liste fixe, « Non classé » par défaut), quantité à commander et prix de vente facultatifs ; avertissement si le prix de vente est plus bas que le prix d'achat. La fiche du produit affiche ces informations et la marge par unité.
+7. Formulaire simple pour ajouter ou modifier un produit. Phase 8b (décisions 78 à 82) : code SKU (champ toujours présent, facultatif à remplir, unique quand il est rempli), type de stock (liste fixe, « Non classé » par défaut), quantité à commander et prix de vente facultatifs ; avertissement si le prix de vente est plus bas que le prix d'achat. La fiche du produit affiche ces informations et la marge par unité.
 8. Historique des entrées, sorties et ajustements, avec date, heure, produit, quantité et motif (50 derniers, puis « Voir plus »). Chaque ligne propose « Annuler cette opération » (section 6, règle 12).
 9. Export Excel en un clic, avec quatre feuilles : `Stock`, `Historique`, `Fournisseurs` et `Clients`.
 10. Données de démonstration, uniquement lorsque l'entrepôt est vide.
@@ -148,7 +148,7 @@ Pour éviter les erreurs d'arrondi des nombres à virgule, **toutes les quantit�
 ### Structure
 
 - `users/{uid}` : `nomEntrepot`, `devise`, `createdAt`, `suppressionDemandee` (booléen, `false` par défaut).
-- `users/{uid}/products/{productId}` : `nom`, `unite`, `quantiteMilliemes`, `seuilAlerteMilliemes`, `prixAchatCentimes`, `archive`, `dernierMouvementId`, `createdAt`, `updatedAt`. Depuis la phase 8b (décisions 78 à 83) : `codeSku`, `typeStock`, `quantiteACommanderMilliemes`, `prixVenteCentimes`. Ces quatre champs sont facultatifs pour les règles (les produits plus anciens ne les ont pas) ; le code SKU est obligatoire dans le formulaire ; une quantité à commander ou un prix de vente non rempli est absent du document.
+- `users/{uid}/products/{productId}` : `nom`, `unite`, `quantiteMilliemes`, `seuilAlerteMilliemes`, `prixAchatCentimes`, `archive`, `dernierMouvementId`, `createdAt`, `updatedAt`. Depuis la phase 8b (décisions 78 à 83) : `codeSku`, `typeStock`, `quantiteACommanderMilliemes`, `prixVenteCentimes`. Ces quatre champs sont facultatifs (les produits plus anciens ne les ont pas) ; un code SKU, une quantité à commander ou un prix de vente non rempli est absent du document.
 - `users/{uid}/movements/{movementId}` : `productId`, `nomProduit`, `unite`, `deltaMilliemes`, `type`, `motif`, `auteurUid`, `dateAppareil`, `dateServeur`.
 - `users/{uid}/suppliers/{supplierId}` (phase 6b, décisions 42 et 50) : `nom`, `telephone`, `whatsapp`, `email`, `adresse`, `produitsFournis`, `notes`, `createdAt`, `updatedAt`. Seul `nom` est obligatoire ; un champ facultatif non rempli vaut une chaîne vide. `produitsFournis` est un texte libre, sans lien avec les produits du stock. Un fournisseur supprimé est effacé définitivement : il n'y a pas d'archivage (décision 50).
 - `users/{uid}/clients/{clientId}` (phase 6c, décision 72) : `nom`, `telephone`, `whatsapp`, `email`, `adresse`, `notes`, `createdAt`, `updatedAt`. Seul `nom` est obligatoire ; un champ facultatif non rempli vaut une chaîne vide. Un client supprimé est effacé définitivement.
@@ -297,7 +297,7 @@ Le propriétaire doit pouvoir suivre les tests avec des instructions en françai
 - Fournisseurs : ajouter, modifier et supprimer ; un compte ne voit pas les fournisseurs d'un autre.
 - Clients : ajouter, modifier et supprimer ; un compte ne voit pas les clients d'un autre ; la suppression du compte efface aussi les clients.
 - Vérifier les alertes de stock bas et de rupture.
-- Phase 8b : code SKU obligatoire et unique dans le formulaire ; un produit ancien, sans les nouveaux champs, reste accepté par les règles et s'affiche sans erreur ; avertissement si le prix de vente est plus bas que le prix d'achat ; marge exacte ; recherche par code et par type.
+- Phase 8b : code SKU facultatif, unique quand il est rempli ; un produit ancien, sans les nouveaux champs, reste accepté par les règles et s'affiche sans erreur ; avertissement si le prix de vente est plus bas que le prix d'achat ; marge exacte ; recherche par code et par type.
 - Exporter le stock et l'historique, et ouvrir le fichier dans Excel.
 - Tester sur ordinateur et smartphone.
 - Tester une première ouverture en ligne, puis une réouverture hors ligne.

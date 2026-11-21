@@ -26,7 +26,7 @@ Dépôt GitHub : `saintfranckinder/minstock`, renommé par le propriétaire le 2
 | — | Accueil épuré (décision 74), haut figé et bouton retour (décision 75), partie figée réduite (décision 76) | **Terminé le 2026-11-20** (version 0.15.0 essayée sur smartphone par le propriétaire : réussi) |
 | — | Boutons de contact en icônes, avec leur nom dessous (décision 77), puis grille centrée (une colonne égale par bouton) | **Fait le 2026-11-21** (version 0.15.3, tests sur l'ordinateur réussis) ; test de la version 0.15.3 sur smartphone à faire par le propriétaire |
 | 8 | Hors ligne et indicateur de synchronisation (décisions 64 à 68) | **Terminée le 2026-11-19** (essai en mode avion réussi sur smartphone, selon les captures du propriétaire) |
-| 8b | Code SKU, type de stock, quantité à commander, prix de vente (décisions 69 et 78 à 83) | **En cours** : réponses du propriétaire notées le 2026-11-21 (code SKU obligatoire) ; règles version 9 et essais écrits ; **publication des règles version 9 par le propriétaire attendue**, puis code de l'application |
+| 8b | Code SKU, type de stock, quantité à commander, prix de vente (décisions 69 et 78 à 83) | **En cours** : réponses du propriétaire notées le 2026-11-21 (six recommandations acceptées ; code SKU toujours présent, facultatif à remplir) ; règles version 9 et essais écrits ; **publication des règles version 9 par le propriétaire attendue**, puis code de l'application |
 | 9 | Export Excel | À faire |
 | 10 | Application installable (PWA) | À faire |
 | 11 | Données de démonstration | À faire |
@@ -898,7 +898,7 @@ Tests non exécutés : smartphone (version 0.15.3), à faire par le propriétair
 
 **Compte rendu partiel de la phase 8b (2026-11-21) : étape 1, décisions et règles**
 
-Réponse du propriétaire aux questions de détail : « Oui, mais le SKU est obligatoire ». Décisions 78 à 83 notées ; `CLAUDE.md` mis à jour (sections 4, 5, 8, 10 et 12). Écart avec le plan de départ : pas de filtre par type, la recherche trouve aussi le type (décision 79, question 6 ajoutée le 2026-11-21).
+Réponse du propriétaire aux questions de détail : « Oui, mais le SKU est obligatoire », puis précision : l'**option** doit exister dans l'application, le champ reste facultatif à remplir. La décision 78, d'abord notée « code obligatoire à remplir », a été corrigée le jour même, avant toute écriture du code de l'application (les règles version 9 et les essais n'en dépendaient pas : seul un commentaire des règles a changé). Décisions 78 à 83 notées ; `CLAUDE.md` mis à jour (sections 4, 5, 8, 10 et 12). Écart avec le plan de départ : pas de filtre par type, la recherche trouve aussi le type (décision 79, question 6 ajoutée le 2026-11-21).
 
 Ce qui a été fait :
 
@@ -1001,7 +1001,7 @@ Règles de conception retenues pour le code :
 
 ### 8.1 Phase actuelle
 
-- **Phase 8b en cours (2026-11-21).** Réponses du propriétaire notées (décisions 78 à 83 : code SKU obligatoire dans le formulaire, recherche par type au lieu d'un filtre). Règles version 9 et essais écrits ; **le propriétaire doit publier les règles version 9 dans la console** ; ensuite : passage de `tests-regles.html`, puis code de l'application.
+- **Phase 8b en cours (2026-11-21).** Réponses du propriétaire notées (décisions 78 à 83 : code SKU toujours présent dans le formulaire, facultatif à remplir ; recherche par type au lieu d'un filtre). Règles version 9 et essais écrits ; **le propriétaire doit publier les règles version 9 dans la console** ; ensuite : passage de `tests-regles.html`, puis code de l'application.
 - **Étape « boutons de contact en icônes » faite le 2026-11-21** (décision 77 : « Appeler », « WhatsApp », « E-mail » deviennent une icône avec son nom dessous). Tests sur l'ordinateur réussis ; **test sur smartphone à faire par le propriétaire**.
 - **Étape « accueil épuré » terminée le 2026-11-20** (décisions 74 à 76 : une ligne par produit, fiche dans un panneau, bouton rond, barre de navigation, ⚙ ; haut des écrans figé ; bouton retour du téléphone ; partie figée réduite). Tests sur l'ordinateur réussis ; version `0.15.0` essayée sur smartphone par le propriétaire : réussi.
 - Déjà terminées le 2026-11-19 et le 2026-11-20 : **phase 8** (hors ligne et indicateur de synchronisation, mode avion réussi sur smartphone) et **phase 6c** (carnet de clients, smartphone réussi).
@@ -1170,7 +1170,7 @@ Toutes sont dans `DECISIONS.md` (83 décisions, aucune effacée) :
 - **75 (demande du propriétaire du 2026-11-20) :** en-tête et haut des écrans figés (sur l'accueil : nom, carte, recherche) ; flèche ← à la place de « Retour aux produits » ; bouton retour du téléphone dans l'application.
 - **76 (demande du propriétaire du 2026-11-20) :** partie figée réduite : espaces resserrés, carte repliée tant que la recherche contient du texte, bouton rond « + » sur Fournisseurs et Clients.
 - **77 (demande du propriétaire du 2026-11-21) :** boutons « Appeler », « WhatsApp », « E-mail » des fournisseurs et des clients affichés comme une icône avec son nom dessous (précise la décision 53).
-- **78 à 83 (phase 8b, réponses du propriétaire du 2026-11-21) :** code SKU obligatoire dans le formulaire, unique, non exigé par les règles ; types de stock (liste fixe, « Non classé » par défaut), recherche par type au lieu d'un filtre ; quantité à commander facultative, affichée en « Stock bas » ou « Rupture » ; prix de vente facultatif avec avertissement s'il est plus bas que le prix d'achat, jamais dans la valeur du stock ; marge par unité dans la fiche ; règles version 9.
+- **78 à 83 (phase 8b, réponses du propriétaire du 2026-11-21) :** code SKU toujours présent dans le formulaire, facultatif à remplir, unique quand il est rempli ; types de stock (liste fixe, « Non classé » par défaut), recherche par type au lieu d'un filtre ; quantité à commander facultative, affichée en « Stock bas » ou « Rupture » ; prix de vente facultatif avec avertissement s'il est plus bas que le prix d'achat, jamais dans la valeur du stock ; marge par unité dans la fiche ; règles version 9.
 
 Les règles de conception de la section 7 restent à respecter dans toute la suite.
 

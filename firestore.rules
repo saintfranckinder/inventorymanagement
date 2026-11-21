@@ -75,9 +75,8 @@ service cloud.firestore {
     }
 
     // Champs facultatifs de la phase 8b (decisions 78 a 83) : verifies
-    // seulement s'ils sont presents. Les regles n'exigent pas le code SKU
-    // (obligatoire dans le formulaire seulement) : un produit cree ou modifie
-    // hors ligne par une ancienne version de l'application doit rester accepte.
+    // seulement s'ils sont presents. Un produit cree ou modifie hors ligne par
+    // une ancienne version de l'application, sans ces champs, reste accepte.
     function champsPhase8bValides(d) {
       return (!('codeSku' in d)
           || (d.codeSku is string && d.codeSku.matches('^[A-Za-z0-9-]{1,50}$')))
