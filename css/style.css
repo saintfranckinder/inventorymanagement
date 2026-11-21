@@ -1393,20 +1393,38 @@ body.connecte .pied {
 }
 
 /* « Appeler », « WhatsApp », « E-mail » (décision 77) : une icône dans une
-   pastille bleu clair et son nom dessous, côte à côte, comme dans la barre
-   de navigation. Zone de toucher d'au moins 64 × 64 pixels. */
+   pastille bleu clair et son nom dessous, comme dans la barre de navigation.
+   Grille de trois colonnes égales, centrée et de largeur limitée ; chaque
+   bouton garde sa colonne, même quand un autre est absent (pas de WhatsApp,
+   par exemple). Zone de toucher d'au moins 64 × 64 pixels. */
 .liens-contact {
-  display: flex;
-  gap: 0.5rem;
-  margin: 0.75rem 0 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(0.5rem, 4vw, 1.5rem);
+  max-width: 20rem;
+  margin: 0.75rem auto 0;
+}
+
+.lien-contact-appeler {
+  grid-column: 1;
+}
+
+.lien-contact-whatsapp {
+  grid-column: 2;
+}
+
+.lien-contact-email {
+  grid-column: 3;
 }
 
 .lien-contact {
   display: flex;
-  flex: 0 1 6rem;
   flex-direction: column;
   align-items: center;
+  justify-self: center;
   gap: 0.25rem;
+  width: 100%;
+  max-width: 6rem;
   min-width: 0;
   min-height: 64px;
   padding: 0.375rem 0.25rem;
