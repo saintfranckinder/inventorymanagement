@@ -26,6 +26,7 @@ Dépôt GitHub : `saintfranckinder/minstock`, renommé par le propriétaire le 2
 | — | Accueil épuré (décision 74), haut figé et bouton retour (décision 75), partie figée réduite (décision 76) | **Terminé le 2026-11-20** (version 0.15.0 essayée sur smartphone par le propriétaire : réussi) |
 | — | Boutons de contact en icônes, avec leur nom dessous (décision 77), puis grille centrée (une colonne égale par bouton) | **Fait le 2026-11-21** (version 0.15.3, tests sur l'ordinateur réussis) ; test de la version 0.15.3 sur smartphone à faire par le propriétaire |
 | 8 | Hors ligne et indicateur de synchronisation (décisions 64 à 68) | **Terminée le 2026-11-19** (essai en mode avion réussi sur smartphone, selon les captures du propriétaire) |
+| — | Recherche dans l'historique, sur les mouvements déjà chargés (décision 84) | **Faite le 2026-11-21** (version 0.17.0, tests sur l'ordinateur réussis) ; test sur smartphone à faire par le propriétaire |
 | 8b | Code SKU, type de stock, quantité à commander, prix de vente (décisions 69 et 78 à 83) | **Terminée le 2026-11-21** (version 0.16.0 ; règles version 9 publiées ; `tests-regles.html` 122 sur 122, `tests-nombres.html` 111 sur 111 ; test sur smartphone réussi le même jour, selon le propriétaire) |
 | 9 | Export Excel | À faire |
 | 10 | Application installable (PWA) | À faire |
@@ -954,6 +955,33 @@ Constats :
 
 **Phase terminée le 2026-11-21.**
 
+### Étape intermédiaire : recherche dans l'historique (décision 84)
+
+Demande du propriétaire du 2026-11-21 : filtrer les mouvements comme les produits. Deux options présentées avec leurs risques : (1) recherche dans les mouvements déjà chargés, sans lecture de plus ; (2) recherche dans tout l'historique sur le serveur, avec un index à créer dans la console. **Option 1 choisie.**
+
+**Compte rendu (2026-11-21, version 0.17.0)**
+
+Ce qui a été fait :
+
+- `index.html` : champ « Produit, type ou motif » avec la loupe, dans la partie figée de l'écran Mouvements (même présentation que Fournisseurs) ; ligne de bilan `recherche-historique-bilan` (annoncée aux lecteurs d'écran).
+- `js/ecran-mouvements.js` : `correspondALaRecherche` (nom du produit, type, motif) et `afficherBilanRecherche` ; `afficherHistorique` filtre seulement les lignes affichées, chaque ligne étant toujours construite avec tout l'historique chargé (`annulationDe`, `peutEtreAnnule` inchangés) ; la recherche est vidée à la déconnexion. Aucun changement des données, des règles, des écoutes ni de « Voir plus ».
+- Version `0.17.0`.
+
+Tests exécutés par l'assistant, sur `http://localhost:8080/`, avec le compte de test, à 360 × 780 :
+
+| Test | Résultat |
+|---|---|
+| Sans recherche : 50 mouvements, aucun bilan affiché | Réussi |
+| « riz » : les 2 mouvements du Riz ; « sortie » : 27 sorties ; « AJUSTEMENT » : 4 ajustements ; « annulation » : les 2 annulations (motif) ; bilan « N mouvements trouvés parmi les 50 derniers mouvements chargés. Pour chercher plus loin, touchez « Voir plus »… » | Réussi |
+| « zzz » et « cimént » (aucun mouvement du Ciment parmi les 50 derniers) : « Aucun mouvement ne correspond à … parmi les 50 derniers mouvements chargés », avec l'invitation à toucher « Voir plus » | Réussi |
+| « Voir plus » avec « ciment » tapé : la recherche reste, 11 mouvements du Ciment trouvés parmi les 100 chargés | Réussi |
+| Annulation : avec « essai des regles », les annulations sont cachées, mais les opérations d'origine restent marquées « Annulée le … », sans bouton « Annuler cette opération » ; mêmes marques qu'avant la recherche | Réussi |
+| Champ de 328 × 48, police de 16 pixels ; partie figée de 129 pixels ; aucun défilement horizontal ; console sans erreur | Réussi |
+
+Tests non exécutés : smartphone (à faire par le propriétaire) ; « Voir plus » sans Internet avec une recherche active (même chemin que sans recherche, avertissement d'historique incomplet inchangé).
+
+Constat : l'historique du compte de test contient des mouvements d'un produit « Prenium Water Bottle », créés par le propriétaire pendant son essai sur téléphone de la phase 8b.
+
 ### Phase 9 : export Excel
 - **Résultat :** `stock_AAAA-MM-JJ.xlsx`, feuilles `Stock`, `Historique` et `Fournisseurs` (décision 42), SheetJS local (pris sur le site officiel de l'éditeur, version fixe), avertissements hors ligne / en attente.
 - **Tests :** ouverture dans Excel, décimales correctes ; export hors ligne avec avertissement ; téléchargement sur smartphone.
@@ -1048,15 +1076,16 @@ Règles de conception retenues pour le code :
 ### 8.1 Phase actuelle
 
 - **Phase 8b terminée le 2026-11-21** (décisions 78 à 83 : code SKU toujours présent dans le formulaire, facultatif à remplir ; type de stock ; quantité à commander ; prix de vente et marge ; recherche par code et par type). Règles version 9 publiées par le propriétaire ; tous les tests sur l'ordinateur réussis ; version 0.16.0 essayée sur smartphone par le propriétaire : réussi.
+- **Recherche dans l'historique faite le 2026-11-21** (décision 84, version 0.17.0) : tests sur l'ordinateur réussis ; **test sur smartphone à faire par le propriétaire**.
 - **Prochaine étape : phase 9, export Excel.** Rien n'est codé ; elle commence par quelques questions au propriétaire (section 8.7).
 - **Étape « boutons de contact en icônes » faite le 2026-11-21** (décision 77 : « Appeler », « WhatsApp », « E-mail » deviennent une icône avec son nom dessous). Tests sur l'ordinateur réussis ; **test sur smartphone à faire par le propriétaire**.
 - **Étape « accueil épuré » terminée le 2026-11-20** (décisions 74 à 76 : une ligne par produit, fiche dans un panneau, bouton rond, barre de navigation, ⚙ ; haut des écrans figé ; bouton retour du téléphone ; partie figée réduite). Tests sur l'ordinateur réussis ; version `0.15.0` essayée sur smartphone par le propriétaire : réussi.
 - Déjà terminées le 2026-11-19 et le 2026-11-20 : **phase 8** (hors ligne et indicateur de synchronisation, mode avion réussi sur smartphone) et **phase 6c** (carnet de clients, smartphone réussi).
 - **Prochaine étape : phase 8b** (code SKU, type de stock, quantité à commander, prix de vente : décision 69 ; règles version 9). **Rien n'est codé.** Les cinq questions de détail ont été posées au propriétaire le 2026-11-20 avec les recommandations de l'assistant (section 8.7) ; **sa réponse est attendue**.
-- Version de l'application : `0.16.0`. Règles Firestore : **version 9**, publiée dans la console par le propriétaire le 2026-11-21 ; `tests-regles.html` 122 sur 122 (série habituelle) le même jour. La série « suppression » (22 essais, compte jetable) n'a pas été rejouée : les règles de suppression n'ont pas changé.
+- Version de l'application : `0.17.0`. Règles Firestore : **version 9**, publiée dans la console par le propriétaire le 2026-11-21 ; `tests-regles.html` 122 sur 122 (série habituelle) le même jour. La série « suppression » (22 essais, compte jetable) n'a pas été rejouée : les règles de suppression n'ont pas changé.
 - Dépôt GitHub : `saintfranckinder/minstock`, **public**. Site : `https://saintfranckinder.github.io/minstock/` (GitHub Pages, branche `main`, dossier racine).
-- Dépôt Git, branche `main` : `cecf8d3` (phases 0 et 1), `48d55b3` (phase 2), `f09bf30` (phase 3), `96f2a3d` (phase 4a), `d8f1b5b` (phase 4b), `2f53da4` (note de passation), `b26abb6` (dépôt renommé), `e166a30` (recherche de secrets), `d5a7808` (décisions 40 et 41), `86d4eb4` (mise en ligne), `e1a5c70` (fin de l'étape « dépôt public »), `e202b2a` (décisions 42 et 43), `7e156a3` (phase 5), `eb40c59` (test sur smartphone de la phase 5), `456dff6` (phase 6), `de2ef92` (test sur smartphone de la phase 6), `14e00c9` (phase 6b), `36f5d20` (test sur smartphone de la phase 6b), `6eeb438` (identité visuelle), `c95d942` (compteurs cliquables), `f60525d` (test sur smartphone des compteurs), `d952342` (phase 7), `b2cc014` (test sur smartphone de la phase 7), `84b6e87` (note de passation), `e6e178b` (phase 8, version 0.11.0), `44567e0` (décision 71), `3ca1084` (note), `83ac5be` (phase 8 terminée), `7dc5476` (téléphone du propriétaire), `d6ce5a1` (phase 6c, version 0.12.0), `50e206b` (phase 6c terminée), `2367763` (accueil épuré, version 0.13.0), `5e33443` (décision 75, version 0.14.0), `dcb2a30` (décision 76, version 0.15.0), `ad63621` (accueil épuré terminé), une note de passation, `1b1063f` (icônes de contact, décision 77, version 0.15.1), `02b74ab` (grille de trois colonnes, version 0.15.2), `a523018` (même équilibre avec deux boutons, version 0.15.3), `984d73d` (phase 8b, étape 1 : décisions et règles version 9), `1ba861b` (décision 78 corrigée), puis le commit de la phase 8b, étape 2 (application, version 0.16.0, avec cette note). Le propriétaire envoie chaque commit avec **Push origin** dans GitHub Desktop ; le site se met à jour quelques minutes après.
-- **État de l'envoi sur GitHub (vu dans la copie locale le 2026-11-20, sans interroger GitHub) :** le propriétaire a envoyé jusqu'à `dcb2a30` (version `0.15.0` en ligne, identique au code). *(Le 2026-11-21, la capture du téléphone du propriétaire montre la version 0.15.1 en ligne : les commits jusqu'à `1b1063f` ont donc été envoyés.)* *(Le 2026-11-21, le propriétaire a essayé la version 0.16.0 en ligne : les commits jusqu'à `b4aabd2` ont donc été envoyés.)* Reste à envoyer : la note de fin de la phase 8b (documentation seulement).
+- Dépôt Git, branche `main` : `cecf8d3` (phases 0 et 1), `48d55b3` (phase 2), `f09bf30` (phase 3), `96f2a3d` (phase 4a), `d8f1b5b` (phase 4b), `2f53da4` (note de passation), `b26abb6` (dépôt renommé), `e166a30` (recherche de secrets), `d5a7808` (décisions 40 et 41), `86d4eb4` (mise en ligne), `e1a5c70` (fin de l'étape « dépôt public »), `e202b2a` (décisions 42 et 43), `7e156a3` (phase 5), `eb40c59` (test sur smartphone de la phase 5), `456dff6` (phase 6), `de2ef92` (test sur smartphone de la phase 6), `14e00c9` (phase 6b), `36f5d20` (test sur smartphone de la phase 6b), `6eeb438` (identité visuelle), `c95d942` (compteurs cliquables), `f60525d` (test sur smartphone des compteurs), `d952342` (phase 7), `b2cc014` (test sur smartphone de la phase 7), `84b6e87` (note de passation), `e6e178b` (phase 8, version 0.11.0), `44567e0` (décision 71), `3ca1084` (note), `83ac5be` (phase 8 terminée), `7dc5476` (téléphone du propriétaire), `d6ce5a1` (phase 6c, version 0.12.0), `50e206b` (phase 6c terminée), `2367763` (accueil épuré, version 0.13.0), `5e33443` (décision 75, version 0.14.0), `dcb2a30` (décision 76, version 0.15.0), `ad63621` (accueil épuré terminé), une note de passation, `1b1063f` (icônes de contact, décision 77, version 0.15.1), `02b74ab` (grille de trois colonnes, version 0.15.2), `a523018` (même équilibre avec deux boutons, version 0.15.3), `984d73d` (phase 8b, étape 1 : décisions et règles version 9), `1ba861b` (décision 78 corrigée), `b4aabd2` (phase 8b, étape 2 : application, version 0.16.0), `a687971` (phase 8b terminée), puis le commit de la recherche dans l'historique (décision 84, version 0.17.0, avec cette note). Le propriétaire envoie chaque commit avec **Push origin** dans GitHub Desktop ; le site se met à jour quelques minutes après.
+- **État de l'envoi sur GitHub (vu dans la copie locale le 2026-11-20, sans interroger GitHub) :** le propriétaire a envoyé jusqu'à `dcb2a30` (version `0.15.0` en ligne, identique au code). *(Le 2026-11-21, la capture du téléphone du propriétaire montre la version 0.15.1 en ligne : les commits jusqu'à `1b1063f` ont donc été envoyés.)* *(Le 2026-11-21, le propriétaire a essayé la version 0.16.0 en ligne : les commits jusqu'à `b4aabd2` ont donc été envoyés.)* Restent à envoyer : la note de fin de la phase 8b (`a687971`, documentation) et le commit de la recherche dans l'historique (**code** : version 0.17.0, aucune règle à publier).
 - **Dossier de la session :** l'outil de travail peut s'ouvrir sur le dossier parent `C:\GitHub\Inventory Management` ; le dépôt reste `C:\GitHub\Inventory Management\inventorymanagement` (utiliser des chemins complets, et `git -C <dépôt>`).
 
 ### 8.2 Travail terminé
@@ -1155,7 +1184,7 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 | `js/ecran-produits.js` | Tableau de bord : valeurs, recherche, alertes, `−1` / `+1`, compteurs et leurs filtres ; **une ligne par produit** (`carteProduit`), « En attente de synchronisation » à la place de « Achat … » ; **fiche du produit** dans un `<dialog>` (`ouvrirFiche`, `remplirFiche`, `fermerFiche`) ; carte repliée pendant une recherche (`recherche-active`) ; formulaire des produits | 4a, 4b, 5, identité, 8, accueil épuré |
 | `js/mouvements.js` | Lot d'une opération de stock ; lecture de l'historique ; identifiant `annulation-…` | 4b, 6 |
 | `js/operations-en-attente.js` | Suivi local des opérations non confirmées (`localStorage`, clé `operations-en-attente:{uid}`) ; opérations en attente des autres comptes | 4b, 8 |
-| `js/ecran-mouvements.js` | Formulaire de mouvement, `envoyerMouvement` (seul chemin d'envoi d'un mouvement), historique avec « Annuler cette opération », opérations refusées | 4b, 5, 6 |
+| `js/ecran-mouvements.js` | Formulaire de mouvement, `envoyerMouvement` (seul chemin d'envoi d'un mouvement), historique avec « Annuler cette opération », opérations refusées ; recherche dans l'historique chargé (décision 84 : `correspondALaRecherche`, `afficherBilanRecherche`) | 4b, 5, 6, recherche historique |
 | `firestore.rules` | Règles de sécurité, version 9 | 2, 3, 4a, 4b, 6b, 7, 6c, 8b |
 | `tests-regles.html`, `js/tests-regles.js` | **Ne jamais y ajouter d'essai qui touche à `suppressionDemandee` ou supprime l'entrepôt dans la série habituelle** (danger évité en phase 7). Série habituelle : 121 essais des règles sur le vrai serveur quand les trois produits d'essai existent déjà (122 au passage du 2026-11-21, qui a créé `essai-regles-sku`) (compte de test en `@example.com` uniquement, décision 40 ; environ une minute). Série « suppression du compte » : 22 essais, seulement avec un compte jetable `test-suppression…@example.com` (décision 63) ; **connecter ce compte dans la page de test, jamais dans l'application** (la reprise automatique de la suppression effacerait son compte de connexion) | 3, 4a, 4b, dépôt public, 6, 6b, 7, 6c |
 | `tests-nombres.html`, `js/tests-nombres.js` | 104 essais de conversion et de calcul, sans connexion | 4a, 5 |
@@ -1164,7 +1193,7 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 | `.gitignore`, `.gitattributes` | Fichiers exclus de Git ; `vendor/*.js` jamais modifiés par Git ; `*.woff2` en binaire | 0, 2, identité |
 | `.nojekyll` | Fichier vide : GitHub Pages publie tout tel quel (décision 41) | dépôt public |
 | `CLAUDE.md`, `DEMARRAGE.md` | Cahier des charges et méthode de travail ; modifiés avec l'accord du propriétaire (fournisseurs, annulation, suppression au lieu d'archivage des fournisseurs : section 6 de ce fichier ; carnet de clients dans `CLAUDE.md`, phase 6c). `DEMARRAGE.md` n'a pas été mis à jour depuis la phase 6b | 1, évolutions 42 et 43, 6b, 6c |
-| `PLAN.md`, `DECISIONS.md`, `README.md` | Suivi, décisions 1 à 83, documentation | Toutes |
+| `PLAN.md`, `DECISIONS.md`, `README.md` | Suivi, décisions 1 à 84, documentation | Toutes |
 
 **Hors Git :** `.env.test` contient l'adresse et le mot de passe des deux comptes de test et des comptes jetables `test-suppression-1` à `-3@example.com` (2 et 3 supprimés par les essais de la phase 7 ; 1 actif, sans entrepôt, réservé à la série « suppression » de `tests-regles.html`). Il est ignoré par Git et n'apparaît dans aucun commit (vérifié le 2026-11-18). Également hors Git : `C:\GitHub\Inventory Management\.claude\launch.json` (serveur local pour l'outil de travail, section 8.5 point 13).
 
@@ -1195,7 +1224,7 @@ Les vérifications de la phase 2 sont réglées : `demarrer.bat` a été lancé 
 
 ### 8.6 Décisions prises
 
-Toutes sont dans `DECISIONS.md` (83 décisions, aucune effacée) :
+Toutes sont dans `DECISIONS.md` (84 décisions, aucune effacée) :
 
 - **1 à 7 (choix initiaux) :** Firestore en plan Spark ; connexion Google et e-mail ; quantités et prix en entiers ; `dernierMouvementId` ; GitHub Pages ; publication du code par le propriétaire.
 - **8 à 15 (audit) :** page `tests-regles.html` à la place du simulateur ; règles tolérantes au hors-ligne et suivi local des opérations ; dépôt public dès la fin de la phase 4b ; SDK local corrigé et serveur local ; règles produit-mouvement complétées ; suppression du compte avec reconnexion d'abord ; phase 4 coupée en deux ; dossier de travail.
@@ -1219,6 +1248,7 @@ Toutes sont dans `DECISIONS.md` (83 décisions, aucune effacée) :
 - **76 (demande du propriétaire du 2026-11-20) :** partie figée réduite : espaces resserrés, carte repliée tant que la recherche contient du texte, bouton rond « + » sur Fournisseurs et Clients.
 - **77 (demande du propriétaire du 2026-11-21) :** boutons « Appeler », « WhatsApp », « E-mail » des fournisseurs et des clients affichés comme une icône avec son nom dessous (précise la décision 53).
 - **78 à 83 (phase 8b, réponses du propriétaire du 2026-11-21) :** code SKU toujours présent dans le formulaire, facultatif à remplir, unique quand il est rempli ; types de stock (liste fixe, « Non classé » par défaut), recherche par type au lieu d'un filtre ; quantité à commander facultative, affichée en « Stock bas » ou « Rupture » ; prix de vente facultatif avec avertissement s'il est plus bas que le prix d'achat, jamais dans la valeur du stock ; marge par unité dans la fiche ; règles version 9.
+- **84 (demande du propriétaire du 2026-11-21) :** recherche dans l'historique (produit, type, motif) sur les mouvements déjà chargés, sans lecture de plus ; elle ne filtre que l'affichage (annulation inchangée) ; précise la décision 47.
 
 Les règles de conception de la section 7 restent à respecter dans toute la suite.
 
@@ -1240,7 +1270,7 @@ Les règles de conception de la section 7 restent à respecter dans toute la sui
 
 Par défaut, sauf avis contraire : « quantité à commander » affichée seulement quand le produit est en « Stock bas » ou « Rupture » ; code, type, prix de vente et marge dans la fiche du produit, pour garder les lignes de l'accueil compactes ; prix de vente en centimes, comme le prix d'achat (décision 4).
 
-1. **Propriétaire :** **Push origin** pour les commits en attente (version 0.15.3), puis essai sur le téléphone : vérifier « Version 0.15.3 » dans Paramètres, ouvrir Fournisseurs et Clients, vérifier que les boutons sont bien centrés avec trois boutons et avec deux (par exemple un contact sans WhatsApp), et toucher chaque icône (Téléphone, WhatsApp, E-mail s'ouvrent). *(Réponse aux questions de la phase 8b donnée le 2026-11-21 : décisions 78 à 83.)* *(Règles version 9 publiées et essai de la phase 8b sur le téléphone réussi le 2026-11-21.)* Répondre aux questions de la phase 9 quand l'assistant les pose. Toujours en attente : les deux tests de la phase 3 et le message d'aide quand la fenêtre Google est bloquée. Conseillé : activer la validation en deux étapes du compte Google qui gère la console Firebase.
+1. **Propriétaire :** **Push origin** pour les commits en attente (version 0.15.3), puis essai sur le téléphone : vérifier « Version 0.15.3 » dans Paramètres, ouvrir Fournisseurs et Clients, vérifier que les boutons sont bien centrés avec trois boutons et avec deux (par exemple un contact sans WhatsApp), et toucher chaque icône (Téléphone, WhatsApp, E-mail s'ouvrent). *(Réponse aux questions de la phase 8b donnée le 2026-11-21 : décisions 78 à 83.)* *(Règles version 9 publiées et essai de la phase 8b sur le téléphone réussi le 2026-11-21.)* **Push origin** pour la recherche dans l'historique (version 0.17.0), puis essai sur le téléphone (Paramètres : « Version 0.17.0 » ; Mouvements : chercher un produit, puis « sortie », puis un mot rare et toucher « Voir plus »). Répondre aux questions de la phase 9 quand l'assistant les pose. Toujours en attente : les deux tests de la phase 3 et le message d'aide quand la fenêtre Google est bloquée. Conseillé : activer la validation en deux étapes du compte Google qui gère la console Firebase.
 2. **Assistant, au début de la prochaine session** (ouverte dans `C:\GitHub\Inventory Management\inventorymanagement` ou dans son dossier parent) : lire `CLAUDE.md`, `PLAN.md` et `DECISIONS.md`. Si la réponse du propriétaire n'est pas notée ici, lui rappeler en quelques lignes le tableau ci-dessus et attendre. Après son accord :
    1. noter les **décisions 78 et suivantes** à la fin de `DECISIONS.md` (la 77 est prise par les icônes de contact) ; mettre à jour `CLAUDE.md` (sections 4, 5, 8, 10 et 12) avec son accord ;
    2. écrire les **règles version 9** : quatre champs facultatifs dans `produitValide` (dans `hasOnly`, **pas** dans `hasAll`), pour qu'un produit qui ne les a pas, ou une opération faite hors ligne par une ancienne version, reste accepté ; ne rien changer au lien produit-mouvement ;

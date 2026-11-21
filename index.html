@@ -775,6 +775,15 @@
           </button>
           <h2>Historique des mouvements</h2>
         </div>
+        <!-- Recherche dans les mouvements déjà chargés (décision 84) -->
+        <div id="bloc-recherche-historique" class="recherche" hidden>
+          <label for="recherche-historique" class="lecteur-ecran">Rechercher dans l'historique : produit, type d'opération ou motif</label>
+          <svg class="icone recherche-icone" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <circle cx="11" cy="11" r="7"/>
+            <path d="M16.2 16.2L21 21"/>
+          </svg>
+          <input id="recherche-historique" type="search" autocomplete="off" enterkeyhint="search" placeholder="Produit, type ou motif">
+        </div>
       </div>
 
       <p class="aide">
@@ -786,6 +795,7 @@
       <p id="erreur-historique" class="message-erreur" role="alert" hidden></p>
       <p id="info-historique" class="message-info" role="status" hidden></p>
       <p id="historique-vide" class="aide" hidden>Aucun mouvement pour l'instant.</p>
+      <p id="recherche-historique-bilan" class="aide" role="status" hidden></p>
 
       <ul id="liste-historique" class="liste-produits"></ul>
 

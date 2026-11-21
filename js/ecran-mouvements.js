@@ -2,8 +2,19 @@
 // historique (50 derniers, puis « Voir plus ») avec « Annuler cette
 // opération » (décisions 43 et 48), et liste des opérations refusées par le
 // serveur.
+// Recherche dans l'historique (décision 84) : elle ne porte que sur les
+// mouvements déjà chargés (aucune lecture de plus) et ne change que ce qui est
+// affiché ; les contrôles de l'annulation voient toujours tout l'historique
+// chargé.
 
-import { afficherMessage, afficherVue, effacerMessages, element, vueActuelle } from './interface.js';
+import {
+  afficherMessage,
+  afficherVue,
+  effacerMessages,
+  element,
+  normaliserPourRecherche,
+  vueActuelle
+} from './interface.js';
 import { oublierEcoute, signalerEcoute } from './indicateur-synchro.js';
 import {
   LIBELLES_TYPE,
@@ -33,6 +44,7 @@ import {
 import { messageErreur } from './messages-erreur.js';
 
 const FORMAT_DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
+const FORMAT_ENTIER = new Intl.NumberFormat('fr-FR');
 
 // Au-delà de cet écart entre l'heure de l'opération et l'heure de réception
 // par le serveur, l'historique affiche les deux.
@@ -503,6 +515,35 @@ function ligneHistorique(mouvement) {
   return article;
 }
 
+// Recherche (décision 84) : nom du produit, type d'opération (« sortie »…) ou
+// motif, sans tenir compte des majuscules ni des accents.
+function correspondALaRecherche(mouvement, recherche) {
+  return normaliserPourRecherche(mouvement.nomProduit || '').includes(recherche) ||
+    normaliserPourRecherche(LIBELLES_TYPE[mouvement.type] || '').includes(recherche) ||
+    normaliserPourRecherche(mouvement.motif || '').includes(recherche);
+}
+
+// Ligne sous la recherche : combien de mouvements trouvés, parmi combien de
+// mouvements chargés, et comment chercher plus loin.
+function afficherBilanRecherche(saisie, nombreTrouves, nombreCharges) {
+  const bilan = element('recherche-historique-bilan');
+  if (!normaliserPourRecherche(saisie)) {
+    bilan.hidden = true;
+    bilan.textContent = '';
+    return;
+  }
+  const charges = `parmi les ${FORMAT_ENTIER.format(nombreCharges)} derniers mouvements chargés`;
+  let texte = nombreTrouves === 0
+    ? `Aucun mouvement ne correspond à « ${saisie.trim()} » ${charges}.`
+    : `${FORMAT_ENTIER.format(nombreTrouves)} ` +
+      (nombreTrouves >= 2 ? 'mouvements trouvés' : 'mouvement trouvé') + ` ${charges}.`;
+  if (peutEtreDAutres) {
+    texte += ' Pour chercher plus loin, touchez « Voir plus » en bas de la liste.';
+  }
+  bilan.textContent = texte;
+  bilan.hidden = false;
+}
+
 function afficherHistorique() {
   const liste = element('liste-historique');
 
@@ -515,8 +556,18 @@ function afficherHistorique() {
   liste.textContent = '';
   const mouvements = mouvementsTries();
   element('historique-vide').hidden = !mouvementsRecus || mouvements.length > 0;
+  element('bloc-recherche-historique').hidden = mouvements.length === 0;
 
-  for (const mouvement of mouvements) {
+  // La recherche ne filtre que l'affichage : chaque ligne est construite avec
+  // tout l'historique chargé (« Annulée », bouton « Annuler cette opération »).
+  const saisie = element('recherche-historique').value;
+  const recherche = normaliserPourRecherche(saisie);
+  const visibles = recherche
+    ? mouvements.filter((mouvement) => correspondALaRecherche(mouvement, recherche))
+    : mouvements;
+  afficherBilanRecherche(saisie, visibles.length, mouvements.length);
+
+  for (const mouvement of visibles) {
     liste.append(ligneHistorique(mouvement));
   }
 
@@ -607,6 +658,11 @@ export function brancherEcranMouvements() {
   element('bouton-historique').addEventListener('click', () => afficherVue('vue-historique'));
   element('bouton-retour-historique').addEventListener('click', () => afficherVue('vue-accueil'));
   element('bouton-voir-plus').addEventListener('click', voirPlus);
+  element('recherche-historique').addEventListener('input', () => {
+    if (contexte) {
+      afficherHistorique();
+    }
+  });
 
   surChangementDesOperations(afficherOperationsRefusees);
 }
@@ -644,5 +700,9 @@ export function arreterEcranMouvements() {
   element('historique-vide').hidden = true;
   element('bouton-voir-plus').hidden = true;
   element('historique-partiel').hidden = true;
+  element('recherche-historique').value = '';
+  element('bloc-recherche-historique').hidden = true;
+  element('recherche-historique-bilan').hidden = true;
+  element('recherche-historique-bilan').textContent = '';
   afficherOperationsRefusees();
 }

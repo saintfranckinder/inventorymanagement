@@ -12,7 +12,7 @@ Le projet est en cours de construction. L'avancement est suivi dans `PLAN.md`.
 - Afficher le texte de confidentialité depuis l'écran de connexion.
 - Ajouter, modifier et archiver un produit : nom, unité, seuil d'alerte, prix d'achat, stock de départ ; et, facultatifs, code SKU, type de stock, quantité à commander, prix de vente (phase 8b).
 - Enregistrer des mouvements de stock : entrée, sortie, ajustement, avec un motif facultatif.
-- Consulter l'historique : les 50 derniers mouvements, puis « Voir plus ».
+- Consulter l'historique : les 50 derniers mouvements, puis « Voir plus » ; y chercher par produit, par type d'opération (« sortie »…) ou par motif. La recherche porte sur les mouvements déjà chargés : pour chercher plus loin, touchez « Voir plus » (décision 84). Pour tout l'historique, utilisez l'export Excel (phase 9).
 - Annuler une opération faite par erreur, depuis l'historique.
 - Signaler les opérations que le serveur a refusées, même après fermeture de l'application.
 - Tableau de bord : valeur du stock (indicative), recherche par nom, alertes « Stock bas » et « Rupture », boutons rapides `−1` et `+1`.
